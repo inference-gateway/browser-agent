@@ -1,0 +1,73 @@
+{
+	"name": "playwright-agent",
+	"version": "0.1.0",
+	"description": "AI agent for browser automation and web testing using Playwright",
+	"protocolVersion": "0.3.0",
+	"url": "",
+	"preferredTransport": "JSONRPC",
+	"defaultInputModes": ["text"],
+	"defaultOutputModes": ["text"],
+	"capabilities": {
+		"streaming": true,
+		"pushNotifications": false,
+		"stateTransitionHistory": false
+	},
+	"skills": [
+		{
+			"id": "navigate_to_url",
+			"name": "navigate_to_url",
+			"description": "Navigate to a specific URL and wait for the page to fully load",
+			"tags": ["navigation","browser","playwright"],
+			"schema": {"properties":{"timeout":{"default":30000,"description":"Maximum navigation timeout in milliseconds","type":"integer"},"url":{"description":"The URL to navigate to","type":"string"},"wait_until":{"default":"load","description":"When to consider navigation succeeded (domcontentloaded, load, networkidle)","type":"string"}},"required":["url"],"type":"object"}
+		},
+		{
+			"id": "click_element",
+			"name": "click_element",
+			"description": "Click on an element identified by selector, text, or other locator strategies",
+			"tags": ["interaction","click","playwright"],
+			"schema": {"properties":{"button":{"default":"left","description":"Mouse button to use (left, right, middle)","type":"string"},"click_count":{"default":1,"description":"Number of times to click","type":"integer"},"force":{"default":false,"description":"Force click even if element is not visible","type":"boolean"},"selector":{"description":"CSS selector, XPath, or text to identify the element","type":"string"},"timeout":{"default":30000,"description":"Maximum time to wait for element in milliseconds","type":"integer"}},"required":["selector"],"type":"object"}
+		},
+		{
+			"id": "fill_form",
+			"name": "fill_form",
+			"description": "Fill form fields with provided data, handling various input types",
+			"tags": ["form","input","automation","playwright"],
+			"schema": {"properties":{"fields":{"description":"List of form fields to fill","items":{"properties":{"selector":{"description":"Selector for the form field","type":"string"},"type":{"description":"Type of input (text, select, checkbox, radio)","type":"string"},"value":{"description":"Value to fill in the field","type":"string"}},"required":["selector","value"],"type":"object"},"type":"array"},"submit":{"default":false,"description":"Whether to submit the form after filling","type":"boolean"},"submit_selector":{"description":"Selector for the submit button if submit is true","type":"string"}},"required":["fields"],"type":"object"}
+		},
+		{
+			"id": "extract_data",
+			"name": "extract_data",
+			"description": "Extract data from the page using selectors and return structured information",
+			"tags": ["scraping","extraction","data","playwright"],
+			"schema": {"properties":{"extractors":{"description":"List of data extractors to run","items":{"properties":{"attribute":{"default":"text","description":"Attribute to extract (text, href, src, etc.)","type":"string"},"multiple":{"default":false,"description":"Extract all matching elements or just the first","type":"boolean"},"name":{"description":"Name for the extracted data field","type":"string"},"selector":{"description":"CSS selector or XPath to extract data from","type":"string"}},"required":["name","selector"],"type":"object"},"type":"array"},"format":{"default":"json","description":"Output format (json, csv, text)","type":"string"}},"required":["extractors"],"type":"object"}
+		},
+		{
+			"id": "take_screenshot",
+			"name": "take_screenshot",
+			"description": "Capture a screenshot of the current page or specific element",
+			"tags": ["screenshot","capture","visual","playwright"],
+			"schema": {"properties":{"full_page":{"default":false,"description":"Capture the entire scrollable page","type":"boolean"},"path":{"description":"File path to save the screenshot","type":"string"},"quality":{"default":80,"description":"Quality for jpeg images (0-100)","type":"integer"},"selector":{"description":"Optional selector to screenshot specific element","type":"string"},"type":{"default":"png","description":"Image format (png, jpeg)","type":"string"}},"required":["path"],"type":"object"}
+		},
+		{
+			"id": "execute_script",
+			"name": "execute_script",
+			"description": "Execute custom JavaScript code in the browser context",
+			"tags": ["javascript","execution","custom","playwright"],
+			"schema": {"properties":{"args":{"description":"Arguments to pass to the script","items":{"type":"string"},"type":"array"},"return_value":{"default":true,"description":"Whether to return the script execution result","type":"boolean"},"script":{"description":"JavaScript code to execute","type":"string"}},"required":["script"],"type":"object"}
+		},
+		{
+			"id": "handle_authentication",
+			"name": "handle_authentication",
+			"description": "Handle various authentication scenarios including basic auth, OAuth, and custom login forms",
+			"tags": ["authentication","login","security","playwright"],
+			"schema": {"properties":{"login_url":{"description":"URL of the login page for form authentication","type":"string"},"password":{"description":"Password for authentication","type":"string"},"password_selector":{"description":"Selector for password field in form authentication","type":"string"},"submit_selector":{"description":"Selector for submit button in form authentication","type":"string"},"type":{"description":"Authentication type (basic, form, oauth)","type":"string"},"username":{"description":"Username or email for authentication","type":"string"},"username_selector":{"description":"Selector for username field in form authentication","type":"string"}},"required":["type"],"type":"object"}
+		},
+		{
+			"id": "wait_for_condition",
+			"name": "wait_for_condition",
+			"description": "Wait for specific conditions before proceeding with automation",
+			"tags": ["wait","synchronization","timing","playwright"],
+			"schema": {"properties":{"condition":{"description":"Type of condition (selector, navigation, function, timeout)","type":"string"},"custom_function":{"description":"Custom JavaScript function to evaluate for 'function' condition","type":"string"},"selector":{"description":"Selector to wait for if condition is 'selector'","type":"string"},"state":{"default":"visible","description":"State to wait for (visible, hidden, attached, detached)","type":"string"},"timeout":{"default":30000,"description":"Maximum time to wait in milliseconds","type":"integer"}},"required":["condition"],"type":"object"}
+		}
+	]
+}

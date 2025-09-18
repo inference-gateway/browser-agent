@@ -1,0 +1,27 @@
+# .adl-ignore file
+# This file specifies which files should not be overwritten during generation operations.
+# Files listed here typically contain implementations that users have completed.
+#
+# Patterns supported:
+# - Exact file names: skills/agent_skill.go
+# - Wildcards: *.go
+# - Directory patterns: skills/*
+# - Directories: build/
+# - Comments: lines starting with #
+
+skills/navigate_to_url.go
+skills/click_element.go
+skills/fill_form.go
+skills/extract_data.go
+skills/take_screenshot.go
+skills/execute_script.go
+skills/handle_authentication.go
+skills/wait_for_condition.go
+internal/playwright/playwright.go
+
+# Go dependency files
+go.sum
+
+# Add your own files to ignore here:
+# my-custom-file.go
+# config/secrets.yaml
