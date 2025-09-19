@@ -29,7 +29,7 @@ func NewExtractDataSkill(logger *zap.Logger, playwright playwright.BrowserAutoma
 			"properties": map[string]any{
 				"extractors": map[string]any{
 					"description": "List of data extractors to run",
-					"items":       map[string]any{"type": "object", "properties": map[string]any{"attribute": map[string]any{"type": "string", "description": "Attribute to extract (text, href, src, etc.)", "default": "text"}, "multiple": map[string]any{"description": "Extract all matching elements or just the first", "default": false, "type": "boolean"}, "name": map[string]any{"type": "string", "description": "Name for the extracted data field"}, "selector": map[string]any{"type": "string", "description": "CSS selector or XPath to extract data from"}}, "required": []string{"name", "selector"}},
+					"items":       map[string]any{"type": "object", "properties": map[string]any{"name": map[string]any{"type": "string", "description": "Name for the extracted data field"}, "selector": map[string]any{"type": "string", "description": "CSS selector or XPath to extract data from"}, "attribute": map[string]any{"type": "string", "description": "Attribute to extract (text, href, src, etc.)", "default": "text"}, "multiple": map[string]any{"type": "boolean", "description": "Extract all matching elements or just the first", "default": false}}, "required": []string{"name", "selector"}},
 					"type":        "array",
 				},
 				"format": map[string]any{
