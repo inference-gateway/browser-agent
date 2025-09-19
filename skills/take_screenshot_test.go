@@ -56,7 +56,6 @@ func (m *MockPlaywright) TakeScreenshot(ctx context.Context, sessionID, path str
 		return fmt.Errorf("mock screenshot capture failed")
 	}
 
-	// Create mock screenshot file
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
@@ -113,13 +112,11 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
 	
-	// Parse the JSON response
 	var response map[string]interface{}
 	if err := json.Unmarshal([]byte(result), &response); err != nil {
 		t.Fatalf("Failed to parse response JSON: %v", err)
 	}
 	
-	// Verify response structure
 	if success, ok := response["success"].(bool); !ok || !success {
 		t.Errorf("Expected success to be true, got: %v", response["success"])
 	}
@@ -128,7 +125,6 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 		t.Errorf("Expected path to be %s, got: %v", path, response["path"])
 	}
 	
-	// Verify file was created
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		t.Errorf("Expected screenshot file to be created at %s", path)
 	}
@@ -342,7 +338,6 @@ func TestValidateAndNormalizePath(t *testing.T) {
 				t.Error("Expected non-empty result")
 			}
 			
-			// Clean up created directories
 			if dir := filepath.Dir(result); dir != "." {
 				_ = os.RemoveAll(dir)
 			}
@@ -384,8 +379,8 @@ func TestGetMimeType(t *testing.T) {
 	}{
 		{"png", "image/png"},
 		{"jpeg", "image/jpeg"},
-		{"unknown", "image/png"}, // Default case
-		{"", "image/png"},         // Default case
+		{"unknown", "image/png"},
+		{"", "image/png"}, 
 	}
 	
 	for _, tt := range tests {
@@ -403,7 +398,6 @@ func TestGetCurrentTimestamp(t *testing.T) {
 	
 	timestamp := skill.getCurrentTimestamp()
 	
-	// Verify it's a valid RFC3339 timestamp
 	_, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
 		t.Errorf("Expected valid RFC3339 timestamp, got: %s (error: %v)", timestamp, err)
