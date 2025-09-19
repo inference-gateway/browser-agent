@@ -68,11 +68,11 @@ type BrowserAutomation interface {
 
 	// Page operations
 	NavigateToURL(ctx context.Context, sessionID, url string, waitUntil string, timeout time.Duration) error
-	ClickElement(ctx context.Context, sessionID, selector string, options map[string]interface{}) error
-	FillForm(ctx context.Context, sessionID string, fields []map[string]interface{}, submit bool, submitSelector string) error
-	ExtractData(ctx context.Context, sessionID string, extractors []map[string]interface{}, format string) (string, error)
+	ClickElement(ctx context.Context, sessionID, selector string, options map[string]any) error
+	FillForm(ctx context.Context, sessionID string, fields []map[string]any, submit bool, submitSelector string) error
+	ExtractData(ctx context.Context, sessionID string, extractors []map[string]any, format string) (string, error)
 	TakeScreenshot(ctx context.Context, sessionID, path string, fullPage bool, selector string, format string, quality int) error
-	ExecuteScript(ctx context.Context, sessionID, script string, args []interface{}) (interface{}, error)
+	ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error)
 	WaitForCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error
 	HandleAuthentication(ctx context.Context, sessionID, authType, username, password, loginURL string, selectors map[string]string) error
 
@@ -272,7 +272,7 @@ func (p *playwrightImpl) NavigateToURL(ctx context.Context, sessionID, url strin
 }
 
 // ClickElement clicks an element in the specified session
-func (p *playwrightImpl) ClickElement(ctx context.Context, sessionID, selector string, options map[string]interface{}) error {
+func (p *playwrightImpl) ClickElement(ctx context.Context, sessionID, selector string, options map[string]any) error {
 	session, err := p.GetSession(sessionID)
 	if err != nil {
 		return err
@@ -306,7 +306,7 @@ func (p *playwrightImpl) ClickElement(ctx context.Context, sessionID, selector s
 }
 
 // FillForm fills form fields in the specified session
-func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields []map[string]interface{}, submit bool, submitSelector string) error {
+func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields []map[string]any, submit bool, submitSelector string) error {
 	session, err := p.GetSession(sessionID)
 	if err != nil {
 		return err
@@ -357,7 +357,7 @@ func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields 
 }
 
 // ExtractData extracts data from the page using selectors
-func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extractors []map[string]interface{}, format string) (string, error) {
+func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extractors []map[string]any, format string) (string, error) {
 	session, err := p.GetSession(sessionID)
 	if err != nil {
 		return "", err
@@ -365,7 +365,7 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 
 	p.logger.Info("extracting data", zap.String("sessionID", sessionID), zap.Int("extractors", len(extractors)))
 
-	results := make(map[string]interface{})
+	results := make(map[string]any)
 
 	for _, extractor := range extractors {
 		name, ok := extractor["name"].(string)
@@ -391,9 +391,9 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 				return "", fmt.Errorf("failed to query elements for %s: %w", name, err)
 			}
 
-			var values []interface{}
+			var values []any
 			for _, element := range elements {
-				var value interface{}
+				var value any
 				if attribute == "text" {
 					value, err = element.InnerText()
 				} else {
@@ -410,7 +410,7 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 				return "", fmt.Errorf("failed to query element for %s: %w", name, err)
 			}
 
-			var value interface{}
+			var value any
 			if element != nil {
 				if attribute == "text" {
 					value, err = element.InnerText()
@@ -475,7 +475,7 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 }
 
 // ExecuteScript executes JavaScript in the browser context
-func (p *playwrightImpl) ExecuteScript(ctx context.Context, sessionID, script string, args []interface{}) (interface{}, error) {
+func (p *playwrightImpl) ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error) {
 	session, err := p.GetSession(sessionID)
 	if err != nil {
 		return nil, err

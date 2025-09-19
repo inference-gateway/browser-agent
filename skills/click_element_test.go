@@ -13,7 +13,7 @@ import (
 
 func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 	logger := zap.NewNop()
-	
+
 	tests := []struct {
 		name           string
 		args           map[string]any
@@ -94,7 +94,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 			args: map[string]any{
 				"button": "left",
 			},
-			setupMock:    func(m *mocks.FakeBrowserAutomation) {},
+			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
 			expectedError: true,
 		},
 		{
@@ -102,7 +102,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 			args: map[string]any{
 				"selector": "",
 			},
-			setupMock:    func(m *mocks.FakeBrowserAutomation) {},
+			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
 			expectedError: true,
 		},
 		{
@@ -111,7 +111,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				"selector": "#button",
 				"button":   "invalid",
 			},
-			setupMock:    func(m *mocks.FakeBrowserAutomation) {},
+			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
 			expectedError: true,
 		},
 		{
@@ -294,6 +294,6 @@ func TestClickElementSkill_NewClickElementSkill(t *testing.T) {
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
 	tool := NewClickElementSkill(logger, mockPlaywright)
-	
+
 	assert.NotNil(t, tool)
 }

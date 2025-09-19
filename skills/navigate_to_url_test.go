@@ -54,15 +54,15 @@ func (m *MockBrowserAutomation) NavigateToURL(ctx context.Context, sessionID, ur
 	return m.navigateErr
 }
 
-func (m *MockBrowserAutomation) ClickElement(ctx context.Context, sessionID, selector string, options map[string]interface{}) error {
+func (m *MockBrowserAutomation) ClickElement(ctx context.Context, sessionID, selector string, options map[string]any) error {
 	return nil
 }
 
-func (m *MockBrowserAutomation) FillForm(ctx context.Context, sessionID string, fields []map[string]interface{}, submit bool, submitSelector string) error {
+func (m *MockBrowserAutomation) FillForm(ctx context.Context, sessionID string, fields []map[string]any, submit bool, submitSelector string) error {
 	return nil
 }
 
-func (m *MockBrowserAutomation) ExtractData(ctx context.Context, sessionID string, extractors []map[string]interface{}, format string) (string, error) {
+func (m *MockBrowserAutomation) ExtractData(ctx context.Context, sessionID string, extractors []map[string]any, format string) (string, error) {
 	return "", nil
 }
 
@@ -70,7 +70,7 @@ func (m *MockBrowserAutomation) TakeScreenshot(ctx context.Context, sessionID, p
 	return nil
 }
 
-func (m *MockBrowserAutomation) ExecuteScript(ctx context.Context, sessionID, script string, args []interface{}) (interface{}, error) {
+func (m *MockBrowserAutomation) ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error) {
 	return nil, nil
 }
 
@@ -319,4 +319,3 @@ func TestNavigateToURLSkill_isValidWaitCondition(t *testing.T) {
 		})
 	}
 }
-

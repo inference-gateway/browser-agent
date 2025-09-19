@@ -114,7 +114,7 @@ func (s *ClickElementSkill) ClickElementHandler(ctx context.Context, args map[st
 		zap.String("normalized", normalizedSelector),
 		zap.String("type", selectorType))
 
-	options := map[string]interface{}{
+	options := map[string]any{
 		"timeout":     time.Duration(timeout) * time.Millisecond,
 		"force":       force,
 		"click_count": clickCount,
@@ -143,16 +143,16 @@ func (s *ClickElementSkill) ClickElementHandler(ctx context.Context, args map[st
 		zap.String("selector", normalizedSelector),
 		zap.String("sessionID", session.ID))
 
-	response := map[string]interface{}{
-		"success":      true,
-		"selector":     selector,
-		"button":       button,
-		"click_count":  clickCount,
-		"force":        force,
-		"timeout_ms":   timeout,
-		"session_id":   session.ID,
+	response := map[string]any{
+		"success":       true,
+		"selector":      selector,
+		"button":        button,
+		"click_count":   clickCount,
+		"force":         force,
+		"timeout_ms":    timeout,
+		"session_id":    session.ID,
 		"selector_type": selectorType,
-		"message":      "Element clicked successfully",
+		"message":       "Element clicked successfully",
 	}
 
 	return fmt.Sprintf(`%+v`, response), nil
@@ -172,38 +172,38 @@ func (s *ClickElementSkill) isValidButton(button string) bool {
 // normalizeSelector processes the selector to support CSS, XPath, and text-based strategies
 func (s *ClickElementSkill) normalizeSelector(selector string) (string, string) {
 	selector = strings.TrimSpace(selector)
-	
+
 	if strings.HasPrefix(selector, "/") || strings.HasPrefix(selector, "//") || strings.HasPrefix(selector, "xpath=") {
 		if strings.HasPrefix(selector, "xpath=") {
 			return selector[6:], "xpath"
 		}
 		return selector, "xpath"
 	}
-	
+
 	textRegex := regexp.MustCompile(`^(text=|:text\(|:has-text\(|:text-is\(|:text-matches\()`)
 	if textRegex.MatchString(selector) {
 		return selector, "text"
 	}
-	
-	if strings.Contains(selector, "text=") || 
-	   (strings.HasPrefix(selector, "'") && strings.HasSuffix(selector, "'")) ||
-	   (strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
+
+	if strings.Contains(selector, "text=") ||
+		(strings.HasPrefix(selector, "'") && strings.HasSuffix(selector, "'")) ||
+		(strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
 		if (strings.HasPrefix(selector, "'") && strings.HasSuffix(selector, "'")) ||
-		   (strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
+			(strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
 			text := selector[1 : len(selector)-1]
 			return fmt.Sprintf("text=%s", text), "text"
 		}
 		return selector, "text"
 	}
-	
+
 	if strings.HasPrefix(selector, "role=") || strings.Contains(selector, "[role=") {
 		return selector, "role"
 	}
-	
+
 	if strings.Contains(selector, "data-testid") || strings.Contains(selector, "test-id") {
 		return selector, "testid"
 	}
-	
+
 	return selector, "css"
 }
 
@@ -213,9 +213,9 @@ func (s *ClickElementSkill) waitForElementActionable(ctx context.Context, sessio
 	if err != nil {
 		return fmt.Errorf("failed to get session: %w", err)
 	}
-	
+
 	timeoutDuration := time.Duration(timeoutMs) * time.Millisecond
-	
+
 	err = s.playwright.WaitForCondition(ctx, sessionID, "selector", selector, "visible", timeoutDuration, "")
 	if err != nil {
 		s.logger.Warn("element not visible, attempting force click if enabled",
@@ -223,7 +223,7 @@ func (s *ClickElementSkill) waitForElementActionable(ctx context.Context, sessio
 			zap.Error(err))
 		return s.checkElementInIframes(ctx, session, selector)
 	}
-	
+
 	return nil
 }
 
@@ -232,20 +232,20 @@ func (s *ClickElementSkill) checkElementInIframes(ctx context.Context, session *
 	if session.Page == nil {
 		return fmt.Errorf("element not found: %s (page not available)", selector)
 	}
-	
+
 	iframeCount, err := session.Page.Locator("iframe").Count()
 	if err != nil {
 		return fmt.Errorf("element not found and iframe check failed: %w", err)
 	}
-	
+
 	if iframeCount == 0 {
 		return fmt.Errorf("element not found: %s", selector)
 	}
-	
-	s.logger.Info("checking for element in iframes", 
+
+	s.logger.Info("checking for element in iframes",
 		zap.String("selector", selector),
 		zap.Int("iframe_count", iframeCount))
-	
+
 	return fmt.Errorf("element not found in main frame, %d iframes detected but cross-frame clicking not yet implemented", iframeCount)
 }
 
@@ -256,6 +256,6 @@ func (s *ClickElementSkill) getOrCreateSession(ctx context.Context) (*playwright
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch browser: %w", err)
 	}
-	
+
 	return session, nil
 }
