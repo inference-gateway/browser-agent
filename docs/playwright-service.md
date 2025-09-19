@@ -98,7 +98,7 @@ Navigates to a URL and waits for the specified condition:
 
 #### ClickElement
 ```go
-ClickElement(ctx context.Context, sessionID, selector string, options map[string]interface{}) error
+ClickElement(ctx context.Context, sessionID, selector string, options map[string]any) error
 ```
 Clicks an element identified by CSS selector or XPath.
 
@@ -110,7 +110,7 @@ Options:
 
 #### FillForm
 ```go
-FillForm(ctx context.Context, sessionID string, fields []map[string]interface{}, submit bool, submitSelector string) error
+FillForm(ctx context.Context, sessionID string, fields []map[string]any, submit bool, submitSelector string) error
 ```
 Fills form fields with provided data.
 
@@ -121,7 +121,7 @@ Field structure:
 
 #### ExtractData
 ```go
-ExtractData(ctx context.Context, sessionID string, extractors []map[string]interface{}, format string) (string, error)
+ExtractData(ctx context.Context, sessionID string, extractors []map[string]any, format string) (string, error)
 ```
 Extracts data from the page using selectors.
 
@@ -139,7 +139,7 @@ Captures a screenshot of the page or specific element.
 
 #### ExecuteScript
 ```go
-ExecuteScript(ctx context.Context, sessionID, script string, args []interface{}) (interface{}, error)
+ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error)
 ```
 Executes JavaScript code in the browser context.
 
@@ -194,7 +194,7 @@ err = service.NavigateToURL(ctx, session.ID, "https://example.com", "load", 30*t
 
 ### Form Automation
 ```go
-fields := []map[string]interface{}{
+fields := []map[string]any{
     {
         "selector": "#username",
         "value":    "user@example.com",
@@ -212,7 +212,7 @@ err = service.FillForm(ctx, session.ID, fields, true, "#submit")
 
 ### Data Extraction
 ```go
-extractors := []map[string]interface{}{
+extractors := []map[string]any{
     {
         "name":      "title",
         "selector":  "h1",
