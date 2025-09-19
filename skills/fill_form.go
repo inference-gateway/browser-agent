@@ -29,7 +29,7 @@ func NewFillFormSkill(logger *zap.Logger, playwright playwright.BrowserAutomatio
 			"properties": map[string]any{
 				"fields": map[string]any{
 					"description": "List of form fields to fill",
-					"items":       map[string]any{"type": "object", "properties": map[string]any{"value": map[string]any{"type": "string", "description": "Value to fill in the field"}, "type": map[string]any{"type": "string", "description": "Type of input (text, select, checkbox, radio)"}, "selector": map[string]any{"type": "string", "description": "Selector for the form field"}}, "required": []string{"selector", "value"}},
+					"items":       map[string]any{"required": []string{"selector", "value"}, "type": "object", "properties": map[string]any{"selector": map[string]any{"type": "string", "description": "Selector for the form field"}, "value": map[string]any{"type": "string", "description": "Value to fill in the field"}, "type": map[string]any{"type": "string", "description": "Type of input (text, select, checkbox, radio)"}}},
 					"type":        "array",
 				},
 				"submit": map[string]any{
