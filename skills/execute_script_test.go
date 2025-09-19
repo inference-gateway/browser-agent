@@ -34,14 +34,14 @@ func (m *ExecuteScriptMockBrowserAutomation) ExecuteScript(ctx context.Context, 
 
 func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 	logger := zap.NewNop()
-	
+
 	tests := []struct {
-		name         string
-		args         map[string]any
+		name          string
+		args          map[string]any
 		executeResult any
-		executeError error
-		expectError  bool
-		expectResult func(t *testing.T, result string)
+		executeError  error
+		expectError   bool
+		expectResult  func(t *testing.T, result string)
 	}{
 		{
 			name: "successful simple script execution",
@@ -56,7 +56,7 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 				err := json.Unmarshal([]byte(result), &scriptResult)
 				assert.NoError(t, err)
 				assert.True(t, scriptResult.Success)
-				assert.Equal(t, float64(42), scriptResult.Result) // JSON unmarshals numbers as float64
+				assert.Equal(t, float64(42), scriptResult.Result)
 				assert.Equal(t, "number", scriptResult.ResultType)
 				assert.Equal(t, "Script executed successfully", scriptResult.Message)
 			},
@@ -122,7 +122,7 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 			},
 			executeResult: nil,
 			executeError:  errors.New("Script error"),
-			expectError:   false, // Skill should handle the error gracefully
+			expectError:   false,
 			expectResult: func(t *testing.T, result string) {
 				var scriptResult ScriptExecutionResult
 				err := json.Unmarshal([]byte(result), &scriptResult)
@@ -140,8 +140,8 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name: "missing script parameter should fail",
-			args: map[string]any{},
+			name:        "missing script parameter should fail",
+			args:        map[string]any{},
 			expectError: true,
 		},
 		{
@@ -157,7 +157,7 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockPlaywright := NewExecuteScriptMockBrowserAutomation()
 			mockPlaywright.SetExecuteScriptResult(tt.executeResult, tt.executeError)
-			
+
 			skill := &ExecuteScriptSkill{
 				logger:     logger,
 				playwright: mockPlaywright,
@@ -205,7 +205,7 @@ func TestExecuteScriptSkill_validateScriptSecurity(t *testing.T) {
 		},
 		{
 			name:        "script with setTimeout should fail",
-			script:      "settimeout(() => { /* malicious */ }, 1000);", // lowercase to match regex
+			script:      "settimeout(() => { /* malicious */ }, 1000);",
 			expectError: true,
 		},
 		{
@@ -215,7 +215,7 @@ func TestExecuteScriptSkill_validateScriptSecurity(t *testing.T) {
 		},
 		{
 			name:        "very long script should fail",
-			script:      string(make([]byte, 60000)), // 60KB
+			script:      string(make([]byte, 60000)),
 			expectError: true,
 		},
 	}

@@ -21,15 +21,15 @@ type ExecuteScriptSkill struct {
 
 // ScriptExecutionResult represents the result of script execution
 type ScriptExecutionResult struct {
-	Success     bool          `json:"success"`
-	Result      any           `json:"result"`
-	ResultType  string        `json:"result_type"`
-	Error       string        `json:"error,omitempty"`
-	ExecutionMS int64         `json:"execution_ms"`
-	SessionID   string        `json:"session_id"`
-	Timestamp   string        `json:"timestamp"`
-	ScriptHash  string        `json:"script_hash"`
-	Message     string        `json:"message"`
+	Success     bool           `json:"success"`
+	Result      any            `json:"result"`
+	ResultType  string         `json:"result_type"`
+	Error       string         `json:"error,omitempty"`
+	ExecutionMS int64          `json:"execution_ms"`
+	SessionID   string         `json:"session_id"`
+	Timestamp   string         `json:"timestamp"`
+	ScriptHash  string         `json:"script_hash"`
+	Message     string         `json:"message"`
 	Metadata    map[string]any `json:"metadata,omitempty"`
 }
 
@@ -80,20 +80,17 @@ func NewExecuteScriptSkill(logger *zap.Logger, playwright playwright.BrowserAuto
 // ExecuteScriptHandler handles the execute_script skill execution
 func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[string]any) (string, error) {
 	startTime := time.Now()
-	
-	// Extract and validate script parameter
+
 	script, ok := args["script"].(string)
 	if !ok || script == "" {
 		return "", fmt.Errorf("script parameter is required and must be a non-empty string")
 	}
 
-	// Security validation
 	if err := s.validateScriptSecurity(script); err != nil {
 		s.logger.Error("script security validation failed", zap.String("script", script), zap.Error(err))
 		return "", fmt.Errorf("script security validation failed: %w", err)
 	}
 
-	// Extract optional parameters
 	scriptArgs := []any{}
 	if argsVal, ok := args["args"]; ok {
 		if argsSlice, ok := argsVal.([]any); ok {
@@ -118,7 +115,6 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 		isAsync = async
 	}
 
-	// Prepare script for execution
 	processedScript, err := s.prepareScript(script, isAsync)
 	if err != nil {
 		s.logger.Error("script preparation failed", zap.Error(err))
@@ -132,14 +128,12 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 		zap.Int("timeout_ms", timeout),
 		zap.Bool("async", isAsync))
 
-	// Get or create browser session
 	session, err := s.getOrCreateSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	// Execute the script
 	var result any
 	if returnValue {
 		result, err = s.playwright.ExecuteScript(ctx, session.ID, processedScript, scriptArgs)
@@ -152,7 +146,6 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 	scriptHash := s.calculateScriptHash(script)
 	timestamp := time.Now().Format(time.RFC3339)
 
-	// Build result object
 	scriptResult := &ScriptExecutionResult{
 		Success:     err == nil,
 		Result:      result,
@@ -162,12 +155,12 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 		Timestamp:   timestamp,
 		ScriptHash:  scriptHash,
 		Metadata: map[string]any{
-			"args_count":     len(scriptArgs),
-			"return_value":   returnValue,
-			"timeout_ms":     timeout,
-			"async":          isAsync,
-			"script_length":  len(script),
-			"processed":      processedScript != script,
+			"args_count":    len(scriptArgs),
+			"return_value":  returnValue,
+			"timeout_ms":    timeout,
+			"async":         isAsync,
+			"script_length": len(script),
+			"processed":     processedScript != script,
 		},
 	}
 
@@ -187,7 +180,6 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 			zap.Int64("execution_ms", scriptResult.ExecutionMS))
 	}
 
-	// Serialize result
 	responseJSON, err := json.Marshal(scriptResult)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal response: %w", err)
@@ -198,7 +190,6 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 
 // validateScriptSecurity performs basic security validation on the script
 func (s *ExecuteScriptSkill) validateScriptSecurity(script string) error {
-	// List of potentially dangerous patterns
 	dangerousPatterns := []string{
 		// File system access
 		"require\\s*\\(\\s*['\"]fs['\"]",
@@ -230,7 +221,7 @@ func (s *ExecuteScriptSkill) validateScriptSecurity(script string) error {
 	}
 
 	scriptLower := strings.ToLower(script)
-	
+
 	for _, pattern := range dangerousPatterns {
 		matched, err := regexp.MatchString(pattern, scriptLower)
 		if err != nil {
@@ -242,8 +233,7 @@ func (s *ExecuteScriptSkill) validateScriptSecurity(script string) error {
 		}
 	}
 
-	// Check script length
-	if len(script) > 50000 { // 50KB limit
+	if len(script) > 50000 {
 		return fmt.Errorf("script too large: %d characters (max 50000)", len(script))
 	}
 
@@ -256,7 +246,6 @@ func (s *ExecuteScriptSkill) prepareScript(script string, isAsync bool) (string,
 		return script, nil
 	}
 
-	// Wrap in async function for async execution
 	wrappedScript := fmt.Sprintf(`
 (async function() {
 	try {
