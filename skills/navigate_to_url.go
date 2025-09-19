@@ -104,7 +104,7 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		zap.String("url", url),
 		zap.String("sessionID", session.ID))
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"success":    true,
 		"url":        url,
 		"wait_until": waitUntil,

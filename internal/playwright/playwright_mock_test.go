@@ -95,7 +95,7 @@ func TestPlaywrightServiceWithMock(t *testing.T) {
 				ctx := context.Background()
 				sessionID := "test-session"
 				selector := "button[type='submit']"
-				options := map[string]interface{}{
+				options := map[string]any{
 					"timeout": 10000,
 					"force":   false,
 				}
@@ -131,7 +131,7 @@ func TestPlaywrightServiceWithMock(t *testing.T) {
 			testFunc: func(t *testing.T, mockService *mocks.FakeBrowserAutomation) {
 				ctx := context.Background()
 				sessionID := "test-session"
-				fields := []map[string]interface{}{
+				fields := []map[string]any{
 					{
 						"selector": "input[name='username']",
 						"value":    "testuser",
@@ -180,7 +180,7 @@ func TestPlaywrightServiceWithMock(t *testing.T) {
 			testFunc: func(t *testing.T, mockService *mocks.FakeBrowserAutomation) {
 				ctx := context.Background()
 				sessionID := "test-session"
-				extractors := []map[string]interface{}{
+				extractors := []map[string]any{
 					{
 						"name":      "title",
 						"selector":  "title",
@@ -258,7 +258,7 @@ func TestPlaywrightServiceWithMock(t *testing.T) {
 				ctx := context.Background()
 				sessionID := "test-session"
 				script := "return document.title"
-				args := []interface{}{}
+				args := []any{}
 				expectedResult := "Example Domain"
 
 				mockService.ExecuteScriptReturns(expectedResult, nil)
@@ -420,7 +420,7 @@ func TestPlaywrightServiceIntegrationWithMock(t *testing.T) {
 		t.Error("Expected non-nil script result")
 	}
 
-	extractors := []map[string]interface{}{
+	extractors := []map[string]any{
 		{
 			"name":      "title",
 			"selector":  "title",
@@ -611,7 +611,7 @@ func TestPlaywrightFormFillingWithMock(t *testing.T) {
 		t.Fatalf("Failed to navigate to forms page: %v", err)
 	}
 
-	fields := []map[string]interface{}{
+	fields := []map[string]any{
 		{
 			"selector": "input[name='custname']",
 			"value":    "Test User",
@@ -634,7 +634,7 @@ func TestPlaywrightFormFillingWithMock(t *testing.T) {
 		t.Fatalf("Failed to fill form: %v", err)
 	}
 
-	clickOptions := map[string]interface{}{
+	clickOptions := map[string]any{
 		"timeout": 10000,
 		"force":   false,
 	}
@@ -742,7 +742,7 @@ func TestFullWorkflowWithMock(t *testing.T) {
 		t.Error("Expected non-nil script result")
 	}
 
-	extractors := []map[string]interface{}{
+	extractors := []map[string]any{
 		{
 			"name":      "title",
 			"selector":  "title",
