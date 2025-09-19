@@ -28,8 +28,8 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "successful extraction with single extractor",
 			args: map[string]any{
-				"extractors": []interface{}{
-					map[string]interface{}{
+				"extractors": []any{
+					map[string]any{
 						"name":     "title",
 						"selector": "h1",
 					},
@@ -46,13 +46,13 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "successful extraction with multiple extractors",
 			args: map[string]any{
-				"extractors": []interface{}{
-					map[string]interface{}{
+				"extractors": []any{
+					map[string]any{
 						"name":      "title",
 						"selector":  "h1",
 						"attribute": "text",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"name":      "links",
 						"selector":  "a",
 						"attribute": "href",
@@ -71,8 +71,8 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "extraction with CSV format",
 			args: map[string]any{
-				"extractors": []interface{}{
-					map[string]interface{}{
+				"extractors": []any{
+					map[string]any{
 						"name":     "title",
 						"selector": "h1",
 					},
@@ -89,8 +89,8 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "extraction with text format",
 			args: map[string]any{
-				"extractors": []interface{}{
-					map[string]interface{}{
+				"extractors": []any{
+					map[string]any{
 						"name":     "title",
 						"selector": "h1",
 					},
@@ -116,7 +116,7 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "empty extractors array",
 			args: map[string]any{
-				"extractors": []interface{}{},
+				"extractors": []any{},
 				"format":     "json",
 			},
 			mockSetup:   func() {},
@@ -126,8 +126,8 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "invalid format",
 			args: map[string]any{
-				"extractors": []interface{}{
-					map[string]interface{}{
+				"extractors": []any{
+					map[string]any{
 						"name":     "title",
 						"selector": "h1",
 					},
@@ -141,8 +141,8 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "extractor missing name",
 			args: map[string]any{
-				"extractors": []interface{}{
-					map[string]interface{}{
+				"extractors": []any{
+					map[string]any{
 						"selector": "h1",
 					},
 				},
@@ -155,8 +155,8 @@ func TestExtractDataHandler(t *testing.T) {
 		{
 			name: "extractor missing selector",
 			args: map[string]any{
-				"extractors": []interface{}{
-					map[string]interface{}{
+				"extractors": []any{
+					map[string]any{
 						"name": "title",
 					},
 				},
@@ -193,19 +193,19 @@ func TestConvertExtractors(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		extractors  []interface{}
-		expected    []map[string]interface{}
+		extractors  []any
+		expected    []map[string]any
 		expectedErr bool
 	}{
 		{
 			name: "single extractor with defaults",
-			extractors: []interface{}{
-				map[string]interface{}{
+			extractors: []any{
+				map[string]any{
 					"name":     "title",
 					"selector": "h1",
 				},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"name":      "title",
 					"selector":  "h1",
@@ -217,15 +217,15 @@ func TestConvertExtractors(t *testing.T) {
 		},
 		{
 			name: "extractor with all fields",
-			extractors: []interface{}{
-				map[string]interface{}{
+			extractors: []any{
+				map[string]any{
 					"name":      "links",
 					"selector":  "a",
 					"attribute": "href",
 					"multiple":  true,
 				},
 			},
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"name":      "links",
 					"selector":  "a",
@@ -237,7 +237,7 @@ func TestConvertExtractors(t *testing.T) {
 		},
 		{
 			name: "invalid extractor type",
-			extractors: []interface{}{
+			extractors: []any{
 				"invalid",
 			},
 			expected:    nil,
@@ -265,12 +265,12 @@ func TestParseGoMapFormat(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
-		expected map[string]interface{}
+		expected map[string]any
 	}{
 		{
 			name:  "simple map",
 			input: "map[title:Test Title count:42]",
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"title": "Test Title",
 				"count": 42,
 			},
@@ -278,19 +278,19 @@ func TestParseGoMapFormat(t *testing.T) {
 		{
 			name:  "map with array",
 			input: "map[links:[/page1 /page2 /page3]]",
-			expected: map[string]interface{}{
-				"links": []interface{}{"/page1", "/page2", "/page3"},
+			expected: map[string]any{
+				"links": []any{"/page1", "/page2", "/page3"},
 			},
 		},
 		{
 			name:     "empty map",
 			input:    "map[]",
-			expected: map[string]interface{}{},
+			expected: map[string]any{},
 		},
 		{
 			name:  "map with boolean and nil",
 			input: "map[active:true missing:<nil>]",
-			expected: map[string]interface{}{
+			expected: map[string]any{
 				"active":  true,
 				"missing": nil,
 			},
