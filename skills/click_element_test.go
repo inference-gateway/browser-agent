@@ -192,7 +192,7 @@ func TestClickElementSkill_isValidButton(t *testing.T) {
 		{"middle", true},
 		{"invalid", false},
 		{"", false},
-		{"LEFT", false}, // case sensitive
+		{"LEFT", false},
 	}
 
 	for _, tt := range tests {
