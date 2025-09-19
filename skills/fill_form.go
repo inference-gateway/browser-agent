@@ -225,7 +225,6 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		}
 	}
 
-	// Build comprehensive response
 	response := map[string]any{
 		"success":      true,
 		"session_id":   session.ID,
