@@ -3,6 +3,7 @@ package skills
 import (
 	"context"
 	"fmt"
+	"time"
 
 	server "github.com/inference-gateway/adk/server"
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
@@ -58,19 +59,209 @@ func NewWaitForConditionSkill(logger *zap.Logger, playwright playwright.BrowserA
 
 // WaitForConditionHandler handles the wait_for_condition skill execution
 func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, args map[string]any) (string, error) {
-	// TODO: Implement wait_for_condition logic
-	// Wait for specific conditions before proceeding with automation
+	// Extract and validate required condition parameter
+	condition, ok := args["condition"].(string)
+	if !ok || condition == "" {
+		return "", fmt.Errorf("condition parameter is required and must be a non-empty string")
+	}
 
-	// Example of using dependencies:
-	// s.logger.SomeMethod(ctx, ...)
-	// s.playwright.SomeMethod(ctx, ...)
+	// Validate condition type
+	if !s.isValidCondition(condition) {
+		return "", fmt.Errorf("invalid condition type: %s. Must be one of: selector, navigation, function, timeout, networkidle", condition)
+	}
 
-	// Extract parameters from args
-	// condition := args["condition"].(string)
-	// custom_function := args["custom_function"].(string)
-	// selector := args["selector"].(string)
-	// state := args["state"].(string)
-	// timeout := args["timeout"].(int)
+	// Extract optional parameters with defaults
+	selector := ""
+	if sel, ok := args["selector"].(string); ok {
+		selector = sel
+	}
 
-	return fmt.Sprintf(`{"result": "TODO: Implement wait_for_condition logic", "input": %+v}`, args), nil
+	state := "visible"
+	if st, ok := args["state"].(string); ok && st != "" {
+		if !s.isValidState(st) {
+			return "", fmt.Errorf("invalid state: %s. Must be one of: visible, hidden, attached, detached", st)
+		}
+		state = st
+	}
+
+	timeout := 30000
+	if t, ok := args["timeout"].(int); ok && t > 0 {
+		timeout = t
+	} else if tf, ok := args["timeout"].(float64); ok && tf > 0 {
+		timeout = int(tf)
+	}
+
+	customFunction := ""
+	if cf, ok := args["custom_function"].(string); ok {
+		customFunction = cf
+	}
+
+	// Validate condition-specific requirements
+	if err := s.validateConditionRequirements(condition, selector, customFunction); err != nil {
+		return "", err
+	}
+
+	s.logger.Info("waiting for condition",
+		zap.String("condition", condition),
+		zap.String("selector", selector),
+		zap.String("state", state),
+		zap.Int("timeout_ms", timeout),
+		zap.String("custom_function", customFunction))
+
+	// Get or create browser session
+	session, err := s.getOrCreateSession(ctx)
+	if err != nil {
+		s.logger.Error("failed to get browser session", zap.Error(err))
+		return "", fmt.Errorf("failed to get browser session: %w", err)
+	}
+
+	// Execute wait operation based on condition type
+	timeoutDuration := time.Duration(timeout) * time.Millisecond
+	startTime := time.Now()
+
+	err = s.executeWaitCondition(ctx, session.ID, condition, selector, state, timeoutDuration, customFunction)
+	if err != nil {
+		s.logger.Error("wait condition failed",
+			zap.String("condition", condition),
+			zap.String("selector", selector),
+			zap.String("sessionID", session.ID),
+			zap.Error(err))
+		return "", fmt.Errorf("wait condition failed: %w", err)
+	}
+
+	actualWaitTime := time.Since(startTime).Milliseconds()
+
+	s.logger.Info("wait condition completed successfully",
+		zap.String("condition", condition),
+		zap.String("selector", selector),
+		zap.String("sessionID", session.ID),
+		zap.Int64("actual_wait_ms", actualWaitTime))
+
+	response := map[string]any{
+		"success":          true,
+		"condition":        condition,
+		"selector":         selector,
+		"state":            state,
+		"timeout_ms":       timeout,
+		"actual_wait_ms":   actualWaitTime,
+		"session_id":       session.ID,
+		"message":          "Wait condition completed successfully",
+		"custom_function":  customFunction,
+	}
+
+	return fmt.Sprintf(`%+v`, response), nil
+}
+
+// isValidCondition validates the condition type
+func (s *WaitForConditionSkill) isValidCondition(condition string) bool {
+	validConditions := []string{"selector", "navigation", "function", "timeout", "networkidle"}
+	for _, valid := range validConditions {
+		if condition == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// isValidState validates the selector state
+func (s *WaitForConditionSkill) isValidState(state string) bool {
+	validStates := []string{"visible", "hidden", "attached", "detached"}
+	for _, valid := range validStates {
+		if state == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// validateConditionRequirements validates condition-specific requirements
+func (s *WaitForConditionSkill) validateConditionRequirements(condition, selector, customFunction string) error {
+	switch condition {
+	case "selector":
+		if selector == "" {
+			return fmt.Errorf("selector parameter is required for selector condition")
+		}
+	case "function":
+		if customFunction == "" {
+			return fmt.Errorf("custom_function parameter is required for function condition")
+		}
+	case "navigation", "timeout", "networkidle":
+		// These conditions don't require additional parameters
+	}
+	return nil
+}
+
+// executeWaitCondition executes the appropriate wait operation based on condition type
+func (s *WaitForConditionSkill) executeWaitCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error {
+	switch condition {
+	case "selector":
+		return s.playwright.WaitForCondition(ctx, sessionID, condition, selector, state, timeout, "")
+	case "function":
+		return s.playwright.WaitForCondition(ctx, sessionID, condition, "", "", timeout, customFunction)
+	case "navigation":
+		return s.playwright.WaitForCondition(ctx, sessionID, condition, "", "", timeout, "")
+	case "timeout":
+		return s.playwright.WaitForCondition(ctx, sessionID, condition, "", "", timeout, "")
+	case "networkidle":
+		// For network idle, we can use a custom JavaScript function that waits for no network activity
+		networkIdleFunction := `
+			() => {
+				return new Promise((resolve) => {
+					let timeout;
+					let requestCount = 0;
+					
+					// Monitor fetch requests
+					const originalFetch = window.fetch;
+					window.fetch = function(...args) {
+						requestCount++;
+						return originalFetch.apply(this, args).finally(() => {
+							requestCount--;
+							if (requestCount === 0) {
+								clearTimeout(timeout);
+								timeout = setTimeout(() => resolve(true), 500);
+							}
+						});
+					};
+					
+					// Monitor XMLHttpRequest
+					const originalXHR = window.XMLHttpRequest;
+					window.XMLHttpRequest = function() {
+						const xhr = new originalXHR();
+						const originalSend = xhr.send;
+						xhr.send = function(...args) {
+							requestCount++;
+							xhr.addEventListener('loadend', () => {
+								requestCount--;
+								if (requestCount === 0) {
+									clearTimeout(timeout);
+									timeout = setTimeout(() => resolve(true), 500);
+								}
+							});
+							return originalSend.apply(this, args);
+						};
+						return xhr;
+					};
+					
+					// Initial check
+					if (requestCount === 0) {
+						timeout = setTimeout(() => resolve(true), 500);
+					}
+				});
+			}
+		`
+		return s.playwright.WaitForCondition(ctx, sessionID, "function", "", "", timeout, networkIdleFunction)
+	default:
+		return fmt.Errorf("unsupported condition type: %s", condition)
+	}
+}
+
+// getOrCreateSession gets an existing session or creates a new one
+func (s *WaitForConditionSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
+	config := playwright.DefaultBrowserConfig()
+	session, err := s.playwright.LaunchBrowser(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch browser: %w", err)
+	}
+
+	return session, nil
 }
