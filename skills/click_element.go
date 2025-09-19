@@ -173,7 +173,6 @@ func (s *ClickElementSkill) isValidButton(button string) bool {
 func (s *ClickElementSkill) normalizeSelector(selector string) (string, string) {
 	selector = strings.TrimSpace(selector)
 	
-	// Check if it's an XPath selector
 	if strings.HasPrefix(selector, "/") || strings.HasPrefix(selector, "//") || strings.HasPrefix(selector, "xpath=") {
 		if strings.HasPrefix(selector, "xpath=") {
 			return selector[6:], "xpath"
@@ -181,36 +180,30 @@ func (s *ClickElementSkill) normalizeSelector(selector string) (string, string) 
 		return selector, "xpath"
 	}
 	
-	// Check if it's a text-based selector
 	textRegex := regexp.MustCompile(`^(text=|:text\(|:has-text\(|:text-is\(|:text-matches\()`)
 	if textRegex.MatchString(selector) {
 		return selector, "text"
 	}
 	
-	// Check for common text patterns without explicit text prefix
 	if strings.Contains(selector, "text=") || 
 	   (strings.HasPrefix(selector, "'") && strings.HasSuffix(selector, "'")) ||
 	   (strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
-		// For quoted strings, convert to Playwright text selector
 		if (strings.HasPrefix(selector, "'") && strings.HasSuffix(selector, "'")) ||
 		   (strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
-			text := selector[1 : len(selector)-1] // Remove quotes
+			text := selector[1 : len(selector)-1]
 			return fmt.Sprintf("text=%s", text), "text"
 		}
 		return selector, "text"
 	}
 	
-	// Check for role-based selectors
 	if strings.HasPrefix(selector, "role=") || strings.Contains(selector, "[role=") {
 		return selector, "role"
 	}
 	
-	// Check for data-testid or test-id selectors
 	if strings.Contains(selector, "data-testid") || strings.Contains(selector, "test-id") {
 		return selector, "testid"
 	}
 	
-	// Default to CSS selector
 	return selector, "css"
 }
 
@@ -223,14 +216,11 @@ func (s *ClickElementSkill) waitForElementActionable(ctx context.Context, sessio
 	
 	timeoutDuration := time.Duration(timeoutMs) * time.Millisecond
 	
-	// Try to wait for the element to be visible and attached
 	err = s.playwright.WaitForCondition(ctx, sessionID, "selector", selector, "visible", timeoutDuration, "")
 	if err != nil {
 		s.logger.Warn("element not visible, attempting force click if enabled",
 			zap.String("selector", selector),
 			zap.Error(err))
-		// For iframe support, we could add additional logic here
-		// Check if element exists within iframes
 		return s.checkElementInIframes(ctx, session, selector)
 	}
 	
@@ -239,18 +229,15 @@ func (s *ClickElementSkill) waitForElementActionable(ctx context.Context, sessio
 
 // checkElementInIframes checks if the element exists within any iframes
 func (s *ClickElementSkill) checkElementInIframes(ctx context.Context, session *playwright.BrowserSession, selector string) error {
-	// Check if page is available
 	if session.Page == nil {
 		return fmt.Errorf("element not found: %s (page not available)", selector)
 	}
 	
-	// Count iframe elements using locator
 	iframeCount, err := session.Page.Locator("iframe").Count()
 	if err != nil {
 		return fmt.Errorf("element not found and iframe check failed: %w", err)
 	}
 	
-	// If no iframes, return the original error
 	if iframeCount == 0 {
 		return fmt.Errorf("element not found: %s", selector)
 	}
@@ -259,8 +246,6 @@ func (s *ClickElementSkill) checkElementInIframes(ctx context.Context, session *
 		zap.String("selector", selector),
 		zap.Int("iframe_count", iframeCount))
 	
-	// For now, we log the presence of iframes but don't attempt cross-frame clicking
-	// This would require more complex implementation with frame switching
 	return fmt.Errorf("element not found in main frame, %d iframes detected but cross-frame clicking not yet implemented", iframeCount)
 }
 
