@@ -65,6 +65,8 @@ jobs:
             Examples: "feat(a2a): Add retry mechanism for agent connections", "fix(auth): Resolve token validation issue"
 
             Follow the development workflow specified in the coding instructions.
+
+            IMPORTANT: You never use interface{} type for generics - if you really have to use any.
           mcp_config: |
             {
               "mcpServers": {
