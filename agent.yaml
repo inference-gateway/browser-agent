@@ -266,7 +266,7 @@ spec:
         properties:
           condition:
             type: string
-            description: Type of condition (selector, navigation, function, timeout)
+            description: Type of condition (selector, navigation, function, timeout, networkidle)
           selector:
             type: string
             description: Selector to wait for if condition is 'selector'
