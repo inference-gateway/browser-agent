@@ -11,9 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/playwright-community/playwright-go"
 	config "github.com/inference-gateway/playwright-agent/config"
 	zap "go.uber.org/zap"
+
+	"github.com/playwright-community/playwright-go"
 )
 
 // BrowserEngine represents the browser type
@@ -27,12 +28,12 @@ const (
 
 // BrowserConfig holds browser configuration options
 type BrowserConfig struct {
-	Engine      BrowserEngine
-	Headless    bool
-	Timeout     time.Duration
+	Engine         BrowserEngine
+	Headless       bool
+	Timeout        time.Duration
 	ViewportWidth  int
 	ViewportHeight int
-	Args        []string
+	Args           []string
 }
 
 // DefaultBrowserConfig returns default browser configuration
@@ -64,7 +65,7 @@ type BrowserAutomation interface {
 	LaunchBrowser(ctx context.Context, config *BrowserConfig) (*BrowserSession, error)
 	CloseBrowser(ctx context.Context, sessionID string) error
 	GetSession(sessionID string) (*BrowserSession, error)
-	
+
 	// Page operations
 	NavigateToURL(ctx context.Context, sessionID, url string, waitUntil string, timeout time.Duration) error
 	ClickElement(ctx context.Context, sessionID, selector string, options map[string]interface{}) error
@@ -74,7 +75,7 @@ type BrowserAutomation interface {
 	ExecuteScript(ctx context.Context, sessionID, script string, args []interface{}) (interface{}, error)
 	WaitForCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error
 	HandleAuthentication(ctx context.Context, sessionID, authType, username, password, loginURL string, selectors map[string]string) error
-	
+
 	// Service management
 	GetHealth(ctx context.Context) error
 	Shutdown(ctx context.Context) error
@@ -93,25 +94,23 @@ type playwrightImpl struct {
 // NewPlaywrightService creates a new instance of BrowserAutomation
 func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutomation, error) {
 	logger.Info("initializing playwright dependency")
-	
+
 	service := &playwrightImpl{
 		logger:   logger,
 		config:   cfg,
 		sessions: make(map[string]*BrowserSession),
 	}
-	
-	// Install playwright browsers if needed
+
 	if err := service.ensurePlaywrightInstalled(); err != nil {
 		return nil, fmt.Errorf("failed to ensure playwright installation: %w", err)
 	}
-	
-	// Initialize playwright
+
 	pw, err := playwright.Run()
 	if err != nil {
 		return nil, fmt.Errorf("failed to start playwright: %w", err)
 	}
 	service.pw = pw
-	
+
 	logger.Info("playwright service initialized successfully")
 	return service, nil
 }
@@ -121,11 +120,9 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 	if p.isInstalled {
 		return nil
 	}
-	
+
 	p.logger.Info("checking playwright browser installation")
-	
-	// Check if browsers are installed by trying to get browser types
-	// If this fails, we'll attempt installation
+
 	if _, err := os.Stat(os.Getenv("PLAYWRIGHT_BROWSERS_PATH")); err != nil {
 		p.logger.Info("installing playwright browsers")
 		if err := playwright.Install(); err != nil {
@@ -133,7 +130,7 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 		}
 		p.logger.Info("playwright browsers installed successfully")
 	}
-	
+
 	p.isInstalled = true
 	return nil
 }
@@ -143,11 +140,11 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 	if config == nil {
 		config = DefaultBrowserConfig()
 	}
-	
-	p.logger.Info("launching browser", 
-		zap.String("engine", string(config.Engine)), 
+
+	p.logger.Info("launching browser",
+		zap.String("engine", string(config.Engine)),
 		zap.Bool("headless", config.Headless))
-	
+
 	var browserType playwright.BrowserType
 	switch config.Engine {
 	case Chromium:
@@ -159,41 +156,39 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 	default:
 		return nil, fmt.Errorf("unsupported browser engine: %s", config.Engine)
 	}
-	
+
 	timeoutMs := float64(config.Timeout.Milliseconds())
 	launchOptions := playwright.BrowserTypeLaunchOptions{
 		Headless: &config.Headless,
 		Args:     config.Args,
 		Timeout:  &timeoutMs,
 	}
-	
+
 	browser, err := browserType.Launch(launchOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch browser: %w", err)
 	}
-	
-	// Create browser context with viewport settings
+
 	contextOptions := playwright.BrowserNewContextOptions{
 		Viewport: &playwright.Size{
 			Width:  config.ViewportWidth,
 			Height: config.ViewportHeight,
 		},
 	}
-	
+
 	context, err := browser.NewContext(contextOptions)
 	if err != nil {
 		browser.Close()
 		return nil, fmt.Errorf("failed to create browser context: %w", err)
 	}
-	
-	// Create initial page
+
 	page, err := context.NewPage()
 	if err != nil {
 		context.Close()
 		browser.Close()
 		return nil, fmt.Errorf("failed to create page: %w", err)
 	}
-	
+
 	sessionID := fmt.Sprintf("session_%d", time.Now().UnixNano())
 	session := &BrowserSession{
 		ID:       sessionID,
@@ -203,11 +198,11 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 		Created:  time.Now(),
 		LastUsed: time.Now(),
 	}
-	
+
 	p.sessionsMux.Lock()
 	p.sessions[sessionID] = session
 	p.sessionsMux.Unlock()
-	
+
 	p.logger.Info("browser session created", zap.String("sessionID", sessionID))
 	return session, nil
 }
@@ -216,19 +211,19 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 func (p *playwrightImpl) CloseBrowser(ctx context.Context, sessionID string) error {
 	p.sessionsMux.Lock()
 	defer p.sessionsMux.Unlock()
-	
+
 	session, exists := p.sessions[sessionID]
 	if !exists {
 		return fmt.Errorf("session not found: %s", sessionID)
 	}
-	
+
 	if session.Context != nil {
 		session.Context.Close()
 	}
 	if session.Browser != nil {
 		session.Browser.Close()
 	}
-	
+
 	delete(p.sessions, sessionID)
 	p.logger.Info("browser session closed", zap.String("sessionID", sessionID))
 	return nil
@@ -238,12 +233,12 @@ func (p *playwrightImpl) CloseBrowser(ctx context.Context, sessionID string) err
 func (p *playwrightImpl) GetSession(sessionID string) (*BrowserSession, error) {
 	p.sessionsMux.RLock()
 	defer p.sessionsMux.RUnlock()
-	
+
 	session, exists := p.sessions[sessionID]
 	if !exists {
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
-	
+
 	session.LastUsed = time.Now()
 	return session, nil
 }
@@ -254,7 +249,7 @@ func (p *playwrightImpl) NavigateToURL(ctx context.Context, sessionID, url strin
 	if err != nil {
 		return err
 	}
-	
+
 	var waitOption *playwright.WaitUntilState
 	switch waitUntil {
 	case "domcontentloaded":
@@ -264,13 +259,13 @@ func (p *playwrightImpl) NavigateToURL(ctx context.Context, sessionID, url strin
 	default:
 		waitOption = playwright.WaitUntilStateLoad
 	}
-	
+
 	timeoutMs := float64(timeout.Milliseconds())
 	options := playwright.PageGotoOptions{
 		WaitUntil: waitOption,
 		Timeout:   &timeoutMs,
 	}
-	
+
 	p.logger.Info("navigating to URL", zap.String("sessionID", sessionID), zap.String("url", url))
 	_, err = session.Page.Goto(url, options)
 	return err
@@ -282,9 +277,9 @@ func (p *playwrightImpl) ClickElement(ctx context.Context, sessionID, selector s
 	if err != nil {
 		return err
 	}
-	
+
 	clickOptions := playwright.PageClickOptions{}
-	
+
 	if timeout, ok := options["timeout"].(time.Duration); ok {
 		timeoutMs := float64(timeout.Milliseconds())
 		clickOptions.Timeout = &timeoutMs
@@ -305,7 +300,7 @@ func (p *playwrightImpl) ClickElement(ctx context.Context, sessionID, selector s
 			clickOptions.Button = playwright.MouseButtonLeft
 		}
 	}
-	
+
 	p.logger.Info("clicking element", zap.String("sessionID", sessionID), zap.String("selector", selector))
 	return session.Page.Click(selector, clickOptions)
 }
@@ -316,22 +311,22 @@ func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields 
 	if err != nil {
 		return err
 	}
-	
+
 	p.logger.Info("filling form", zap.String("sessionID", sessionID), zap.Int("fields", len(fields)))
-	
+
 	for _, field := range fields {
 		selector, ok := field["selector"].(string)
 		if !ok {
 			return fmt.Errorf("field selector is required")
 		}
-		
+
 		value, ok := field["value"].(string)
 		if !ok {
 			return fmt.Errorf("field value is required")
 		}
-		
+
 		fieldType, _ := field["type"].(string)
-		
+
 		switch fieldType {
 		case "select":
 			_, err = session.Page.SelectOption(selector, playwright.SelectOptionValues{Values: &[]string{value}})
@@ -344,12 +339,12 @@ func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields 
 		default: // text input
 			err = session.Page.Fill(selector, value)
 		}
-		
+
 		if err != nil {
 			return fmt.Errorf("failed to fill field %s: %w", selector, err)
 		}
 	}
-	
+
 	if submit && submitSelector != "" {
 		p.logger.Info("submitting form", zap.String("sessionID", sessionID), zap.String("submitSelector", submitSelector))
 		err = session.Page.Click(submitSelector)
@@ -357,7 +352,7 @@ func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields 
 			return fmt.Errorf("failed to submit form: %w", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -367,35 +362,35 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 	if err != nil {
 		return "", err
 	}
-	
+
 	p.logger.Info("extracting data", zap.String("sessionID", sessionID), zap.Int("extractors", len(extractors)))
-	
+
 	results := make(map[string]interface{})
-	
+
 	for _, extractor := range extractors {
 		name, ok := extractor["name"].(string)
 		if !ok {
 			return "", fmt.Errorf("extractor name is required")
 		}
-		
+
 		selector, ok := extractor["selector"].(string)
 		if !ok {
 			return "", fmt.Errorf("extractor selector is required")
 		}
-		
+
 		attribute, _ := extractor["attribute"].(string)
 		if attribute == "" {
 			attribute = "text"
 		}
-		
+
 		multiple, _ := extractor["multiple"].(bool)
-		
+
 		if multiple {
 			elements, err := session.Page.QuerySelectorAll(selector)
 			if err != nil {
 				return "", fmt.Errorf("failed to query elements for %s: %w", name, err)
 			}
-			
+
 			var values []interface{}
 			for _, element := range elements {
 				var value interface{}
@@ -414,7 +409,7 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 			if err != nil {
 				return "", fmt.Errorf("failed to query element for %s: %w", name, err)
 			}
-			
+
 			var value interface{}
 			if element != nil {
 				if attribute == "text" {
@@ -429,13 +424,11 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 			results[name] = value
 		}
 	}
-	
-	// Format results based on requested format
+
 	switch format {
 	case "json":
 		return fmt.Sprintf("%+v", results), nil
 	case "csv":
-		// Simple CSV implementation for basic results
 		return fmt.Sprintf("%+v", results), nil
 	default:
 		return fmt.Sprintf("%+v", results), nil
@@ -448,21 +441,21 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 	if err != nil {
 		return err
 	}
-	
+
 	p.logger.Info("taking screenshot", zap.String("sessionID", sessionID), zap.String("path", path))
-	
+
 	options := playwright.PageScreenshotOptions{
 		Path:     &path,
 		FullPage: &fullPage,
 	}
-	
+
 	if format == "jpeg" {
 		options.Type = playwright.ScreenshotTypeJpeg
 		options.Quality = &quality
 	} else {
 		options.Type = playwright.ScreenshotTypePng
 	}
-	
+
 	if selector != "" {
 		element, err := session.Page.QuerySelector(selector)
 		if err != nil {
@@ -476,7 +469,7 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 			return err
 		}
 	}
-	
+
 	_, err = session.Page.Screenshot(options)
 	return err
 }
@@ -487,14 +480,14 @@ func (p *playwrightImpl) ExecuteScript(ctx context.Context, sessionID, script st
 	if err != nil {
 		return nil, err
 	}
-	
+
 	p.logger.Info("executing script", zap.String("sessionID", sessionID))
-	
+
 	result, err := session.Page.Evaluate(script, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute script: %w", err)
 	}
-	
+
 	return result, nil
 }
 
@@ -504,9 +497,9 @@ func (p *playwrightImpl) WaitForCondition(ctx context.Context, sessionID, condit
 	if err != nil {
 		return err
 	}
-	
+
 	p.logger.Info("waiting for condition", zap.String("sessionID", sessionID), zap.String("condition", condition))
-	
+
 	switch condition {
 	case "selector":
 		var waitState *playwright.WaitForSelectorState
@@ -520,38 +513,37 @@ func (p *playwrightImpl) WaitForCondition(ctx context.Context, sessionID, condit
 		default:
 			waitState = playwright.WaitForSelectorStateVisible
 		}
-		
+
 		timeoutMs := float64(timeout.Milliseconds())
 		options := playwright.PageWaitForSelectorOptions{
 			State:   waitState,
 			Timeout: &timeoutMs,
 		}
-		
+
 		_, err = session.Page.WaitForSelector(selector, options)
 		return err
-		
+
 	case "navigation":
-		// Wait for navigation by using a load wait with timeout
 		time.Sleep(timeout)
 		return nil
-		
+
 	case "function":
 		if customFunction == "" {
 			return fmt.Errorf("custom function is required for function condition")
 		}
-		
+
 		timeoutMs := float64(timeout.Milliseconds())
 		options := playwright.PageWaitForFunctionOptions{
 			Timeout: &timeoutMs,
 		}
-		
+
 		_, err = session.Page.WaitForFunction(customFunction, options)
 		return err
-		
+
 	case "timeout":
 		time.Sleep(timeout)
 		return nil
-		
+
 	default:
 		return fmt.Errorf("unsupported condition type: %s", condition)
 	}
@@ -563,19 +555,17 @@ func (p *playwrightImpl) HandleAuthentication(ctx context.Context, sessionID, au
 	if err != nil {
 		return err
 	}
-	
+
 	p.logger.Info("handling authentication", zap.String("sessionID", sessionID), zap.String("type", authType))
-	
+
 	switch authType {
 	case "basic":
-		// Basic auth is typically handled at the URL level or via headers
-		// For now, we'll just navigate to the login URL if provided
 		if loginURL != "" {
 			_, err = session.Page.Goto(loginURL)
 			return err
 		}
 		return fmt.Errorf("basic auth requires loginURL")
-		
+
 	case "form":
 		if loginURL != "" {
 			_, err = session.Page.Goto(loginURL)
@@ -583,42 +573,37 @@ func (p *playwrightImpl) HandleAuthentication(ctx context.Context, sessionID, au
 				return fmt.Errorf("failed to navigate to login URL: %w", err)
 			}
 		}
-		
-		// Fill username
+
 		if usernameSelector, ok := selectors["username_selector"]; ok && usernameSelector != "" {
 			err = session.Page.Fill(usernameSelector, username)
 			if err != nil {
 				return fmt.Errorf("failed to fill username: %w", err)
 			}
 		}
-		
-		// Fill password
+
 		if passwordSelector, ok := selectors["password_selector"]; ok && passwordSelector != "" {
 			err = session.Page.Fill(passwordSelector, password)
 			if err != nil {
 				return fmt.Errorf("failed to fill password: %w", err)
 			}
 		}
-		
-		// Submit form
+
 		if submitSelector, ok := selectors["submit_selector"]; ok && submitSelector != "" {
 			err = session.Page.Click(submitSelector)
 			if err != nil {
 				return fmt.Errorf("failed to submit form: %w", err)
 			}
 		}
-		
+
 		return nil
-		
+
 	case "oauth":
-		// OAuth handling would require more complex implementation
-		// For now, just navigate to the login URL
 		if loginURL != "" {
 			_, err = session.Page.Goto(loginURL)
 			return err
 		}
 		return fmt.Errorf("OAuth implementation not yet supported")
-		
+
 	default:
 		return fmt.Errorf("unsupported authentication type: %s", authType)
 	}
@@ -629,11 +614,11 @@ func (p *playwrightImpl) GetHealth(ctx context.Context) error {
 	if p.pw == nil {
 		return fmt.Errorf("playwright not initialized")
 	}
-	
+
 	p.sessionsMux.RLock()
 	activeSessions := len(p.sessions)
 	p.sessionsMux.RUnlock()
-	
+
 	p.logger.Info("playwright service health check", zap.Int("activeSessions", activeSessions))
 	return nil
 }
@@ -641,8 +626,7 @@ func (p *playwrightImpl) GetHealth(ctx context.Context) error {
 // Shutdown gracefully shuts down the service
 func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 	p.logger.Info("shutting down playwright service")
-	
-	// Close all active sessions
+
 	p.sessionsMux.Lock()
 	for sessionID := range p.sessions {
 		if session := p.sessions[sessionID]; session != nil {
@@ -656,8 +640,7 @@ func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 	}
 	p.sessions = make(map[string]*BrowserSession)
 	p.sessionsMux.Unlock()
-	
-	// Stop playwright
+
 	if p.pw != nil {
 		err := p.pw.Stop()
 		if err != nil {
@@ -665,7 +648,7 @@ func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 			return err
 		}
 	}
-	
+
 	p.logger.Info("playwright service shutdown complete")
 	return nil
 }

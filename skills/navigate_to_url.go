@@ -56,22 +56,22 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 	if !ok {
 		return "", fmt.Errorf("url parameter is required")
 	}
-	
+
 	timeout := 30000
 	if t, ok := args["timeout"].(int); ok {
 		timeout = t
 	}
-	
+
 	waitUntil := "load"
 	if w, ok := args["wait_until"].(string); ok {
 		waitUntil = w
 	}
-	
-	s.logger.Info("navigating to URL", 
-		zap.String("url", url), 
-		zap.String("wait_until", waitUntil), 
+
+	s.logger.Info("navigating to URL",
+		zap.String("url", url),
+		zap.String("wait_until", waitUntil),
 		zap.Int("timeout", timeout))
-	
+
 	config := &playwright.BrowserConfig{
 		Engine:         playwright.Chromium,
 		Headless:       true,
@@ -80,23 +80,23 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		ViewportHeight: 720,
 		Args:           []string{"--disable-dev-shm-usage", "--no-sandbox"},
 	}
-	
+
 	session, err := s.playwright.LaunchBrowser(ctx, config)
 	if err != nil {
 		return "", fmt.Errorf("failed to launch browser: %w", err)
 	}
-	
+
 	defer func() {
 		if closeErr := s.playwright.CloseBrowser(ctx, session.ID); closeErr != nil {
 			s.logger.Error("failed to close browser session", zap.Error(closeErr))
 		}
 	}()
-	
+
 	err = s.playwright.NavigateToURL(ctx, session.ID, url, waitUntil, time.Duration(timeout)*time.Millisecond)
 	if err != nil {
 		return "", fmt.Errorf("failed to navigate to URL: %w", err)
 	}
-	
-	return fmt.Sprintf(`{"result": "Successfully navigated to %s", "sessionID": "%s", "url": "%s", "wait_until": "%s"}`, 
+
+	return fmt.Sprintf(`{"result": "Successfully navigated to %s", "sessionID": "%s", "url": "%s", "wait_until": "%s"}`,
 		url, session.ID, url, waitUntil), nil
 }
