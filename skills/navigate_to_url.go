@@ -3,6 +3,8 @@ package skills
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"time"
 
 	server "github.com/inference-gateway/adk/server"
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
@@ -50,17 +52,118 @@ func NewNavigateToURLSkill(logger *zap.Logger, playwright playwright.BrowserAuto
 
 // NavigateToURLHandler handles the navigate_to_url skill execution
 func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[string]any) (string, error) {
-	// TODO: Implement navigate_to_url logic
-	// Navigate to a specific URL and wait for the page to fully load
+	url, ok := args["url"].(string)
+	if !ok || url == "" {
+		return "", fmt.Errorf("url parameter is required and must be a non-empty string")
+	}
 
-	// Example of using dependencies:
-	// s.logger.SomeMethod(ctx, ...)
-	// s.playwright.SomeMethod(ctx, ...)
+	normalizedURL, err := s.validateAndNormalizeURL(url)
+	if err != nil {
+		s.logger.Error("invalid URL provided", zap.String("url", url), zap.Error(err))
+		return "", fmt.Errorf("invalid URL: %w", err)
+	}
+	url = normalizedURL
 
-	// Extract parameters from args
-	// timeout := args["timeout"].(int)
-	// url := args["url"].(string)
-	// wait_until := args["wait_until"].(string)
+	waitUntil := "load"
+	if wu, ok := args["wait_until"].(string); ok && wu != "" {
+		if !s.isValidWaitCondition(wu) {
+			return "", fmt.Errorf("invalid wait_until value: %s. Must be one of: domcontentloaded, load, networkidle", wu)
+		}
+		waitUntil = wu
+	}
 
-	return fmt.Sprintf(`{"result": "TODO: Implement navigate_to_url logic", "input": %+v}`, args), nil
+	timeout := 30000
+	if t, ok := args["timeout"].(int); ok && t > 0 {
+		timeout = t
+	} else if tf, ok := args["timeout"].(float64); ok && tf > 0 {
+		timeout = int(tf)
+	}
+
+	s.logger.Info("navigating to URL",
+		zap.String("url", url),
+		zap.String("wait_until", waitUntil),
+		zap.Int("timeout_ms", timeout))
+
+	session, err := s.getOrCreateSession(ctx)
+	if err != nil {
+		s.logger.Error("failed to get browser session", zap.Error(err))
+		return "", fmt.Errorf("failed to get browser session: %w", err)
+	}
+
+	timeoutDuration := time.Duration(timeout) * time.Millisecond
+	err = s.playwright.NavigateToURL(ctx, session.ID, url, waitUntil, timeoutDuration)
+	if err != nil {
+		s.logger.Error("navigation failed",
+			zap.String("url", url),
+			zap.String("sessionID", session.ID),
+			zap.Error(err))
+		return "", fmt.Errorf("navigation failed: %w", err)
+	}
+
+	s.logger.Info("navigation completed successfully",
+		zap.String("url", url),
+		zap.String("sessionID", session.ID))
+
+	response := map[string]interface{}{
+		"success":    true,
+		"url":        url,
+		"wait_until": waitUntil,
+		"timeout_ms": timeout,
+		"session_id": session.ID,
+		"message":    "Navigation completed successfully",
+	}
+
+	return fmt.Sprintf(`%+v`, response), nil
+}
+
+// validateAndNormalizeURL validates that the provided URL is well-formed and supported, returning the normalized URL
+func (s *NavigateToURLSkill) validateAndNormalizeURL(urlStr string) (string, error) {
+	if urlStr == "" {
+		return "", fmt.Errorf("URL cannot be empty")
+	}
+
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil {
+		return "", fmt.Errorf("invalid URL format: %w", err)
+	}
+
+	if parsedURL.Scheme == "" {
+		urlStr = "https://" + urlStr
+		parsedURL, err = url.Parse(urlStr)
+		if err != nil {
+			return "", fmt.Errorf("invalid URL format: %w", err)
+		}
+	}
+
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return "", fmt.Errorf("unsupported URL scheme: %s. Only http and https are supported", parsedURL.Scheme)
+	}
+
+	if parsedURL.Host == "" {
+		return "", fmt.Errorf("URL must include a valid host")
+	}
+
+	return parsedURL.String(), nil
+}
+
+// isValidWaitCondition validates the wait_until parameter
+func (s *NavigateToURLSkill) isValidWaitCondition(condition string) bool {
+	validConditions := []string{"domcontentloaded", "load", "networkidle"}
+	for _, valid := range validConditions {
+		if condition == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// getOrCreateSession gets an existing session or creates a new one
+func (s *NavigateToURLSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
+	config := playwright.DefaultBrowserConfig()
+	session, err := s.playwright.LaunchBrowser(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch browser: %w", err)
+	}
+
+	return session, nil
 }
