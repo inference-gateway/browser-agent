@@ -140,7 +140,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 
 	mimeType := s.getMimeType(imageType)
 	filename := filepath.Base(normalizedPath)
-	
+
 	screenshotArtifact := s.artifactHelper.CreateFileArtifactFromBytes(
 		fmt.Sprintf("Screenshot: %s", filename),
 		fmt.Sprintf("Screenshot captured from browser session %s", session.ID),
@@ -159,7 +159,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		zap.String("artifactID", screenshotArtifact.ArtifactID),
 		zap.Int("fileSize", len(screenshotData)))
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"success":     true,
 		"path":        normalizedPath,
 		"full_page":   fullPage,
@@ -188,7 +188,7 @@ func (s *TakeScreenshotSkill) validateAndNormalizePath(path string) (string, err
 	}
 
 	cleanPath := filepath.Clean(path)
-	
+
 	dir := filepath.Dir(cleanPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create directory: %w", err)
