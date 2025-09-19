@@ -264,7 +264,6 @@ func (s *ExtractDataSkill) parseRawResult(rawResult string) (map[string]any, err
 
 	var parsedData map[string]any
 
-	// Try to parse as JSON first (in case format changes)
 	if err := json.Unmarshal([]byte(rawResult), &parsedData); err == nil {
 		return parsedData, nil
 	}
