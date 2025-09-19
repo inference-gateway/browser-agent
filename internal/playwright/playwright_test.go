@@ -37,8 +37,6 @@ func TestNewPlaywrightService(t *testing.T) {
 	logger := zap.NewNop()
 	cfg := &config.Config{}
 	
-	// Note: This test may fail in CI environments without proper browser setup
-	// In a real test environment, you might want to mock the playwright.Run() call
 	service, err := NewPlaywrightService(logger, cfg)
 	if err != nil {
 		t.Logf("Expected error in test environment without browser setup: %v", err)
@@ -49,13 +47,11 @@ func TestNewPlaywrightService(t *testing.T) {
 		t.Error("Expected non-nil service")
 	}
 	
-	// Test health check
 	err = service.GetHealth(context.Background())
 	if err != nil {
 		t.Errorf("Health check failed: %v", err)
 	}
 	
-	// Cleanup
 	err = service.Shutdown(context.Background())
 	if err != nil {
 		t.Errorf("Shutdown failed: %v", err)
@@ -84,8 +80,6 @@ func TestBrowserConfigValidation(t *testing.T) {
 				ViewportHeight: 720,
 			}
 			
-			// This would be used in the actual browser launch
-			// For now, just verify the engine type
 			switch config.Engine {
 			case Chromium, Firefox, WebKit:
 				if !tt.valid {
@@ -122,17 +116,14 @@ func TestBrowserSessionStructure(t *testing.T) {
 
 // Mock test for browser automation interface
 func TestBrowserAutomationInterface(t *testing.T) {
-	// This test verifies that our implementation satisfies the interface
 	var _ BrowserAutomation = (*playwrightImpl)(nil)
 	
-	// Create a mock implementation
 	impl := &playwrightImpl{
 		logger:   zap.NewNop(),
 		config:   &config.Config{},
 		sessions: make(map[string]*BrowserSession),
 	}
 	
-	// Test session management without actual browser
 	_, err := impl.GetSession("non-existent")
 	if err == nil {
 		t.Error("Expected error for non-existent session")

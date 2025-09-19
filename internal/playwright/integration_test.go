@@ -19,7 +19,6 @@ func TestPlaywrightIntegration(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 	
-	// Skip if CI environment variable is set but browsers aren't installed
 	if os.Getenv("CI") == "true" && os.Getenv("PLAYWRIGHT_BROWSERS_INSTALLED") != "true" {
 		t.Skip("Skipping integration test in CI without browser installation")
 	}
@@ -39,7 +38,6 @@ func TestPlaywrightIntegration(t *testing.T) {
 	
 	ctx := context.Background()
 	
-	// Test browser launch
 	config := DefaultBrowserConfig()
 	session, err := service.LaunchBrowser(ctx, config)
 	if err != nil {
@@ -54,28 +52,23 @@ func TestPlaywrightIntegration(t *testing.T) {
 		t.Fatal("Expected non-empty session ID")
 	}
 	
-	// Test navigation
 	err = service.NavigateToURL(ctx, session.ID, "https://example.com", "load", 30*time.Second)
 	if err != nil {
 		t.Fatalf("Failed to navigate to URL: %v", err)
 	}
 	
-	// Test screenshot
 	screenshotPath := "/tmp/test-screenshot.png"
 	err = service.TakeScreenshot(ctx, session.ID, screenshotPath, false, "", "png", 80)
 	if err != nil {
 		t.Fatalf("Failed to take screenshot: %v", err)
 	}
 	
-	// Verify screenshot was created
 	if _, err := os.Stat(screenshotPath); os.IsNotExist(err) {
 		t.Error("Screenshot file was not created")
 	} else {
-		// Clean up
 		os.Remove(screenshotPath)
 	}
 	
-	// Test script execution
 	result, err := service.ExecuteScript(ctx, session.ID, "return document.title", nil)
 	if err != nil {
 		t.Fatalf("Failed to execute script: %v", err)
@@ -85,7 +78,6 @@ func TestPlaywrightIntegration(t *testing.T) {
 		t.Error("Expected non-nil script result")
 	}
 	
-	// Test data extraction
 	extractors := []map[string]interface{}{
 		{
 			"name":     "title",
@@ -103,7 +95,6 @@ func TestPlaywrightIntegration(t *testing.T) {
 		t.Error("Expected non-empty extracted data")
 	}
 	
-	// Test session retrieval
 	retrievedSession, err := service.GetSession(session.ID)
 	if err != nil {
 		t.Fatalf("Failed to retrieve session: %v", err)
@@ -113,13 +104,11 @@ func TestPlaywrightIntegration(t *testing.T) {
 		t.Errorf("Expected session ID %s, got %s", session.ID, retrievedSession.ID)
 	}
 	
-	// Test browser close
 	err = service.CloseBrowser(ctx, session.ID)
 	if err != nil {
 		t.Fatalf("Failed to close browser: %v", err)
 	}
 	
-	// Verify session is no longer available
 	_, err = service.GetSession(session.ID)
 	if err == nil {
 		t.Error("Expected error when getting closed session")
@@ -150,7 +139,6 @@ func TestMultipleBrowserSessions(t *testing.T) {
 	
 	ctx := context.Background()
 	
-	// Launch multiple browser sessions
 	config1 := DefaultBrowserConfig()
 	config1.Engine = Chromium
 	
@@ -166,7 +154,6 @@ func TestMultipleBrowserSessions(t *testing.T) {
 	if err != nil {
 		t.Logf("Firefox may not be available, skipping: %v", err)
 	} else {
-		// Test that both sessions are independent
 		err = service.NavigateToURL(ctx, session1.ID, "https://example.com", "load", 30*time.Second)
 		if err != nil {
 			t.Fatalf("Failed to navigate in session 1: %v", err)
@@ -177,14 +164,12 @@ func TestMultipleBrowserSessions(t *testing.T) {
 			t.Fatalf("Failed to navigate in session 2: %v", err)
 		}
 		
-		// Clean up session 2
 		err = service.CloseBrowser(ctx, session2.ID)
 		if err != nil {
 			t.Fatalf("Failed to close browser session 2: %v", err)
 		}
 	}
 	
-	// Clean up session 1
 	err = service.CloseBrowser(ctx, session1.ID)
 	if err != nil {
 		t.Fatalf("Failed to close browser session 1: %v", err)
@@ -215,7 +200,6 @@ func TestPlaywrightFormFilling(t *testing.T) {
 	
 	ctx := context.Background()
 	
-	// Launch browser
 	config := DefaultBrowserConfig()
 	session, err := service.LaunchBrowser(ctx, config)
 	if err != nil {
@@ -227,13 +211,11 @@ func TestPlaywrightFormFilling(t *testing.T) {
 		}
 	}()
 	
-	// Navigate to a page with forms
 	err = service.NavigateToURL(ctx, session.ID, "https://httpbin.org/forms/post", "load", 30*time.Second)
 	if err != nil {
 		t.Fatalf("Failed to navigate to forms page: %v", err)
 	}
 	
-	// Test form filling
 	fields := []map[string]interface{}{
 		{
 			"selector": "input[name='custname']",
@@ -257,7 +239,6 @@ func TestPlaywrightFormFilling(t *testing.T) {
 		t.Fatalf("Failed to fill form: %v", err)
 	}
 	
-	// Test clicking elements
 	clickOptions := map[string]interface{}{
 		"timeout": 10000,
 		"force":   false,

@@ -72,8 +72,6 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		zap.String("wait_until", waitUntil), 
 		zap.Int("timeout", timeout))
 	
-	// For this implementation, we'll use a default browser session
-	// In a real implementation, you might want to manage sessions more explicitly
 	config := &playwright.BrowserConfig{
 		Engine:         playwright.Chromium,
 		Headless:       true,
@@ -88,7 +86,6 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		return "", fmt.Errorf("failed to launch browser: %w", err)
 	}
 	
-	// Clean up session when done
 	defer func() {
 		if closeErr := s.playwright.CloseBrowser(ctx, session.ID); closeErr != nil {
 			s.logger.Error("failed to close browser session", zap.Error(closeErr))
