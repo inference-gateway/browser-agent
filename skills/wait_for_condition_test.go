@@ -123,12 +123,10 @@ func TestWaitForConditionSkill_WaitForConditionHandler_Success(t *testing.T) {
 		playwright: mockPlaywright,
 	}
 
-	// Mock browser session
 	session := &playwright.BrowserSession{
 		ID: "test-session",
 	}
 
-	// Setup mocks
 	mockPlaywright.LaunchBrowserReturns(session, nil)
 	mockPlaywright.WaitForConditionReturns(nil)
 
@@ -255,20 +253,16 @@ func TestWaitForConditionSkill_WaitForConditionHandler_DefaultValues(t *testing.
 		playwright: mockPlaywright,
 	}
 
-	// Mock browser session
 	session := &playwright.BrowserSession{
 		ID: "test-session",
 	}
 
-	// Setup mocks
 	mockPlaywright.LaunchBrowserReturns(session, nil)
 	mockPlaywright.WaitForConditionReturns(nil)
 
 	args := map[string]any{
 		"condition": "selector",
 		"selector":  ".button",
-		// No state specified - should default to "visible"
-		// No timeout specified - should default to 30000
 	}
 
 	result, err := skill.WaitForConditionHandler(context.Background(), args)

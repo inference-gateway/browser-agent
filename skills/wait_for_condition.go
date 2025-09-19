@@ -59,18 +59,15 @@ func NewWaitForConditionSkill(logger *zap.Logger, playwright playwright.BrowserA
 
 // WaitForConditionHandler handles the wait_for_condition skill execution
 func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, args map[string]any) (string, error) {
-	// Extract and validate required condition parameter
 	condition, ok := args["condition"].(string)
 	if !ok || condition == "" {
 		return "", fmt.Errorf("condition parameter is required and must be a non-empty string")
 	}
 
-	// Validate condition type
 	if !s.isValidCondition(condition) {
 		return "", fmt.Errorf("invalid condition type: %s. Must be one of: selector, navigation, function, timeout, networkidle", condition)
 	}
 
-	// Extract optional parameters with defaults
 	selector := ""
 	if sel, ok := args["selector"].(string); ok {
 		selector = sel
@@ -96,7 +93,6 @@ func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, arg
 		customFunction = cf
 	}
 
-	// Validate condition-specific requirements
 	if err := s.validateConditionRequirements(condition, selector, customFunction); err != nil {
 		return "", err
 	}
@@ -108,14 +104,12 @@ func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, arg
 		zap.Int("timeout_ms", timeout),
 		zap.String("custom_function", customFunction))
 
-	// Get or create browser session
 	session, err := s.getOrCreateSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	// Execute wait operation based on condition type
 	timeoutDuration := time.Duration(timeout) * time.Millisecond
 	startTime := time.Now()
 
@@ -138,15 +132,15 @@ func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, arg
 		zap.Int64("actual_wait_ms", actualWaitTime))
 
 	response := map[string]any{
-		"success":          true,
-		"condition":        condition,
-		"selector":         selector,
-		"state":            state,
-		"timeout_ms":       timeout,
-		"actual_wait_ms":   actualWaitTime,
-		"session_id":       session.ID,
-		"message":          "Wait condition completed successfully",
-		"custom_function":  customFunction,
+		"success":         true,
+		"condition":       condition,
+		"selector":        selector,
+		"state":           state,
+		"timeout_ms":      timeout,
+		"actual_wait_ms":  actualWaitTime,
+		"session_id":      session.ID,
+		"message":         "Wait condition completed successfully",
+		"custom_function": customFunction,
 	}
 
 	return fmt.Sprintf(`%+v`, response), nil
@@ -186,7 +180,6 @@ func (s *WaitForConditionSkill) validateConditionRequirements(condition, selecto
 			return fmt.Errorf("custom_function parameter is required for function condition")
 		}
 	case "navigation", "timeout", "networkidle":
-		// These conditions don't require additional parameters
 	}
 	return nil
 }
@@ -203,7 +196,6 @@ func (s *WaitForConditionSkill) executeWaitCondition(ctx context.Context, sessio
 	case "timeout":
 		return s.playwright.WaitForCondition(ctx, sessionID, condition, "", "", timeout, "")
 	case "networkidle":
-		// For network idle, we can use a custom JavaScript function that waits for no network activity
 		networkIdleFunction := `
 			() => {
 				return new Promise((resolve) => {
