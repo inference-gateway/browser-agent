@@ -190,7 +190,7 @@ func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
 				"url":     "https://example.com",
 				"timeout": -1000,
 			},
-			expectError: false, // Should use default timeout
+			expectError: false,
 		},
 	}
 
@@ -306,7 +306,7 @@ func TestNavigateToURLSkill_isValidWaitCondition(t *testing.T) {
 		{"networkidle", true},
 		{"invalid", false},
 		{"", false},
-		{"LOAD", false}, // case sensitive
+		{"LOAD", false},
 	}
 
 	for _, tt := range tests {

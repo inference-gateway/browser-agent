@@ -52,13 +52,11 @@ func NewNavigateToURLSkill(logger *zap.Logger, playwright playwright.BrowserAuto
 
 // NavigateToURLHandler handles the navigate_to_url skill execution
 func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[string]any) (string, error) {
-	// Extract and validate parameters from args
 	url, ok := args["url"].(string)
 	if !ok || url == "" {
 		return "", fmt.Errorf("url parameter is required and must be a non-empty string")
 	}
 
-	// Validate and normalize URL format
 	normalizedURL, err := s.validateAndNormalizeURL(url)
 	if err != nil {
 		s.logger.Error("invalid URL provided", zap.String("url", url), zap.Error(err))
@@ -66,7 +64,6 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 	}
 	url = normalizedURL
 
-	// Extract wait_until parameter with default
 	waitUntil := "load"
 	if wu, ok := args["wait_until"].(string); ok && wu != "" {
 		if !s.isValidWaitCondition(wu) {
@@ -75,7 +72,6 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		waitUntil = wu
 	}
 
-	// Extract timeout parameter with default
 	timeout := 30000
 	if t, ok := args["timeout"].(int); ok && t > 0 {
 		timeout = t
@@ -88,14 +84,12 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		zap.String("wait_until", waitUntil),
 		zap.Int("timeout_ms", timeout))
 
-	// Get or create a browser session
 	session, err := s.getOrCreateSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	// Perform navigation
 	timeoutDuration := time.Duration(timeout) * time.Millisecond
 	err = s.playwright.NavigateToURL(ctx, session.ID, url, waitUntil, timeoutDuration)
 	if err != nil {
@@ -110,7 +104,6 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		zap.String("url", url),
 		zap.String("sessionID", session.ID))
 
-	// Return success response
 	response := map[string]interface{}{
 		"success":    true,
 		"url":        url,
@@ -129,13 +122,11 @@ func (s *NavigateToURLSkill) validateAndNormalizeURL(urlStr string) (string, err
 		return "", fmt.Errorf("URL cannot be empty")
 	}
 
-	// Parse URL first to check if it already has a scheme
 	parsedURL, err := url.Parse(urlStr)
 	if err != nil {
 		return "", fmt.Errorf("invalid URL format: %w", err)
 	}
 
-	// If no scheme is provided, add https:// prefix and re-parse
 	if parsedURL.Scheme == "" {
 		urlStr = "https://" + urlStr
 		parsedURL, err = url.Parse(urlStr)
@@ -144,17 +135,14 @@ func (s *NavigateToURLSkill) validateAndNormalizeURL(urlStr string) (string, err
 		}
 	}
 
-	// Check for valid scheme
 	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
 		return "", fmt.Errorf("unsupported URL scheme: %s. Only http and https are supported", parsedURL.Scheme)
 	}
 
-	// Check for valid host
 	if parsedURL.Host == "" {
 		return "", fmt.Errorf("URL must include a valid host")
 	}
 
-	// Return the normalized URL
 	return parsedURL.String(), nil
 }
 
@@ -171,8 +159,6 @@ func (s *NavigateToURLSkill) isValidWaitCondition(condition string) bool {
 
 // getOrCreateSession gets an existing session or creates a new one
 func (s *NavigateToURLSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	// For simplicity, we'll create a new session each time
-	// In a production system, you might want to reuse sessions or manage them more efficiently
 	config := playwright.DefaultBrowserConfig()
 	session, err := s.playwright.LaunchBrowser(ctx, config)
 	if err != nil {
