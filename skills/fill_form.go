@@ -78,7 +78,7 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		return "", fmt.Errorf("fields parameter is required")
 	}
 
-	fieldsSlice, ok := fieldsRaw.([]interface{})
+	fieldsSlice, ok := fieldsRaw.([]any)
 	if !ok {
 		return "", fmt.Errorf("fields must be an array")
 	}
@@ -87,9 +87,9 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		return "", fmt.Errorf("at least one field is required")
 	}
 
-	fields := make([]map[string]interface{}, 0, len(fieldsSlice))
+	fields := make([]map[string]any, 0, len(fieldsSlice))
 	for i, fieldRaw := range fieldsSlice {
-		fieldMap, ok := fieldRaw.(map[string]interface{})
+		fieldMap, ok := fieldRaw.(map[string]any)
 		if !ok {
 			return "", fmt.Errorf("field %d must be an object", i)
 		}
@@ -155,10 +155,10 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	fieldResults := make([]map[string]interface{}, 0, len(fields))
-	
+	fieldResults := make([]map[string]any, 0, len(fields))
+
 	for i, field := range fields {
-		fieldResult := map[string]interface{}{
+		fieldResult := map[string]any{
 			"field_index": i,
 			"selector":    field["selector"],
 			"type":        field["type"],
@@ -181,15 +181,15 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 				zap.Error(err))
 			fieldResult["error"] = err.Error()
 			fieldResults = append(fieldResults, fieldResult)
-			
-			errorResponse := map[string]interface{}{
+
+			errorResponse := map[string]any{
 				"success":      false,
 				"session_id":   session.ID,
 				"fields_count": len(fields),
 				"fields":       fieldResults,
 				"error":        fmt.Sprintf("Failed to fill field %d (%s): %v", i, selector, err),
 			}
-			
+
 			return fmt.Sprintf(`%+v`, errorResponse), fmt.Errorf("failed to fill field %d (%s): %w", i, selector, err)
 		}
 
@@ -202,19 +202,19 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 			zap.String("selector", selector))
 	}
 
-	var submitResult map[string]interface{}
+	var submitResult map[string]any
 	if submit {
 		s.logger.Info("submitting form", zap.String("submit_selector", submitSelector))
-		
-		err = s.playwright.ClickElement(ctx, session.ID, submitSelector, map[string]interface{}{
+
+		err = s.playwright.ClickElement(ctx, session.ID, submitSelector, map[string]any{
 			"timeout": 30000,
 		})
-		
-		submitResult = map[string]interface{}{
+
+		submitResult = map[string]any{
 			"submit_selector": submitSelector,
 			"success":         err == nil,
 		}
-		
+
 		if err != nil {
 			s.logger.Error("failed to submit form", zap.String("submit_selector", submitSelector), zap.Error(err))
 			submitResult["error"] = err.Error()
@@ -226,7 +226,7 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 	}
 
 	// Build comprehensive response
-	response := map[string]interface{}{
+	response := map[string]any{
 		"success":      true,
 		"session_id":   session.ID,
 		"fields_count": len(fields),
@@ -245,18 +245,18 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 }
 
 // fillSingleField handles filling a single form field with enhanced type support
-func (s *FillFormSkill) fillSingleField(ctx context.Context, sessionID string, field map[string]interface{}) error {
-	fields := []map[string]interface{}{field}
-	
+func (s *FillFormSkill) fillSingleField(ctx context.Context, sessionID string, field map[string]any) error {
+	fields := []map[string]any{field}
+
 	selector := field["selector"].(string)
 	value := field["value"].(string)
 	fieldType := field["type"].(string)
-	
+
 	s.logger.Debug("delegating field filling to playwright service",
 		zap.String("selector", selector),
 		zap.String("type", fieldType),
 		zap.String("value", value))
-	
+
 	return s.playwright.FillForm(ctx, sessionID, fields, false, "")
 }
 

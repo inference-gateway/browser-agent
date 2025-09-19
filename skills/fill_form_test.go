@@ -43,7 +43,7 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 		{
 			name: "empty fields array",
 			args: map[string]any{
-				"fields": []interface{}{},
+				"fields": []any{},
 			},
 			expectedError: true,
 			errorContains: "at least one field is required",
@@ -51,8 +51,8 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 		{
 			name: "missing selector in field",
 			args: map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"value": "test",
 					},
 				},
@@ -63,8 +63,8 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 		{
 			name: "missing value in field",
 			args: map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"selector": "#test",
 					},
 				},
@@ -75,8 +75,8 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 		{
 			name: "invalid field type",
 			args: map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"selector": "#test",
 						"value":    "test",
 						"type":     "invalid_type",
@@ -89,8 +89,8 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 		{
 			name: "submit without submit_selector",
 			args: map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"selector": "#test",
 						"value":    "test",
 					},
@@ -146,8 +146,8 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 		{
 			name: "text input",
 			args: map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"selector": "#username",
 						"value":    "testuser",
 						"type":     "text",
@@ -158,18 +158,18 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 		{
 			name: "multiple field types",
 			args: map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"selector": "#username",
 						"value":    "testuser",
 						"type":     "text",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"selector": "#agree",
 						"value":    "true",
 						"type":     "checkbox",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"selector": "#country",
 						"value":    "US",
 						"type":     "select",
@@ -180,8 +180,8 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 		{
 			name: "with form submission",
 			args: map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"selector": "#email",
 						"value":    "test@example.com",
 						"type":     "text",
@@ -220,8 +220,8 @@ func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
 			}
 
 			args := map[string]any{
-				"fields": []interface{}{
-					map[string]interface{}{
+				"fields": []any{
+					map[string]any{
 						"selector": "#test",
 						"value":    "test",
 						"type":     fieldType,
@@ -253,8 +253,8 @@ func TestFillFormSkill_DefaultFieldType(t *testing.T) {
 	}
 
 	args := map[string]any{
-		"fields": []interface{}{
-			map[string]interface{}{
+		"fields": []any{
+			map[string]any{
 				"selector": "#test",
 				"value":    "test",
 			},
