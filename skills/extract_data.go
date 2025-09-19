@@ -52,7 +52,6 @@ func NewExtractDataSkill(logger *zap.Logger, playwright playwright.BrowserAutoma
 
 // ExtractDataHandler handles the extract_data skill execution
 func (s *ExtractDataSkill) ExtractDataHandler(ctx context.Context, args map[string]any) (string, error) {
-	// Validate and extract parameters
 	extractors, ok := args["extractors"].([]interface{})
 	if !ok || len(extractors) == 0 {
 		s.logger.Error("extractors parameter is required and must be a non-empty array")
@@ -71,21 +70,18 @@ func (s *ExtractDataSkill) ExtractDataHandler(ctx context.Context, args map[stri
 		zap.Int("extractors_count", len(extractors)),
 		zap.String("format", format))
 
-	// Get or create browser session
 	session, err := s.getOrCreateSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	// Convert extractors to the format expected by Playwright service
 	playwrightExtractors, err := s.convertExtractors(extractors)
 	if err != nil {
 		s.logger.Error("failed to convert extractors", zap.Error(err))
 		return "", fmt.Errorf("failed to convert extractors: %w", err)
 	}
 
-	// Extract data using Playwright service
 	rawResult, err := s.playwright.ExtractData(ctx, session.ID, playwrightExtractors, format)
 	if err != nil {
 		s.logger.Error("data extraction failed",
@@ -94,7 +90,6 @@ func (s *ExtractDataSkill) ExtractDataHandler(ctx context.Context, args map[stri
 		return "", fmt.Errorf("data extraction failed: %w", err)
 	}
 
-	// Process and format the result
 	result, err := s.processExtractedData(rawResult, format, extractors)
 	if err != nil {
 		s.logger.Error("failed to process extracted data", zap.Error(err))
@@ -129,7 +124,6 @@ func (s *ExtractDataSkill) convertExtractors(extractors []interface{}) ([]map[st
 			return nil, fmt.Errorf("extractor at index %d must be an object", i)
 		}
 		
-		// Validate required fields
 		name, ok := extractorMap["name"].(string)
 		if !ok || name == "" {
 			return nil, fmt.Errorf("extractor at index %d must have a non-empty 'name' field", i)
@@ -140,7 +134,6 @@ func (s *ExtractDataSkill) convertExtractors(extractors []interface{}) ([]map[st
 			return nil, fmt.Errorf("extractor at index %d must have a non-empty 'selector' field", i)
 		}
 		
-		// Set defaults
 		attribute := "text"
 		if attr, ok := extractorMap["attribute"].(string); ok && attr != "" {
 			attribute = attr
@@ -164,8 +157,6 @@ func (s *ExtractDataSkill) convertExtractors(extractors []interface{}) ([]map[st
 
 // processExtractedData processes the raw extracted data and formats it according to the specified format
 func (s *ExtractDataSkill) processExtractedData(rawResult, format string, originalExtractors []interface{}) (string, error) {
-	// The playwright service returns a string representation, we need to parse it back
-	// and then format it properly
 	switch format {
 	case "json":
 		return s.formatAsJSON(rawResult, originalExtractors)
@@ -180,13 +171,11 @@ func (s *ExtractDataSkill) processExtractedData(rawResult, format string, origin
 
 // formatAsJSON formats the extracted data as JSON with metadata
 func (s *ExtractDataSkill) formatAsJSON(rawResult string, extractors []interface{}) (string, error) {
-	// Clean and parse the raw result
 	parsedData, err := s.parseRawResult(rawResult)
 	if err != nil {
 		return "", err
 	}
 	
-	// Add metadata
 	result := map[string]interface{}{
 		"success":    true,
 		"format":     "json",
@@ -198,7 +187,6 @@ func (s *ExtractDataSkill) formatAsJSON(rawResult string, extractors []interface
 		},
 	}
 	
-	// Apply data cleaning and normalization
 	cleanedData := s.cleanAndNormalizeData(result["data"])
 	result["data"] = cleanedData
 	
@@ -211,7 +199,7 @@ func (s *ExtractDataSkill) formatAsJSON(rawResult string, extractors []interface
 }
 
 // formatAsCSV formats the extracted data as CSV
-func (s *ExtractDataSkill) formatAsCSV(rawResult string, extractors []interface{}) (string, error) {
+func (s *ExtractDataSkill) formatAsCSV(rawResult string, extractors []any) (string, error) {
 	parsedData, err := s.parseRawResult(rawResult)
 	if err != nil {
 		return "", err
@@ -220,7 +208,6 @@ func (s *ExtractDataSkill) formatAsCSV(rawResult string, extractors []interface{
 	var csvBuilder strings.Builder
 	writer := csv.NewWriter(&csvBuilder)
 	
-	// Write header
 	headers := make([]string, 0, len(parsedData))
 	for key := range parsedData {
 		headers = append(headers, key)
@@ -229,8 +216,6 @@ func (s *ExtractDataSkill) formatAsCSV(rawResult string, extractors []interface{
 		return "", fmt.Errorf("failed to write CSV header: %w", err)
 	}
 	
-	// For CSV, we need to handle the case where some fields might be arrays
-	// We'll create a row for each combination
 	rows := s.generateCSVRows(parsedData, headers)
 	for _, row := range rows {
 		if err := writer.Write(row); err != nil {
@@ -247,7 +232,7 @@ func (s *ExtractDataSkill) formatAsCSV(rawResult string, extractors []interface{
 }
 
 // formatAsText formats the extracted data as human-readable text
-func (s *ExtractDataSkill) formatAsText(rawResult string, extractors []interface{}) (string, error) {
+func (s *ExtractDataSkill) formatAsText(rawResult string, extractors []any) (string, error) {
 	parsedData, err := s.parseRawResult(rawResult)
 	if err != nil {
 		return "", err
@@ -275,32 +260,26 @@ func (s *ExtractDataSkill) formatAsText(rawResult string, extractors []interface
 }
 
 // parseRawResult parses the raw result string from Playwright service
-func (s *ExtractDataSkill) parseRawResult(rawResult string) (map[string]interface{}, error) {
-	// The Playwright service returns data using fmt.Sprintf("%+v", results)
-	// This produces Go map syntax like: map[key1:value1 key2:value2]
-	// We need to parse this format
+func (s *ExtractDataSkill) parseRawResult(rawResult string) (map[string]any, error) {
 	
-	var parsedData map[string]interface{}
+	var parsedData map[string]any
 	
 	// Try to parse as JSON first (in case format changes)
 	if err := json.Unmarshal([]byte(rawResult), &parsedData); err == nil {
 		return parsedData, nil
 	}
 	
-	// Parse Go map format: map[key1:value1 key2:value2]
 	if strings.HasPrefix(rawResult, "map[") && strings.HasSuffix(rawResult, "]") {
 		return s.parseGoMapFormat(rawResult)
 	}
 	
-	// Fallback to regex extraction
 	return s.extractDataFromString(rawResult)
 }
 
 // parseGoMapFormat parses Go map format: map[key1:value1 key2:value2]
-func (s *ExtractDataSkill) parseGoMapFormat(mapStr string) (map[string]interface{}, error) {
+func (s *ExtractDataSkill) parseGoMapFormat(mapStr string) (map[string]any, error) {
 	data := make(map[string]interface{})
 	
-	// Remove "map[" and "]"
 	content := strings.TrimPrefix(mapStr, "map[")
 	content = strings.TrimSuffix(content, "]")
 	
@@ -308,11 +287,6 @@ func (s *ExtractDataSkill) parseGoMapFormat(mapStr string) (map[string]interface
 		return data, nil
 	}
 	
-	// Parse key:value pairs
-	// This is a simplified parser that handles basic cases
-	// For complex nested structures, we might need a more sophisticated parser
-	
-	// Split by spaces, but be careful with values that contain spaces
 	parts := s.smartSplit(content)
 	
 	for _, part := range parts {
@@ -322,7 +296,6 @@ func (s *ExtractDataSkill) parseGoMapFormat(mapStr string) (map[string]interface
 				key := strings.TrimSpace(keyValue[0])
 				value := strings.TrimSpace(keyValue[1])
 				
-				// Try to parse the value as different types
 				data[key] = s.parseValue(value)
 			}
 		}
@@ -359,7 +332,6 @@ func (s *ExtractDataSkill) smartSplit(content string) []string {
 			}
 		case ' ':
 			if inBrackets == 0 && !inQuotes && foundKey {
-				// Look ahead to see if this starts a new key:value pair
 				if s.isNextKeyStart(content, i) {
 					if current.Len() > 0 {
 						parts = append(parts, current.String())
@@ -391,7 +363,6 @@ func (s *ExtractDataSkill) smartSplit(content string) []string {
 
 // isNextKeyStart checks if the next non-space characters form a key (word followed by colon)
 func (s *ExtractDataSkill) isNextKeyStart(content string, currentPos int) bool {
-	// Skip current and following spaces
 	i := currentPos + 1
 	for i < len(content) && content[i] == ' ' {
 		i++
@@ -401,19 +372,16 @@ func (s *ExtractDataSkill) isNextKeyStart(content string, currentPos int) bool {
 		return false
 	}
 	
-	// Look for word characters followed by a colon
 	wordStart := i
 	for i < len(content) && (content[i] != ' ' && content[i] != ':' && content[i] != '[' && content[i] != ']') {
 		i++
 	}
 	
-	// Must have found some word characters and the next character should be ':'
 	return i > wordStart && i < len(content) && content[i] == ':'
 }
 
 // parseValue attempts to parse a string value into appropriate Go type
-func (s *ExtractDataSkill) parseValue(value string) interface{} {
-	// Handle array values: [item1 item2 item3]
+func (s *ExtractDataSkill) parseValue(value string) any {
 	if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
 		arrayContent := strings.TrimPrefix(value, "[")
 		arrayContent = strings.TrimSuffix(arrayContent, "]")
@@ -422,9 +390,8 @@ func (s *ExtractDataSkill) parseValue(value string) interface{} {
 			return []interface{}{}
 		}
 		
-		// Simple split by space for array items
 		items := strings.Fields(arrayContent)
-		result := make([]interface{}, len(items))
+		result := make([]any, len(items))
 		for i, item := range items {
 			result[i] = s.parseScalarValue(item)
 		}
@@ -436,13 +403,11 @@ func (s *ExtractDataSkill) parseValue(value string) interface{} {
 
 // parseScalarValue parses individual scalar values
 func (s *ExtractDataSkill) parseScalarValue(value string) interface{} {
-	// Remove quotes if present
 	if (strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"")) ||
 		(strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) {
 		return value[1 : len(value)-1]
 	}
 	
-	// Try to parse as number
 	if intVal, err := strconv.Atoi(value); err == nil {
 		return intVal
 	}
@@ -451,26 +416,21 @@ func (s *ExtractDataSkill) parseScalarValue(value string) interface{} {
 		return floatVal
 	}
 	
-	// Try to parse as boolean
 	if boolVal, err := strconv.ParseBool(value); err == nil {
 		return boolVal
 	}
 	
-	// Handle special values
 	if value == "<nil>" || value == "null" {
 		return nil
 	}
 	
-	// Return as string
 	return value
 }
 
 // extractDataFromString extracts data from string representation (fallback method)
 func (s *ExtractDataSkill) extractDataFromString(result string) (map[string]interface{}, error) {
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	
-	// Simple regex pattern to extract key-value pairs
-	// This is a basic implementation that can be enhanced
 	pattern := regexp.MustCompile(`(\w+):\s*([^\n]+)`)
 	matches := pattern.FindAllStringSubmatch(result, -1)
 	
@@ -486,11 +446,10 @@ func (s *ExtractDataSkill) extractDataFromString(result string) (map[string]inte
 }
 
 // generateCSVRows generates CSV rows from parsed data, handling arrays appropriately
-func (s *ExtractDataSkill) generateCSVRows(data map[string]interface{}, headers []string) [][]string {
-	// Find the maximum number of rows needed (in case of arrays)
+func (s *ExtractDataSkill) generateCSVRows(data map[string]any, headers []string) [][]string {
 	maxRows := 1
 	for _, value := range data {
-		if arr, ok := value.([]interface{}); ok {
+		if arr, ok := value.([]any); ok {
 			if len(arr) > maxRows {
 				maxRows = len(arr)
 			}
@@ -502,7 +461,7 @@ func (s *ExtractDataSkill) generateCSVRows(data map[string]interface{}, headers 
 		rows[i] = make([]string, len(headers))
 		for j, header := range headers {
 			value := data[header]
-			if arr, ok := value.([]interface{}); ok {
+			if arr, ok := value.([]any); ok {
 				if i < len(arr) {
 					rows[i][j] = fmt.Sprintf("%v", arr[i])
 				} else {
@@ -522,16 +481,16 @@ func (s *ExtractDataSkill) generateCSVRows(data map[string]interface{}, headers 
 }
 
 // cleanAndNormalizeData applies data cleaning and normalization
-func (s *ExtractDataSkill) cleanAndNormalizeData(data interface{}) interface{} {
+func (s *ExtractDataSkill) cleanAndNormalizeData(data any) any {
 	switch v := data.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		cleaned := make(map[string]interface{})
 		for key, value := range v {
 			cleaned[key] = s.cleanAndNormalizeData(value)
 		}
 		return cleaned
-	case []interface{}:
-		cleaned := make([]interface{}, len(v))
+	case []any:
+		cleaned := make([]any, len(v))
 		for i, value := range v {
 			cleaned[i] = s.cleanAndNormalizeData(value)
 		}
@@ -545,14 +504,11 @@ func (s *ExtractDataSkill) cleanAndNormalizeData(data interface{}) interface{} {
 
 // cleanString performs string cleaning and normalization
 func (s *ExtractDataSkill) cleanString(text string) string {
-	// Trim whitespace
 	cleaned := strings.TrimSpace(text)
 	
-	// Replace multiple whitespaces with single space
 	spaceRegex := regexp.MustCompile(`\s+`)
 	cleaned = spaceRegex.ReplaceAllString(cleaned, " ")
 	
-	// Remove control characters except newlines and tabs
 	controlRegex := regexp.MustCompile(`[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`)
 	cleaned = controlRegex.ReplaceAllString(cleaned, "")
 	

@@ -170,7 +170,6 @@ func TestExtractDataHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Reset mock (create a new instance for each test)
 			mockPlaywright = &mocks.FakeBrowserAutomation{}
 			skill.playwright = mockPlaywright
 
@@ -357,7 +356,7 @@ func TestIsValidFormat(t *testing.T) {
 		{"text", true},
 		{"xml", false},
 		{"", false},
-		{"JSON", false}, // case sensitive
+		{"JSON", false},
 	}
 
 	for _, tt := range tests {
