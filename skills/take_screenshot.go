@@ -65,20 +65,17 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 
 // TakeScreenshotHandler handles the take_screenshot skill execution
 func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
-	// Extract and validate parameters
 	path, ok := args["path"].(string)
 	if !ok || path == "" {
 		return "", fmt.Errorf("path parameter is required and must be a non-empty string")
 	}
 
-	// Normalize and validate the path
 	normalizedPath, err := s.validateAndNormalizePath(path)
 	if err != nil {
 		s.logger.Error("invalid path provided", zap.String("path", path), zap.Error(err))
 		return "", fmt.Errorf("invalid path: %w", err)
 	}
 
-	// Extract optional parameters with defaults
 	fullPage := false
 	if fp, ok := args["full_page"].(bool); ok {
 		fullPage = fp
@@ -99,7 +96,6 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		imageType = t
 	}
 
-	// Validate quality for JPEG images
 	if imageType == "jpeg" && (quality < 0 || quality > 100) {
 		return "", fmt.Errorf("quality must be between 0 and 100 for JPEG images, got %d", quality)
 	}
@@ -116,14 +112,12 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		zap.Int("quality", quality),
 		zap.String("selector", selector))
 
-	// Get or create browser session
 	session, err := s.getOrCreateSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	// Take screenshot using playwright
 	err = s.playwright.TakeScreenshot(ctx, session.ID, normalizedPath, fullPage, selector, imageType, quality)
 	if err != nil {
 		s.logger.Error("screenshot failed",
@@ -133,20 +127,17 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		return "", fmt.Errorf("screenshot failed: %w", err)
 	}
 
-	// Read the screenshot file to create artifact
 	screenshotData, err := os.ReadFile(normalizedPath)
 	if err != nil {
 		s.logger.Error("failed to read screenshot file", zap.String("path", normalizedPath), zap.Error(err))
 		return "", fmt.Errorf("failed to read screenshot file: %w", err)
 	}
 
-	// Get file metadata
 	metadata, err := s.getScreenshotMetadata(normalizedPath, fullPage, selector, imageType, quality)
 	if err != nil {
 		s.logger.Warn("failed to get screenshot metadata", zap.Error(err))
 	}
 
-	// Create artifact for the screenshot
 	mimeType := s.getMimeType(imageType)
 	filename := filepath.Base(normalizedPath)
 	
@@ -158,7 +149,6 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		&mimeType,
 	)
 
-	// Add metadata to artifact if available
 	if metadata != nil {
 		screenshotArtifact.Metadata = metadata
 	}
@@ -169,7 +159,6 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		zap.String("artifactID", screenshotArtifact.ArtifactID),
 		zap.Int("fileSize", len(screenshotData)))
 
-	// Prepare response
 	response := map[string]interface{}{
 		"success":     true,
 		"path":        normalizedPath,
@@ -198,10 +187,8 @@ func (s *TakeScreenshotSkill) validateAndNormalizePath(path string) (string, err
 		return "", fmt.Errorf("path cannot be empty")
 	}
 
-	// Clean the path to resolve any relative components
 	cleanPath := filepath.Clean(path)
 	
-	// Create directory if it doesn't exist
 	dir := filepath.Dir(cleanPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create directory: %w", err)
