@@ -2,6 +2,7 @@ package skills
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -206,7 +207,7 @@ func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("expected error but got none")
-				} else if tt.errorMsg != "" && !contains(err.Error(), tt.errorMsg) {
+				} else if tt.errorMsg != "" && !strings.Contains(err.Error(), tt.errorMsg) {
 					t.Errorf("expected error message to contain %q, got %q", tt.errorMsg, err.Error())
 				}
 			} else {
@@ -319,16 +320,3 @@ func TestNavigateToURLSkill_isValidWaitCondition(t *testing.T) {
 	}
 }
 
-// contains is a helper function to check if a string contains a substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
-		(len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
-			func() bool {
-				for i := 1; i < len(s)-len(substr)+1; i++ {
-					if s[i:i+len(substr)] == substr {
-						return true
-					}
-				}
-				return false
-			}())))
-}
