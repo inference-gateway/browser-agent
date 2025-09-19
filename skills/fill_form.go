@@ -73,7 +73,6 @@ func NewFillFormSkill(logger *zap.Logger, playwright playwright.BrowserAutomatio
 
 // FillFormHandler handles the fill_form skill execution
 func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any) (string, error) {
-	// Extract and validate fields parameter
 	fieldsRaw, ok := args["fields"]
 	if !ok {
 		return "", fmt.Errorf("fields parameter is required")
@@ -88,7 +87,6 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		return "", fmt.Errorf("at least one field is required")
 	}
 
-	// Convert fields to the expected format
 	fields := make([]map[string]interface{}, 0, len(fieldsSlice))
 	for i, fieldRaw := range fieldsSlice {
 		fieldMap, ok := fieldRaw.(map[string]interface{})
@@ -96,7 +94,6 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 			return "", fmt.Errorf("field %d must be an object", i)
 		}
 
-		// Validate required field properties
 		selector, hasSelector := fieldMap["selector"].(string)
 		if !hasSelector || selector == "" {
 			return "", fmt.Errorf("field %d: selector is required and must be a non-empty string", i)
@@ -107,12 +104,10 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 			return "", fmt.Errorf("field %d: value is required", i)
 		}
 
-		// Set default type if not specified
 		if _, hasType := fieldMap["type"]; !hasType {
 			fieldMap["type"] = "text"
 		}
 
-		// Validate field type
 		fieldType := fieldMap["type"].(string)
 		validTypes := []string{"text", "textarea", "password", "select", "checkbox", "radio", "file"}
 		isValidType := false
@@ -129,7 +124,6 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		fields = append(fields, fieldMap)
 	}
 
-	// Extract optional submit parameters
 	submit := false
 	if submitRaw, ok := args["submit"]; ok {
 		if submitBool, ok := submitRaw.(bool); ok {
@@ -155,14 +149,12 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		zap.Bool("submit", submit),
 		zap.String("submit_selector", submitSelector))
 
-	// Get or create browser session
 	session, err := s.getOrCreateSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	// Enhanced form filling with detailed status tracking
 	fieldResults := make([]map[string]interface{}, 0, len(fields))
 	
 	for i, field := range fields {
@@ -181,7 +173,6 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 			zap.String("selector", selector),
 			zap.String("type", fieldType))
 
-		// Enhanced field filling with type-specific handling
 		err := s.fillSingleField(ctx, session.ID, field)
 		if err != nil {
 			s.logger.Error("failed to fill field",
@@ -191,7 +182,6 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 			fieldResult["error"] = err.Error()
 			fieldResults = append(fieldResults, fieldResult)
 			
-			// Include already processed fields in error response for debugging
 			errorResponse := map[string]interface{}{
 				"success":      false,
 				"session_id":   session.ID,
@@ -212,13 +202,12 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 			zap.String("selector", selector))
 	}
 
-	// Handle form submission if requested
 	var submitResult map[string]interface{}
 	if submit {
 		s.logger.Info("submitting form", zap.String("submit_selector", submitSelector))
 		
 		err = s.playwright.ClickElement(ctx, session.ID, submitSelector, map[string]interface{}{
-			"timeout": 30000, // 30 second timeout
+			"timeout": 30000,
 		})
 		
 		submitResult = map[string]interface{}{
@@ -257,11 +246,8 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 
 // fillSingleField handles filling a single form field with enhanced type support
 func (s *FillFormSkill) fillSingleField(ctx context.Context, sessionID string, field map[string]interface{}) error {
-	// Use the actual playwright service's FillForm method for consistency
-	// This delegates to the underlying implementation that already handles all field types
 	fields := []map[string]interface{}{field}
 	
-	// For submit handling, we need to extract if this field requires special handling
 	selector := field["selector"].(string)
 	value := field["value"].(string)
 	fieldType := field["type"].(string)
@@ -271,7 +257,6 @@ func (s *FillFormSkill) fillSingleField(ctx context.Context, sessionID string, f
 		zap.String("type", fieldType),
 		zap.String("value", value))
 	
-	// Use the playwright service's FillForm method which already handles all the types correctly
 	return s.playwright.FillForm(ctx, sessionID, fields, false, "")
 }
 

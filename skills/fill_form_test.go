@@ -236,7 +236,6 @@ func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
 
 			_, err := skill.FillFormHandler(context.Background(), args)
 
-			// Should not fail on validation (might fail on actual playwright calls, but that's expected in unit tests)
 			if err != nil {
 				assert.NotContains(t, err.Error(), "invalid type")
 			}
@@ -258,7 +257,6 @@ func TestFillFormSkill_DefaultFieldType(t *testing.T) {
 			map[string]interface{}{
 				"selector": "#test",
 				"value":    "test",
-				// No type specified - should default to "text"
 			},
 		},
 	}
@@ -270,7 +268,6 @@ func TestFillFormSkill_DefaultFieldType(t *testing.T) {
 
 	_, err := skill.FillFormHandler(context.Background(), args)
 
-	// Should not fail due to missing type (defaults to "text")
 	if err != nil {
 		assert.NotContains(t, err.Error(), "invalid type")
 		assert.NotContains(t, err.Error(), "type is required")
