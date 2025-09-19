@@ -2,7 +2,11 @@ package skills
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 
 	server "github.com/inference-gateway/adk/server"
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
@@ -11,15 +15,17 @@ import (
 
 // TakeScreenshotSkill struct holds the skill with dependencies
 type TakeScreenshotSkill struct {
-	logger     *zap.Logger
-	playwright playwright.BrowserAutomation
+	logger         *zap.Logger
+	playwright     playwright.BrowserAutomation
+	artifactHelper *server.ArtifactHelper
 }
 
 // NewTakeScreenshotSkill creates a new take_screenshot skill
 func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
 	skill := &TakeScreenshotSkill{
-		logger:     logger,
-		playwright: playwright,
+		logger:         logger,
+		playwright:     playwright,
+		artifactHelper: server.NewArtifactHelper(),
 	}
 	return server.NewBasicTool(
 		"take_screenshot",
@@ -59,19 +65,215 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 
 // TakeScreenshotHandler handles the take_screenshot skill execution
 func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
-	// TODO: Implement take_screenshot logic
-	// Capture a screenshot of the current page or specific element
+	// Extract and validate parameters
+	path, ok := args["path"].(string)
+	if !ok || path == "" {
+		return "", fmt.Errorf("path parameter is required and must be a non-empty string")
+	}
 
-	// Example of using dependencies:
-	// s.logger.SomeMethod(ctx, ...)
-	// s.playwright.SomeMethod(ctx, ...)
+	// Normalize and validate the path
+	normalizedPath, err := s.validateAndNormalizePath(path)
+	if err != nil {
+		s.logger.Error("invalid path provided", zap.String("path", path), zap.Error(err))
+		return "", fmt.Errorf("invalid path: %w", err)
+	}
 
-	// Extract parameters from args
-	// full_page := args["full_page"].(bool)
-	// path := args["path"].(string)
-	// quality := args["quality"].(int)
-	// selector := args["selector"].(string)
-	// type := args["type"].(string)
+	// Extract optional parameters with defaults
+	fullPage := false
+	if fp, ok := args["full_page"].(bool); ok {
+		fullPage = fp
+	}
 
-	return fmt.Sprintf(`{"result": "TODO: Implement take_screenshot logic", "input": %+v}`, args), nil
+	quality := 80
+	if q, ok := args["quality"].(int); ok {
+		quality = q
+	} else if qf, ok := args["quality"].(float64); ok {
+		quality = int(qf)
+	}
+
+	imageType := "png"
+	if t, ok := args["type"].(string); ok && t != "" {
+		if !s.isValidImageType(t) {
+			return "", fmt.Errorf("invalid image type: %s. Must be 'png' or 'jpeg'", t)
+		}
+		imageType = t
+	}
+
+	// Validate quality for JPEG images
+	if imageType == "jpeg" && (quality < 0 || quality > 100) {
+		return "", fmt.Errorf("quality must be between 0 and 100 for JPEG images, got %d", quality)
+	}
+
+	selector := ""
+	if s, ok := args["selector"].(string); ok {
+		selector = s
+	}
+
+	s.logger.Info("taking screenshot",
+		zap.String("path", normalizedPath),
+		zap.Bool("full_page", fullPage),
+		zap.String("type", imageType),
+		zap.Int("quality", quality),
+		zap.String("selector", selector))
+
+	// Get or create browser session
+	session, err := s.getOrCreateSession(ctx)
+	if err != nil {
+		s.logger.Error("failed to get browser session", zap.Error(err))
+		return "", fmt.Errorf("failed to get browser session: %w", err)
+	}
+
+	// Take screenshot using playwright
+	err = s.playwright.TakeScreenshot(ctx, session.ID, normalizedPath, fullPage, selector, imageType, quality)
+	if err != nil {
+		s.logger.Error("screenshot failed",
+			zap.String("path", normalizedPath),
+			zap.String("sessionID", session.ID),
+			zap.Error(err))
+		return "", fmt.Errorf("screenshot failed: %w", err)
+	}
+
+	// Read the screenshot file to create artifact
+	screenshotData, err := os.ReadFile(normalizedPath)
+	if err != nil {
+		s.logger.Error("failed to read screenshot file", zap.String("path", normalizedPath), zap.Error(err))
+		return "", fmt.Errorf("failed to read screenshot file: %w", err)
+	}
+
+	// Get file metadata
+	metadata, err := s.getScreenshotMetadata(normalizedPath, fullPage, selector, imageType, quality)
+	if err != nil {
+		s.logger.Warn("failed to get screenshot metadata", zap.Error(err))
+	}
+
+	// Create artifact for the screenshot
+	mimeType := s.getMimeType(imageType)
+	filename := filepath.Base(normalizedPath)
+	
+	screenshotArtifact := s.artifactHelper.CreateFileArtifactFromBytes(
+		fmt.Sprintf("Screenshot: %s", filename),
+		fmt.Sprintf("Screenshot captured from browser session %s", session.ID),
+		filename,
+		screenshotData,
+		&mimeType,
+	)
+
+	// Add metadata to artifact if available
+	if metadata != nil {
+		screenshotArtifact.Metadata = metadata
+	}
+
+	s.logger.Info("screenshot completed successfully",
+		zap.String("path", normalizedPath),
+		zap.String("sessionID", session.ID),
+		zap.String("artifactID", screenshotArtifact.ArtifactID),
+		zap.Int("fileSize", len(screenshotData)))
+
+	// Prepare response
+	response := map[string]interface{}{
+		"success":     true,
+		"path":        normalizedPath,
+		"full_page":   fullPage,
+		"type":        imageType,
+		"quality":     quality,
+		"selector":    selector,
+		"session_id":  session.ID,
+		"artifact_id": screenshotArtifact.ArtifactID,
+		"file_size":   len(screenshotData),
+		"timestamp":   s.getCurrentTimestamp(),
+		"message":     "Screenshot captured successfully and stored as artifact",
+	}
+
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal response: %w", err)
+	}
+
+	return string(responseJSON), nil
+}
+
+// validateAndNormalizePath validates and normalizes the file path
+func (s *TakeScreenshotSkill) validateAndNormalizePath(path string) (string, error) {
+	if path == "" {
+		return "", fmt.Errorf("path cannot be empty")
+	}
+
+	// Clean the path to resolve any relative components
+	cleanPath := filepath.Clean(path)
+	
+	// Create directory if it doesn't exist
+	dir := filepath.Dir(cleanPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	return cleanPath, nil
+}
+
+// isValidImageType validates the image format
+func (s *TakeScreenshotSkill) isValidImageType(imageType string) bool {
+	validTypes := []string{"png", "jpeg"}
+	for _, valid := range validTypes {
+		if imageType == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// getMimeType returns the MIME type for the given image format
+func (s *TakeScreenshotSkill) getMimeType(imageType string) string {
+	switch imageType {
+	case "jpeg":
+		return "image/jpeg"
+	case "png":
+		return "image/png"
+	default:
+		return "image/png"
+	}
+}
+
+// getOrCreateSession gets an existing session or creates a new one
+func (s *TakeScreenshotSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
+	config := playwright.DefaultBrowserConfig()
+	session, err := s.playwright.LaunchBrowser(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch browser: %w", err)
+	}
+
+	return session, nil
+}
+
+// getScreenshotMetadata extracts metadata about the screenshot file
+func (s *TakeScreenshotSkill) getScreenshotMetadata(path string, fullPage bool, selector, imageType string, quality int) (map[string]any, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get file info: %w", err)
+	}
+
+	metadata := map[string]any{
+		"file_size":    fileInfo.Size(),
+		"created_at":   fileInfo.ModTime().Format(time.RFC3339),
+		"permissions":  fileInfo.Mode().String(),
+		"full_page":    fullPage,
+		"image_type":   imageType,
+		"quality":      quality,
+		"capture_type": "viewport",
+	}
+
+	if fullPage {
+		metadata["capture_type"] = "full_page"
+	}
+
+	if selector != "" {
+		metadata["capture_type"] = "element"
+		metadata["selector"] = selector
+	}
+
+	return metadata, nil
+}
+
+// getCurrentTimestamp returns the current timestamp in RFC3339 format
+func (s *TakeScreenshotSkill) getCurrentTimestamp() string {
+	return time.Now().Format(time.RFC3339)
 }
