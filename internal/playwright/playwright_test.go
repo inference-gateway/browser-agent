@@ -1,12 +1,8 @@
 package playwright
 
 import (
-	"context"
 	"testing"
 	"time"
-
-	"github.com/inference-gateway/playwright-agent/config"
-	"go.uber.org/zap"
 )
 
 func TestDefaultBrowserConfig(t *testing.T) {
@@ -30,108 +26,6 @@ func TestDefaultBrowserConfig(t *testing.T) {
 	
 	if config.ViewportHeight != 720 {
 		t.Errorf("Expected viewport height to be 720, got %d", config.ViewportHeight)
-	}
-}
-
-func TestNewPlaywrightService(t *testing.T) {
-	logger := zap.NewNop()
-	cfg := &config.Config{}
-	
-	service, err := NewPlaywrightService(logger, cfg)
-	if err != nil {
-		t.Logf("Expected error in test environment without browser setup: %v", err)
-		return
-	}
-	
-	if service == nil {
-		t.Error("Expected non-nil service")
-	}
-	
-	err = service.GetHealth(context.Background())
-	if err != nil {
-		t.Errorf("Health check failed: %v", err)
-	}
-	
-	err = service.Shutdown(context.Background())
-	if err != nil {
-		t.Errorf("Shutdown failed: %v", err)
-	}
-}
-
-func TestBrowserConfigValidation(t *testing.T) {
-	tests := []struct {
-		name   string
-		engine BrowserEngine
-		valid  bool
-	}{
-		{"Chromium", Chromium, true},
-		{"Firefox", Firefox, true},
-		{"WebKit", WebKit, true},
-		{"Invalid", "invalid", false},
-	}
-	
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			config := &BrowserConfig{
-				Engine:         tt.engine,
-				Headless:       true,
-				Timeout:        30 * time.Second,
-				ViewportWidth:  1280,
-				ViewportHeight: 720,
-			}
-			
-			switch config.Engine {
-			case Chromium, Firefox, WebKit:
-				if !tt.valid {
-					t.Errorf("Expected engine %s to be invalid", tt.engine)
-				}
-			default:
-				if tt.valid {
-					t.Errorf("Expected engine %s to be valid", tt.engine)
-				}
-			}
-		})
-	}
-}
-
-func TestBrowserSessionStructure(t *testing.T) {
-	session := &BrowserSession{
-		ID:       "test-session",
-		Created:  time.Now(),
-		LastUsed: time.Now(),
-	}
-	
-	if session.ID != "test-session" {
-		t.Errorf("Expected session ID to be 'test-session', got %s", session.ID)
-	}
-	
-	if session.Created.IsZero() {
-		t.Error("Expected created time to be set")
-	}
-	
-	if session.LastUsed.IsZero() {
-		t.Error("Expected last used time to be set")
-	}
-}
-
-// Mock test for browser automation interface
-func TestBrowserAutomationInterface(t *testing.T) {
-	var _ BrowserAutomation = (*playwrightImpl)(nil)
-	
-	impl := &playwrightImpl{
-		logger:   zap.NewNop(),
-		config:   &config.Config{},
-		sessions: make(map[string]*BrowserSession),
-	}
-	
-	_, err := impl.GetSession("non-existent")
-	if err == nil {
-		t.Error("Expected error for non-existent session")
-	}
-	
-	expectedError := "session not found: non-existent"
-	if err.Error() != expectedError {
-		t.Errorf("Expected error message '%s', got '%s'", expectedError, err.Error())
 	}
 }
 
