@@ -13,6 +13,9 @@ type Config struct {
 	// Core application settings
 	Environment string `env:"ENVIRONMENT"`
 
+	// Custom configuration fields
+	ScreenshotDir string `env:"A2A_SCREENSHOT_DIR" envDefault:"screenshots"`
+
 	// A2A configuration (all A2A_ prefixed vars)
 	A2A serverConfig.Config `env:",prefix=A2A_"`
 }

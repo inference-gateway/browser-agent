@@ -9,6 +9,7 @@ import (
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
+	config "github.com/inference-gateway/playwright-agent/config"
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
@@ -22,18 +23,12 @@ type TakeScreenshotSkill struct {
 }
 
 // NewTakeScreenshotSkill creates a new take_screenshot skill
-func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
-	// Get screenshot directory from environment or use default
-	screenshotDir := os.Getenv("A2A_SCREENSHOT_DIR")
-	if screenshotDir == "" {
-		screenshotDir = "screenshots"
-	}
-	
+func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation, cfg *config.Config) server.Tool {
 	skill := &TakeScreenshotSkill{
 		logger:         logger,
 		playwright:     playwright,
 		artifactHelper: server.NewArtifactHelper(),
-		screenshotDir:  screenshotDir,
+		screenshotDir:  cfg.ScreenshotDir,
 	}
 	return server.NewBasicTool(
 		"take_screenshot",

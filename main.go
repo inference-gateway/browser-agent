@@ -73,7 +73,7 @@ func main() {
 	l.Info("registered skill: extract_data (Extract data from the page using selectors and return structured information)")
 
 	// Register take_screenshot skill
-	takeScreenshotSkill := skills.NewTakeScreenshotSkill(l, playwrightDep)
+	takeScreenshotSkill := skills.NewTakeScreenshotSkill(l, playwrightDep, &cfg)
 	toolBox.AddTool(takeScreenshotSkill)
 	l.Info("registered skill: take_screenshot (Capture a screenshot of the current page or specific element)")
 

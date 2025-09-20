@@ -11,6 +11,7 @@ import (
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
+	config "github.com/inference-gateway/playwright-agent/config"
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
@@ -101,12 +102,15 @@ func (m *MockPlaywright) Shutdown(ctx context.Context) error  { return nil }
 func createTestSkill() *TakeScreenshotSkill {
 	logger := zap.NewNop()
 	mockPlaywright := NewMockPlaywright()
+	cfg := &config.Config{
+		ScreenshotDir: "test_screenshots",
+	}
 
 	return &TakeScreenshotSkill{
 		logger:         logger,
 		playwright:     mockPlaywright,
 		artifactHelper: server.NewArtifactHelper(),
-		screenshotDir:  "test_screenshots",
+		screenshotDir:  cfg.ScreenshotDir,
 	}
 }
 
@@ -152,7 +156,7 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 	}
 
 	// Clean up
-	os.RemoveAll("test_screenshots")
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
@@ -185,7 +189,7 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 	}
 
 	// Clean up
-	os.RemoveAll("test_screenshots")
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
@@ -223,7 +227,7 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 	}
 
 	// Clean up
-	os.RemoveAll("test_screenshots")
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
@@ -256,7 +260,7 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 	}
 
 	// Clean up
-	os.RemoveAll("test_screenshots")
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
@@ -283,7 +287,7 @@ func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
 	}
 
 	// Clean up
-	os.RemoveAll("test_screenshots")
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
@@ -306,7 +310,7 @@ func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 	}
 
 	// Clean up
-	os.RemoveAll("test_screenshots")
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
@@ -330,7 +334,7 @@ func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 	}
 
 	// Clean up
-	os.RemoveAll("test_screenshots")
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestGenerateDeterministicPath(t *testing.T) {
@@ -387,7 +391,7 @@ func TestGenerateDeterministicPath(t *testing.T) {
 			}
 
 			// Clean up created directory
-			os.RemoveAll("test_screenshots")
+			_ = os.RemoveAll("test_screenshots")
 		})
 	}
 }

@@ -9,6 +9,13 @@ spec:
     streaming: true
     pushNotifications: false
     stateTransitionHistory: false
+  config:
+    fields:
+      - name: screenshot_dir
+        env: A2A_SCREENSHOT_DIR
+        type: string
+        description: Directory path for storing screenshots
+        default: "screenshots"
   skills:
     - id: navigate_to_url
       name: navigate_to_url
