@@ -46,7 +46,7 @@
 			"name": "take_screenshot",
 			"description": "Capture a screenshot of the current page or specific element",
 			"tags": ["screenshot","capture","visual","playwright"],
-			"schema": {"properties":{"full_page":{"default":false,"description":"Capture the entire scrollable page","type":"boolean"},"path":{"description":"File path to save the screenshot","type":"string"},"quality":{"default":80,"description":"Quality for jpeg images (0-100)","type":"integer"},"selector":{"description":"Optional selector to screenshot specific element","type":"string"},"type":{"default":"png","description":"Image format (png, jpeg)","type":"string"}},"required":["path"],"type":"object"}
+			"schema": {"properties":{"full_page":{"default":false,"description":"Capture the entire scrollable page","type":"boolean"},"quality":{"default":80,"description":"Quality for jpeg images (0-100)","type":"integer"},"selector":{"description":"Optional selector to screenshot specific element","type":"string"},"type":{"default":"png","description":"Image format (png, jpeg)","type":"string"}},"required":[],"type":"object"}
 		},
 		{
 			"id": "execute_script",

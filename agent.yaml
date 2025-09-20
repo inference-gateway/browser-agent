@@ -9,6 +9,9 @@ spec:
     streaming: true
     pushNotifications: false
     stateTransitionHistory: false
+  config:
+    screenshots:
+      dir: /tmp/screenshots
   skills:
     - id: navigate_to_url
       name: navigate_to_url
@@ -165,9 +168,6 @@ spec:
       schema:
         type: object
         properties:
-          path:
-            type: string
-            description: File path to save the screenshot
           full_page:
             type: boolean
             description: Capture the entire scrollable page
@@ -183,8 +183,7 @@ spec:
             type: integer
             description: Quality for jpeg images (0-100)
             default: 80
-        required:
-          - path
+        required: []
       inject:
         - logger
         - playwright

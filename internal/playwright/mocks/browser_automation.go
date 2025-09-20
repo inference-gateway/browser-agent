@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/inference-gateway/playwright-agent/config"
 	"github.com/inference-gateway/playwright-agent/internal/playwright"
 )
 
@@ -82,6 +83,16 @@ type FakeBrowserAutomation struct {
 	}
 	fillFormReturnsOnCall map[int]struct {
 		result1 error
+	}
+	GetConfigStub        func() *config.Config
+	getConfigMutex       sync.RWMutex
+	getConfigArgsForCall []struct {
+	}
+	getConfigReturns struct {
+		result1 *config.Config
+	}
+	getConfigReturnsOnCall map[int]struct {
+		result1 *config.Config
 	}
 	GetHealthStub        func(context.Context) error
 	getHealthMutex       sync.RWMutex
@@ -198,7 +209,7 @@ type FakeBrowserAutomation struct {
 	waitForConditionReturnsOnCall map[int]struct {
 		result1 error
 	}
-	invocations      map[string][][]any
+	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
@@ -213,7 +224,7 @@ func (fake *FakeBrowserAutomation) ClickElement(arg1 context.Context, arg2 strin
 	}{arg1, arg2, arg3, arg4})
 	stub := fake.ClickElementStub
 	fakeReturns := fake.clickElementReturns
-	fake.recordInvocation("ClickElement", []any{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("ClickElement", []interface{}{arg1, arg2, arg3, arg4})
 	fake.clickElementMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4)
@@ -275,7 +286,7 @@ func (fake *FakeBrowserAutomation) CloseBrowser(arg1 context.Context, arg2 strin
 	}{arg1, arg2})
 	stub := fake.CloseBrowserStub
 	fakeReturns := fake.closeBrowserReturns
-	fake.recordInvocation("CloseBrowser", []any{arg1, arg2})
+	fake.recordInvocation("CloseBrowser", []interface{}{arg1, arg2})
 	fake.closeBrowserMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2)
@@ -344,7 +355,7 @@ func (fake *FakeBrowserAutomation) ExecuteScript(arg1 context.Context, arg2 stri
 	}{arg1, arg2, arg3, arg4Copy})
 	stub := fake.ExecuteScriptStub
 	fakeReturns := fake.executeScriptReturns
-	fake.recordInvocation("ExecuteScript", []any{arg1, arg2, arg3, arg4Copy})
+	fake.recordInvocation("ExecuteScript", []interface{}{arg1, arg2, arg3, arg4Copy})
 	fake.executeScriptMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4)
@@ -416,7 +427,7 @@ func (fake *FakeBrowserAutomation) ExtractData(arg1 context.Context, arg2 string
 	}{arg1, arg2, arg3Copy, arg4})
 	stub := fake.ExtractDataStub
 	fakeReturns := fake.extractDataReturns
-	fake.recordInvocation("ExtractData", []any{arg1, arg2, arg3Copy, arg4})
+	fake.recordInvocation("ExtractData", []interface{}{arg1, arg2, arg3Copy, arg4})
 	fake.extractDataMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4)
@@ -489,7 +500,7 @@ func (fake *FakeBrowserAutomation) FillForm(arg1 context.Context, arg2 string, a
 	}{arg1, arg2, arg3Copy, arg4, arg5})
 	stub := fake.FillFormStub
 	fakeReturns := fake.fillFormReturns
-	fake.recordInvocation("FillForm", []any{arg1, arg2, arg3Copy, arg4, arg5})
+	fake.recordInvocation("FillForm", []interface{}{arg1, arg2, arg3Copy, arg4, arg5})
 	fake.fillFormMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4, arg5)
@@ -542,6 +553,59 @@ func (fake *FakeBrowserAutomation) FillFormReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeBrowserAutomation) GetConfig() *config.Config {
+	fake.getConfigMutex.Lock()
+	ret, specificReturn := fake.getConfigReturnsOnCall[len(fake.getConfigArgsForCall)]
+	fake.getConfigArgsForCall = append(fake.getConfigArgsForCall, struct {
+	}{})
+	stub := fake.GetConfigStub
+	fakeReturns := fake.getConfigReturns
+	fake.recordInvocation("GetConfig", []interface{}{})
+	fake.getConfigMutex.Unlock()
+	if stub != nil {
+		return stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeBrowserAutomation) GetConfigCallCount() int {
+	fake.getConfigMutex.RLock()
+	defer fake.getConfigMutex.RUnlock()
+	return len(fake.getConfigArgsForCall)
+}
+
+func (fake *FakeBrowserAutomation) GetConfigCalls(stub func() *config.Config) {
+	fake.getConfigMutex.Lock()
+	defer fake.getConfigMutex.Unlock()
+	fake.GetConfigStub = stub
+}
+
+func (fake *FakeBrowserAutomation) GetConfigReturns(result1 *config.Config) {
+	fake.getConfigMutex.Lock()
+	defer fake.getConfigMutex.Unlock()
+	fake.GetConfigStub = nil
+	fake.getConfigReturns = struct {
+		result1 *config.Config
+	}{result1}
+}
+
+func (fake *FakeBrowserAutomation) GetConfigReturnsOnCall(i int, result1 *config.Config) {
+	fake.getConfigMutex.Lock()
+	defer fake.getConfigMutex.Unlock()
+	fake.GetConfigStub = nil
+	if fake.getConfigReturnsOnCall == nil {
+		fake.getConfigReturnsOnCall = make(map[int]struct {
+			result1 *config.Config
+		})
+	}
+	fake.getConfigReturnsOnCall[i] = struct {
+		result1 *config.Config
+	}{result1}
+}
+
 func (fake *FakeBrowserAutomation) GetHealth(arg1 context.Context) error {
 	fake.getHealthMutex.Lock()
 	ret, specificReturn := fake.getHealthReturnsOnCall[len(fake.getHealthArgsForCall)]
@@ -550,7 +614,7 @@ func (fake *FakeBrowserAutomation) GetHealth(arg1 context.Context) error {
 	}{arg1})
 	stub := fake.GetHealthStub
 	fakeReturns := fake.getHealthReturns
-	fake.recordInvocation("GetHealth", []any{arg1})
+	fake.recordInvocation("GetHealth", []interface{}{arg1})
 	fake.getHealthMutex.Unlock()
 	if stub != nil {
 		return stub(arg1)
@@ -611,7 +675,7 @@ func (fake *FakeBrowserAutomation) GetSession(arg1 string) (*playwright.BrowserS
 	}{arg1})
 	stub := fake.GetSessionStub
 	fakeReturns := fake.getSessionReturns
-	fake.recordInvocation("GetSession", []any{arg1})
+	fake.recordInvocation("GetSession", []interface{}{arg1})
 	fake.getSessionMutex.Unlock()
 	if stub != nil {
 		return stub(arg1)
@@ -681,7 +745,7 @@ func (fake *FakeBrowserAutomation) HandleAuthentication(arg1 context.Context, ar
 	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	stub := fake.HandleAuthenticationStub
 	fakeReturns := fake.handleAuthenticationReturns
-	fake.recordInvocation("HandleAuthentication", []any{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	fake.recordInvocation("HandleAuthentication", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	fake.handleAuthenticationMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
@@ -743,7 +807,7 @@ func (fake *FakeBrowserAutomation) LaunchBrowser(arg1 context.Context, arg2 *pla
 	}{arg1, arg2})
 	stub := fake.LaunchBrowserStub
 	fakeReturns := fake.launchBrowserReturns
-	fake.recordInvocation("LaunchBrowser", []any{arg1, arg2})
+	fake.recordInvocation("LaunchBrowser", []interface{}{arg1, arg2})
 	fake.launchBrowserMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2)
@@ -811,7 +875,7 @@ func (fake *FakeBrowserAutomation) NavigateToURL(arg1 context.Context, arg2 stri
 	}{arg1, arg2, arg3, arg4, arg5})
 	stub := fake.NavigateToURLStub
 	fakeReturns := fake.navigateToURLReturns
-	fake.recordInvocation("NavigateToURL", []any{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("NavigateToURL", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.navigateToURLMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4, arg5)
@@ -872,7 +936,7 @@ func (fake *FakeBrowserAutomation) Shutdown(arg1 context.Context) error {
 	}{arg1})
 	stub := fake.ShutdownStub
 	fakeReturns := fake.shutdownReturns
-	fake.recordInvocation("Shutdown", []any{arg1})
+	fake.recordInvocation("Shutdown", []interface{}{arg1})
 	fake.shutdownMutex.Unlock()
 	if stub != nil {
 		return stub(arg1)
@@ -939,7 +1003,7 @@ func (fake *FakeBrowserAutomation) TakeScreenshot(arg1 context.Context, arg2 str
 	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	stub := fake.TakeScreenshotStub
 	fakeReturns := fake.takeScreenshotReturns
-	fake.recordInvocation("TakeScreenshot", []any{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	fake.recordInvocation("TakeScreenshot", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	fake.takeScreenshotMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
@@ -1006,7 +1070,7 @@ func (fake *FakeBrowserAutomation) WaitForCondition(arg1 context.Context, arg2 s
 	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	stub := fake.WaitForConditionStub
 	fakeReturns := fake.waitForConditionReturns
-	fake.recordInvocation("WaitForCondition", []any{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
+	fake.recordInvocation("WaitForCondition", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7})
 	fake.waitForConditionMutex.Unlock()
 	if stub != nil {
 		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
@@ -1059,24 +1123,52 @@ func (fake *FakeBrowserAutomation) WaitForConditionReturnsOnCall(i int, result1 
 	}{result1}
 }
 
-func (fake *FakeBrowserAutomation) Invocations() map[string][][]any {
+func (fake *FakeBrowserAutomation) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	copiedInvocations := map[string][][]any{}
+	fake.clickElementMutex.RLock()
+	defer fake.clickElementMutex.RUnlock()
+	fake.closeBrowserMutex.RLock()
+	defer fake.closeBrowserMutex.RUnlock()
+	fake.executeScriptMutex.RLock()
+	defer fake.executeScriptMutex.RUnlock()
+	fake.extractDataMutex.RLock()
+	defer fake.extractDataMutex.RUnlock()
+	fake.fillFormMutex.RLock()
+	defer fake.fillFormMutex.RUnlock()
+	fake.getConfigMutex.RLock()
+	defer fake.getConfigMutex.RUnlock()
+	fake.getHealthMutex.RLock()
+	defer fake.getHealthMutex.RUnlock()
+	fake.getSessionMutex.RLock()
+	defer fake.getSessionMutex.RUnlock()
+	fake.handleAuthenticationMutex.RLock()
+	defer fake.handleAuthenticationMutex.RUnlock()
+	fake.launchBrowserMutex.RLock()
+	defer fake.launchBrowserMutex.RUnlock()
+	fake.navigateToURLMutex.RLock()
+	defer fake.navigateToURLMutex.RUnlock()
+	fake.shutdownMutex.RLock()
+	defer fake.shutdownMutex.RUnlock()
+	fake.takeScreenshotMutex.RLock()
+	defer fake.takeScreenshotMutex.RUnlock()
+	fake.waitForConditionMutex.RLock()
+	defer fake.waitForConditionMutex.RUnlock()
+	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
 	}
 	return copiedInvocations
 }
 
-func (fake *FakeBrowserAutomation) recordInvocation(key string, args []any) {
+func (fake *FakeBrowserAutomation) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
-		fake.invocations = map[string][][]any{}
+		fake.invocations = map[string][][]interface{}{}
 	}
 	if fake.invocations[key] == nil {
-		fake.invocations[key] = [][]any{}
+		fake.invocations[key] = [][]interface{}{}
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }

@@ -3,120 +3,55 @@ package skills
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
+	config "github.com/inference-gateway/playwright-agent/config"
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
+	mocks "github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
 	zap "go.uber.org/zap"
 )
 
-// MockBrowserSession represents a mock browser session for testing
-type MockBrowserSession struct {
-	ID string
-}
-
-// MockPlaywright implements the BrowserAutomation interface for testing
-type MockPlaywright struct {
-	sessions          map[string]*playwright.BrowserSession
-	screenshotResults map[string]error
-	screenshotData    []byte
-	shouldFailLaunch  bool
-	shouldFailCapture bool
-}
-
-func NewMockPlaywright() *MockPlaywright {
-	return &MockPlaywright{
-		sessions:          make(map[string]*playwright.BrowserSession),
-		screenshotResults: make(map[string]error),
-		screenshotData:    []byte("mock screenshot data"),
-	}
-}
-
-func (m *MockPlaywright) LaunchBrowser(ctx context.Context, config *playwright.BrowserConfig) (*playwright.BrowserSession, error) {
-	if m.shouldFailLaunch {
-		return nil, fmt.Errorf("mock browser launch failed")
-	}
+func createTestSkill() *TakeScreenshotSkill {
+	logger := zap.NewNop()
+	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
 	session := &playwright.BrowserSession{
-		ID:       fmt.Sprintf("mock_session_%d", time.Now().UnixNano()),
+		ID:       "test-session-123",
 		Created:  time.Now(),
 		LastUsed: time.Now(),
 	}
-
-	m.sessions[session.ID] = session
-	return session, nil
-}
-
-func (m *MockPlaywright) TakeScreenshot(ctx context.Context, sessionID, path string, fullPage bool, selector string, format string, quality int) error {
-	if m.shouldFailCapture {
-		return fmt.Errorf("mock screenshot capture failed")
-	}
-
-	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
-	}
-
-	return os.WriteFile(path, m.screenshotData, 0644)
-}
-
-// Implement other required methods with no-ops for testing
-func (m *MockPlaywright) CloseBrowser(ctx context.Context, sessionID string) error { return nil }
-func (m *MockPlaywright) GetSession(sessionID string) (*playwright.BrowserSession, error) {
-	session, exists := m.sessions[sessionID]
-	if !exists {
-		return nil, fmt.Errorf("session not found")
-	}
-	return session, nil
-}
-func (m *MockPlaywright) NavigateToURL(ctx context.Context, sessionID, url string, waitUntil string, timeout time.Duration) error {
-	return nil
-}
-func (m *MockPlaywright) ClickElement(ctx context.Context, sessionID, selector string, options map[string]any) error {
-	return nil
-}
-func (m *MockPlaywright) FillForm(ctx context.Context, sessionID string, fields []map[string]any, submit bool, submitSelector string) error {
-	return nil
-}
-func (m *MockPlaywright) ExtractData(ctx context.Context, sessionID string, extractors []map[string]any, format string) (string, error) {
-	return "", nil
-}
-func (m *MockPlaywright) ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error) {
-	return nil, nil
-}
-func (m *MockPlaywright) WaitForCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error {
-	return nil
-}
-func (m *MockPlaywright) HandleAuthentication(ctx context.Context, sessionID, authType, username, password, loginURL string, selectors map[string]string) error {
-	return nil
-}
-func (m *MockPlaywright) GetHealth(ctx context.Context) error { return nil }
-func (m *MockPlaywright) Shutdown(ctx context.Context) error  { return nil }
-
-func createTestSkill() *TakeScreenshotSkill {
-	logger := zap.NewNop()
-	mockPlaywright := NewMockPlaywright()
+	mockPlaywright.LaunchBrowserReturns(session, nil)
+	mockPlaywright.GetSessionReturns(session, nil)
+	mockPlaywright.TakeScreenshotCalls(func(ctx context.Context, sessionID, path string, fullPage bool, selector string, format string, quality int) error {
+		dir := filepath.Dir(path)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+		return os.WriteFile(path, []byte("mock screenshot data"), 0644)
+	})
+	mockPlaywright.GetConfigReturns(&config.Config{
+		Screenshots: config.ScreenshotsConfig{
+			Dir: "test_screenshots",
+		},
+	})
 
 	return &TakeScreenshotSkill{
 		logger:         logger,
 		playwright:     mockPlaywright,
 		artifactHelper: server.NewArtifactHelper(),
+		screenshotDir:  "test_screenshots",
 	}
 }
 
 func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "test_screenshot.png")
-
-	args := map[string]any{
-		"path": path,
-	}
+	args := map[string]any{}
 
 	ctx := context.Background()
 	result, err := skill.TakeScreenshotHandler(ctx, args)
@@ -134,23 +69,30 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 		t.Errorf("Expected success to be true, got: %v", response["success"])
 	}
 
-	if resultPath, ok := response["path"].(string); !ok || resultPath != path {
-		t.Errorf("Expected path to be %s, got: %v", path, response["path"])
+	resultPath, ok := response["path"].(string)
+	if !ok {
+		t.Errorf("Expected path in response, got: %v", response["path"])
 	}
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		t.Errorf("Expected screenshot file to be created at %s", path)
+	if !filepath.IsAbs(resultPath) && !strings.HasPrefix(resultPath, "test_screenshots/") {
+		t.Errorf("Expected path to start with test_screenshots/, got: %s", resultPath)
 	}
+
+	if !strings.Contains(resultPath, "viewport_") {
+		t.Errorf("Expected viewport screenshot filename, got: %s", resultPath)
+	}
+
+	if _, err := os.Stat(resultPath); os.IsNotExist(err) {
+		t.Errorf("Expected screenshot file to be created at %s", resultPath)
+	}
+
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "fullpage_screenshot.png")
-
 	args := map[string]any{
-		"path":      path,
 		"full_page": true,
 	}
 
@@ -169,16 +111,19 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 	if fullPage, ok := response["full_page"].(bool); !ok || !fullPage {
 		t.Errorf("Expected full_page to be true, got: %v", response["full_page"])
 	}
+
+	resultPath, ok := response["path"].(string)
+	if !ok || !strings.Contains(resultPath, "fullpage_") {
+		t.Errorf("Expected fullpage screenshot filename, got: %s", resultPath)
+	}
+
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "quality_screenshot.jpg")
-
 	args := map[string]any{
-		"path":    path,
 		"type":    "jpeg",
 		"quality": 95,
 	}
@@ -202,16 +147,19 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 	if quality, ok := response["quality"].(float64); !ok || int(quality) != 95 {
 		t.Errorf("Expected quality to be 95, got: %v", response["quality"])
 	}
+
+	resultPath, ok := response["path"].(string)
+	if !ok || !strings.HasSuffix(resultPath, ".jpeg") {
+		t.Errorf("Expected .jpeg extension in filename, got: %s", resultPath)
+	}
+
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "element_screenshot.png")
-
 	args := map[string]any{
-		"path":     path,
 		"selector": "#main-content",
 	}
 
@@ -230,35 +178,43 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 	if selector, ok := response["selector"].(string); !ok || selector != "#main-content" {
 		t.Errorf("Expected selector to be #main-content, got: %v", response["selector"])
 	}
+
+	resultPath, ok := response["path"].(string)
+	if !ok || !strings.Contains(resultPath, "element_") {
+		t.Errorf("Expected element screenshot filename, got: %s", resultPath)
+	}
+
+	_ = os.RemoveAll("test_screenshots")
 }
 
-func TestTakeScreenshotHandler_InvalidPath(t *testing.T) {
+func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
 	skill := createTestSkill()
 
-	args := map[string]any{
-		"path": "",
-	}
+	args := map[string]any{}
 
 	ctx := context.Background()
-	_, err := skill.TakeScreenshotHandler(ctx, args)
+	result, err := skill.TakeScreenshotHandler(ctx, args)
 
-	if err == nil {
-		t.Error("Expected error for empty path, got nil")
+	if err != nil {
+		t.Fatalf("Expected no error for deterministic path generation, got: %v", err)
 	}
 
-	if err.Error() != "path parameter is required and must be a non-empty string" {
-		t.Errorf("Expected specific error message, got: %v", err)
+	var response map[string]any
+	if err := json.Unmarshal([]byte(result), &response); err != nil {
+		t.Fatalf("Failed to parse response JSON: %v", err)
 	}
+
+	if _, ok := response["path"]; !ok {
+		t.Error("Expected path to be generated in response")
+	}
+
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "test.gif")
-
 	args := map[string]any{
-		"path": path,
 		"type": "gif",
 	}
 
@@ -273,16 +229,14 @@ func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got: %v", expectedMsg, err)
 	}
+
+	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "test.jpg")
-
 	args := map[string]any{
-		"path":    path,
 		"type":    "jpeg",
 		"quality": 150,
 	}
@@ -298,49 +252,43 @@ func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got: %v", expectedMsg, err)
 	}
+
+	_ = os.RemoveAll("test_screenshots")
 }
 
-func TestValidateAndNormalizePath(t *testing.T) {
+func TestGenerateDeterministicPath(t *testing.T) {
 	skill := createTestSkill()
 
 	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
-		errMsg  string
+		name     string
+		args     map[string]any
+		expected string
 	}{
 		{
-			name:    "valid relative path",
-			input:   "screenshots/test.png",
-			wantErr: false,
+			name:     "viewport screenshot",
+			args:     map[string]any{},
+			expected: "viewport_",
 		},
 		{
-			name:    "valid absolute path",
-			input:   "/tmp/screenshots/test.png",
-			wantErr: false,
+			name:     "fullpage screenshot",
+			args:     map[string]any{"full_page": true},
+			expected: "fullpage_",
 		},
 		{
-			name:    "empty path",
-			input:   "",
-			wantErr: true,
-			errMsg:  "path cannot be empty",
+			name:     "element screenshot",
+			args:     map[string]any{"selector": "#main"},
+			expected: "element_",
+		},
+		{
+			name:     "jpeg format",
+			args:     map[string]any{"type": "jpeg"},
+			expected: ".jpeg",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.validateAndNormalizePath(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("Expected error, got nil")
-					return
-				}
-				if tt.errMsg != "" && err.Error() != tt.errMsg {
-					t.Errorf("Expected error message '%s', got: %v", tt.errMsg, err)
-				}
-				return
-			}
+			result, err := skill.generateDeterministicPath(tt.args)
 
 			if err != nil {
 				t.Errorf("Expected no error, got: %v", err)
@@ -349,11 +297,18 @@ func TestValidateAndNormalizePath(t *testing.T) {
 
 			if result == "" {
 				t.Error("Expected non-empty result")
+				return
 			}
 
-			if dir := filepath.Dir(result); dir != "." {
-				_ = os.RemoveAll(dir)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("Expected path to contain '%s', got: %s", tt.expected, result)
 			}
+
+			if !strings.HasPrefix(result, "test_screenshots/") {
+				t.Errorf("Expected path to start with test_screenshots/, got: %s", result)
+			}
+
+			_ = os.RemoveAll("test_screenshots")
 		})
 	}
 }
