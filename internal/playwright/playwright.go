@@ -79,6 +79,7 @@ type BrowserAutomation interface {
 	// Service management
 	GetHealth(ctx context.Context) error
 	Shutdown(ctx context.Context) error
+	GetConfig() *config.Config
 }
 
 // playwrightImpl is the implementation of BrowserAutomation
@@ -651,4 +652,9 @@ func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 
 	p.logger.Info("playwright service shutdown complete")
 	return nil
+}
+
+// GetConfig returns the configuration
+func (p *playwrightImpl) GetConfig() *config.Config {
+	return p.config
 }

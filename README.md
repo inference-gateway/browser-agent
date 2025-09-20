@@ -45,7 +45,7 @@ docker run -p 8080:8080 playwright-agent
 | `click_element` | Click on an element identified by selector, text, or other locator strategies |button, click_count, force, selector, timeout |
 | `fill_form` | Fill form fields with provided data, handling various input types |fields, submit, submit_selector |
 | `extract_data` | Extract data from the page using selectors and return structured information |extractors, format |
-| `take_screenshot` | Capture a screenshot of the current page or specific element |full_page, path, quality, selector, type |
+| `take_screenshot` | Capture a screenshot of the current page or specific element |full_page, quality, selector, type |
 | `execute_script` | Execute custom JavaScript code in the browser context |args, return_value, script |
 | `handle_authentication` | Handle various authentication scenarios including basic auth, OAuth, and custom login forms |login_url, password, password_selector, submit_selector, type, username, username_selector |
 | `wait_for_condition` | Wait for specific conditions before proceeding with automation |condition, custom_function, selector, state, timeout |

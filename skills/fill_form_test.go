@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
-	"github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
+	mocks "github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
 )
 
 func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
