@@ -18,5 +18,5 @@ go run github.com/maxbrunsfeld/counterfeiter/v6 -o internal/playwright/mocks/bro
 
 - `playwright.go` - Service implementation (generated, do not edit)
 - `playwright_test.go` - Basic unit tests
-- `playwright_mock_test.go` - Mock tests
+- `playwright_integration_test.go` - Integration tests
 - `mocks/browser_automation.go` - Generated mock

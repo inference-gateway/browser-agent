@@ -514,13 +514,7 @@ func (s *ExtractDataSkill) cleanString(text string) string {
 	return cleaned
 }
 
-// getOrCreateSession gets an existing session or creates a new one
+// getOrCreateSession gets the shared default session
 func (s *ExtractDataSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	config := playwright.DefaultBrowserConfig()
-	session, err := s.playwright.LaunchBrowser(ctx, config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to launch browser: %w", err)
-	}
-
-	return session, nil
+	return s.playwright.GetOrCreateDefaultSession(ctx)
 }

@@ -127,7 +127,7 @@ func TestWaitForConditionSkill_WaitForConditionHandler_Success(t *testing.T) {
 		ID: "test-session",
 	}
 
-	mockPlaywright.LaunchBrowserReturns(session, nil)
+	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 	mockPlaywright.WaitForConditionReturns(nil)
 
 	args := map[string]any{
@@ -257,7 +257,7 @@ func TestWaitForConditionSkill_WaitForConditionHandler_DefaultValues(t *testing.
 		ID: "test-session",
 	}
 
-	mockPlaywright.LaunchBrowserReturns(session, nil)
+	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 	mockPlaywright.WaitForConditionReturns(nil)
 
 	args := map[string]any{
