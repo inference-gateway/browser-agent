@@ -180,14 +180,20 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 
 	context, err := browser.NewContext(contextOptions)
 	if err != nil {
-		browser.Close()
+		if closeErr := browser.Close(); closeErr != nil {
+			p.logger.Error("failed to close browser after context creation error", zap.Error(closeErr))
+		}
 		return nil, fmt.Errorf("failed to create browser context: %w", err)
 	}
 
 	page, err := context.NewPage()
 	if err != nil {
-		context.Close()
-		browser.Close()
+		if closeErr := context.Close(); closeErr != nil {
+			p.logger.Error("failed to close context after page creation error", zap.Error(closeErr))
+		}
+		if closeErr := browser.Close(); closeErr != nil {
+			p.logger.Error("failed to close browser after page creation error", zap.Error(closeErr))
+		}
 		return nil, fmt.Errorf("failed to create page: %w", err)
 	}
 
@@ -220,10 +226,14 @@ func (p *playwrightImpl) CloseBrowser(ctx context.Context, sessionID string) err
 	}
 
 	if session.Context != nil {
-		session.Context.Close()
+		if err := session.Context.Close(); err != nil {
+			p.logger.Error("failed to close context", zap.Error(err))
+		}
 	}
 	if session.Browser != nil {
-		session.Browser.Close()
+		if err := session.Browser.Close(); err != nil {
+			p.logger.Error("failed to close browser", zap.Error(err))
+		}
 	}
 
 	delete(p.sessions, sessionID)
@@ -301,14 +311,20 @@ func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*Browse
 
 	context, err := browser.NewContext(contextOptions)
 	if err != nil {
-		browser.Close()
+		if closeErr := browser.Close(); closeErr != nil {
+			p.logger.Error("failed to close browser after context creation error", zap.Error(closeErr))
+		}
 		return nil, fmt.Errorf("failed to create browser context: %w", err)
 	}
 
 	page, err := context.NewPage()
 	if err != nil {
-		context.Close()
-		browser.Close()
+		if closeErr := context.Close(); closeErr != nil {
+			p.logger.Error("failed to close context after page creation error", zap.Error(closeErr))
+		}
+		if closeErr := browser.Close(); closeErr != nil {
+			p.logger.Error("failed to close browser after page creation error", zap.Error(closeErr))
+		}
 		return nil, fmt.Errorf("failed to create page: %w", err)
 	}
 
@@ -385,7 +401,12 @@ func (p *playwrightImpl) ClickElement(ctx context.Context, sessionID, selector s
 	}
 
 	p.logger.Info("clicking element", zap.String("sessionID", sessionID), zap.String("selector", selector))
-	return session.Page.Click(selector, clickOptions)
+	return session.Page.Locator(selector).Click(playwright.LocatorClickOptions{
+		Timeout:    clickOptions.Timeout,
+		Force:      clickOptions.Force,
+		ClickCount: clickOptions.ClickCount,
+		Button:     clickOptions.Button,
+	})
 }
 
 // FillForm fills form fields in the specified session
@@ -412,15 +433,15 @@ func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields 
 
 		switch fieldType {
 		case "select":
-			_, err = session.Page.SelectOption(selector, playwright.SelectOptionValues{Values: &[]string{value}})
+			_, err = session.Page.Locator(selector).SelectOption(playwright.SelectOptionValues{Values: &[]string{value}}, playwright.LocatorSelectOptionOptions{})
 		case "checkbox", "radio":
 			if value == "true" || value == "1" {
-				err = session.Page.Check(selector)
+				err = session.Page.Locator(selector).Check()
 			} else {
-				err = session.Page.Uncheck(selector)
+				err = session.Page.Locator(selector).Uncheck()
 			}
 		default:
-			err = session.Page.Fill(selector, value)
+			err = session.Page.Locator(selector).Fill(value)
 		}
 
 		if err != nil {
@@ -430,7 +451,7 @@ func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields 
 
 	if submit && submitSelector != "" {
 		p.logger.Info("submitting form", zap.String("sessionID", sessionID), zap.String("submitSelector", submitSelector))
-		err = session.Page.Click(submitSelector)
+		err = session.Page.Locator(submitSelector).Click()
 		if err != nil {
 			return fmt.Errorf("failed to submit form: %w", err)
 		}
@@ -469,18 +490,20 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 		multiple, _ := extractor["multiple"].(bool)
 
 		if multiple {
-			elements, err := session.Page.QuerySelectorAll(selector)
+			locator := session.Page.Locator(selector)
+			count, err := locator.Count()
 			if err != nil {
-				return "", fmt.Errorf("failed to query elements for %s: %w", name, err)
+				return "", fmt.Errorf("failed to count elements for %s: %w", name, err)
 			}
 
 			var values []any
-			for _, element := range elements {
+			for i := 0; i < count; i++ {
+				elementLocator := locator.Nth(i)
 				var value any
 				if attribute == "text" {
-					value, err = element.InnerText()
+					value, err = elementLocator.InnerText()
 				} else {
-					value, err = element.GetAttribute(attribute)
+					value, err = elementLocator.GetAttribute(attribute)
 				}
 				if err == nil {
 					values = append(values, value)
@@ -488,21 +511,15 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 			}
 			results[name] = values
 		} else {
-			element, err := session.Page.QuerySelector(selector)
-			if err != nil {
-				return "", fmt.Errorf("failed to query element for %s: %w", name, err)
-			}
-
+			locator := session.Page.Locator(selector)
 			var value any
-			if element != nil {
-				if attribute == "text" {
-					value, err = element.InnerText()
-				} else {
-					value, err = element.GetAttribute(attribute)
-				}
-				if err != nil {
-					return "", fmt.Errorf("failed to extract %s: %w", name, err)
-				}
+			if attribute == "text" {
+				value, err = locator.InnerText()
+			} else {
+				value, err = locator.GetAttribute(attribute)
+			}
+			if err != nil {
+				return "", fmt.Errorf("failed to extract %s: %w", name, err)
 			}
 			results[name] = value
 		}
@@ -540,17 +557,12 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 	}
 
 	if selector != "" {
-		element, err := session.Page.QuerySelector(selector)
-		if err != nil {
-			return fmt.Errorf("failed to find element for screenshot: %w", err)
-		}
-		if element != nil {
-			_, err = element.Screenshot(playwright.ElementHandleScreenshotOptions{
-				Path: &path,
-				Type: options.Type,
-			})
-			return err
-		}
+		locator := session.Page.Locator(selector)
+		_, err = locator.Screenshot(playwright.LocatorScreenshotOptions{
+			Path: &path,
+			Type: options.Type,
+		})
+		return err
 	}
 
 	_, err = session.Page.Screenshot(options)
@@ -598,12 +610,12 @@ func (p *playwrightImpl) WaitForCondition(ctx context.Context, sessionID, condit
 		}
 
 		timeoutMs := float64(timeout.Milliseconds())
-		options := playwright.PageWaitForSelectorOptions{
+		options := playwright.LocatorWaitForOptions{
 			State:   waitState,
 			Timeout: &timeoutMs,
 		}
 
-		_, err = session.Page.WaitForSelector(selector, options)
+		err = session.Page.Locator(selector).WaitFor(options)
 		return err
 
 	case "navigation":
@@ -658,21 +670,21 @@ func (p *playwrightImpl) HandleAuthentication(ctx context.Context, sessionID, au
 		}
 
 		if usernameSelector, ok := selectors["username_selector"]; ok && usernameSelector != "" {
-			err = session.Page.Fill(usernameSelector, username)
+			err = session.Page.Locator(usernameSelector).Fill(username)
 			if err != nil {
 				return fmt.Errorf("failed to fill username: %w", err)
 			}
 		}
 
 		if passwordSelector, ok := selectors["password_selector"]; ok && passwordSelector != "" {
-			err = session.Page.Fill(passwordSelector, password)
+			err = session.Page.Locator(passwordSelector).Fill(password)
 			if err != nil {
 				return fmt.Errorf("failed to fill password: %w", err)
 			}
 		}
 
 		if submitSelector, ok := selectors["submit_selector"]; ok && submitSelector != "" {
-			err = session.Page.Click(submitSelector)
+			err = session.Page.Locator(submitSelector).Click()
 			if err != nil {
 				return fmt.Errorf("failed to submit form: %w", err)
 			}
@@ -714,10 +726,14 @@ func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 	for sessionID := range p.sessions {
 		if session := p.sessions[sessionID]; session != nil {
 			if session.Context != nil {
-				session.Context.Close()
+				if err := session.Context.Close(); err != nil {
+					p.logger.Error("failed to close context during shutdown", zap.Error(err))
+				}
 			}
 			if session.Browser != nil {
-				session.Browser.Close()
+				if err := session.Browser.Close(); err != nil {
+					p.logger.Error("failed to close browser during shutdown", zap.Error(err))
+				}
 			}
 		}
 	}
