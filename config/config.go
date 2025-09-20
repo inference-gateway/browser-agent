@@ -17,10 +17,20 @@ type Config struct {
 	A2A serverConfig.Config `env:",prefix=A2A_"`
 
 	// Custom configuration sections
-	Screenshots ScreenshotsConfig `env:",prefix=SCREENSHOTS_"`
+	Browser BrowserConfig `env:",prefix=BROWSER_"`
 }
 
-// ScreenshotsConfig represents the screenshots configuration
-type ScreenshotsConfig struct {
-	Dir string `env:"DIR,default=/tmp/screenshots"`
+// BrowserConfig represents the browser configuration
+type BrowserConfig struct {
+	Args                          string `env:"ARGS,default=[--disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor --no-first-run --disable-default-apps --disable-extensions --disable-plugins --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-zygote --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-ipc-flooding-protection]"`
+	HeaderAccept                  string `env:"HEADER_ACCEPT,default=text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"`
+	HeaderAcceptEncoding          string `env:"HEADER_ACCEPT_ENCODING,default=gzip, deflate, br"`
+	HeaderAcceptLanguage          string `env:"HEADER_ACCEPT_LANGUAGE,default=en-US,en;q=0.9"`
+	HeaderConnection              string `env:"HEADER_CONNECTION,default=keep-alive"`
+	HeaderDnt                     string `env:"HEADER_DNT,default=1"`
+	HeaderUpgradeInsecureRequests string `env:"HEADER_UPGRADE_INSECURE_REQUESTS,default=1"`
+	ScreenshotsDir                string `env:"SCREENSHOTS_DIR,default=/tmp/screenshots"`
+	UserAgent                     string `env:"USER_AGENT,default=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"`
+	ViewportHeight                string `env:"VIEWPORT_HEIGHT,default=1080"`
+	ViewportWidth                 string `env:"VIEWPORT_WIDTH,default=1920"`
 }
