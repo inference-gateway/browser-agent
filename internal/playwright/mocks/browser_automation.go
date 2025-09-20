@@ -105,19 +105,6 @@ type FakeBrowserAutomation struct {
 	getHealthReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetSessionStub        func(string) (*playwright.BrowserSession, error)
-	getSessionMutex       sync.RWMutex
-	getSessionArgsForCall []struct {
-		arg1 string
-	}
-	getSessionReturns struct {
-		result1 *playwright.BrowserSession
-		result2 error
-	}
-	getSessionReturnsOnCall map[int]struct {
-		result1 *playwright.BrowserSession
-		result2 error
-	}
 	GetOrCreateDefaultSessionStub        func(context.Context) (*playwright.BrowserSession, error)
 	getOrCreateDefaultSessionMutex       sync.RWMutex
 	getOrCreateDefaultSessionArgsForCall []struct {
@@ -128,6 +115,19 @@ type FakeBrowserAutomation struct {
 		result2 error
 	}
 	getOrCreateDefaultSessionReturnsOnCall map[int]struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}
+	GetSessionStub        func(string) (*playwright.BrowserSession, error)
+	getSessionMutex       sync.RWMutex
+	getSessionArgsForCall []struct {
+		arg1 string
+	}
+	getSessionReturns struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}
+	getSessionReturnsOnCall map[int]struct {
 		result1 *playwright.BrowserSession
 		result2 error
 	}
@@ -680,70 +680,6 @@ func (fake *FakeBrowserAutomation) GetHealthReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeBrowserAutomation) GetSession(arg1 string) (*playwright.BrowserSession, error) {
-	fake.getSessionMutex.Lock()
-	ret, specificReturn := fake.getSessionReturnsOnCall[len(fake.getSessionArgsForCall)]
-	fake.getSessionArgsForCall = append(fake.getSessionArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	stub := fake.GetSessionStub
-	fakeReturns := fake.getSessionReturns
-	fake.recordInvocation("GetSession", []interface{}{arg1})
-	fake.getSessionMutex.Unlock()
-	if stub != nil {
-		return stub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeBrowserAutomation) GetSessionCallCount() int {
-	fake.getSessionMutex.RLock()
-	defer fake.getSessionMutex.RUnlock()
-	return len(fake.getSessionArgsForCall)
-}
-
-func (fake *FakeBrowserAutomation) GetSessionCalls(stub func(string) (*playwright.BrowserSession, error)) {
-	fake.getSessionMutex.Lock()
-	defer fake.getSessionMutex.Unlock()
-	fake.GetSessionStub = stub
-}
-
-func (fake *FakeBrowserAutomation) GetSessionArgsForCall(i int) string {
-	fake.getSessionMutex.RLock()
-	defer fake.getSessionMutex.RUnlock()
-	argsForCall := fake.getSessionArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeBrowserAutomation) GetSessionReturns(result1 *playwright.BrowserSession, result2 error) {
-	fake.getSessionMutex.Lock()
-	defer fake.getSessionMutex.Unlock()
-	fake.GetSessionStub = nil
-	fake.getSessionReturns = struct {
-		result1 *playwright.BrowserSession
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBrowserAutomation) GetSessionReturnsOnCall(i int, result1 *playwright.BrowserSession, result2 error) {
-	fake.getSessionMutex.Lock()
-	defer fake.getSessionMutex.Unlock()
-	fake.GetSessionStub = nil
-	if fake.getSessionReturnsOnCall == nil {
-		fake.getSessionReturnsOnCall = make(map[int]struct {
-			result1 *playwright.BrowserSession
-			result2 error
-		})
-	}
-	fake.getSessionReturnsOnCall[i] = struct {
-		result1 *playwright.BrowserSession
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeBrowserAutomation) GetOrCreateDefaultSession(arg1 context.Context) (*playwright.BrowserSession, error) {
 	fake.getOrCreateDefaultSessionMutex.Lock()
 	ret, specificReturn := fake.getOrCreateDefaultSessionReturnsOnCall[len(fake.getOrCreateDefaultSessionArgsForCall)]
@@ -803,6 +739,70 @@ func (fake *FakeBrowserAutomation) GetOrCreateDefaultSessionReturnsOnCall(i int,
 		})
 	}
 	fake.getOrCreateDefaultSessionReturnsOnCall[i] = struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBrowserAutomation) GetSession(arg1 string) (*playwright.BrowserSession, error) {
+	fake.getSessionMutex.Lock()
+	ret, specificReturn := fake.getSessionReturnsOnCall[len(fake.getSessionArgsForCall)]
+	fake.getSessionArgsForCall = append(fake.getSessionArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	stub := fake.GetSessionStub
+	fakeReturns := fake.getSessionReturns
+	fake.recordInvocation("GetSession", []interface{}{arg1})
+	fake.getSessionMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeBrowserAutomation) GetSessionCallCount() int {
+	fake.getSessionMutex.RLock()
+	defer fake.getSessionMutex.RUnlock()
+	return len(fake.getSessionArgsForCall)
+}
+
+func (fake *FakeBrowserAutomation) GetSessionCalls(stub func(string) (*playwright.BrowserSession, error)) {
+	fake.getSessionMutex.Lock()
+	defer fake.getSessionMutex.Unlock()
+	fake.GetSessionStub = stub
+}
+
+func (fake *FakeBrowserAutomation) GetSessionArgsForCall(i int) string {
+	fake.getSessionMutex.RLock()
+	defer fake.getSessionMutex.RUnlock()
+	argsForCall := fake.getSessionArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeBrowserAutomation) GetSessionReturns(result1 *playwright.BrowserSession, result2 error) {
+	fake.getSessionMutex.Lock()
+	defer fake.getSessionMutex.Unlock()
+	fake.GetSessionStub = nil
+	fake.getSessionReturns = struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBrowserAutomation) GetSessionReturnsOnCall(i int, result1 *playwright.BrowserSession, result2 error) {
+	fake.getSessionMutex.Lock()
+	defer fake.getSessionMutex.Unlock()
+	fake.GetSessionStub = nil
+	if fake.getSessionReturnsOnCall == nil {
+		fake.getSessionReturnsOnCall = make(map[int]struct {
+			result1 *playwright.BrowserSession
+			result2 error
+		})
+	}
+	fake.getSessionReturnsOnCall[i] = struct {
 		result1 *playwright.BrowserSession
 		result2 error
 	}{result1, result2}
@@ -1203,34 +1203,6 @@ func (fake *FakeBrowserAutomation) WaitForConditionReturnsOnCall(i int, result1 
 func (fake *FakeBrowserAutomation) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.clickElementMutex.RLock()
-	defer fake.clickElementMutex.RUnlock()
-	fake.closeBrowserMutex.RLock()
-	defer fake.closeBrowserMutex.RUnlock()
-	fake.executeScriptMutex.RLock()
-	defer fake.executeScriptMutex.RUnlock()
-	fake.extractDataMutex.RLock()
-	defer fake.extractDataMutex.RUnlock()
-	fake.fillFormMutex.RLock()
-	defer fake.fillFormMutex.RUnlock()
-	fake.getConfigMutex.RLock()
-	defer fake.getConfigMutex.RUnlock()
-	fake.getHealthMutex.RLock()
-	defer fake.getHealthMutex.RUnlock()
-	fake.getSessionMutex.RLock()
-	defer fake.getSessionMutex.RUnlock()
-	fake.handleAuthenticationMutex.RLock()
-	defer fake.handleAuthenticationMutex.RUnlock()
-	fake.launchBrowserMutex.RLock()
-	defer fake.launchBrowserMutex.RUnlock()
-	fake.navigateToURLMutex.RLock()
-	defer fake.navigateToURLMutex.RUnlock()
-	fake.shutdownMutex.RLock()
-	defer fake.shutdownMutex.RUnlock()
-	fake.takeScreenshotMutex.RLock()
-	defer fake.takeScreenshotMutex.RUnlock()
-	fake.waitForConditionMutex.RLock()
-	defer fake.waitForConditionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
