@@ -247,7 +247,6 @@ func (p *playwrightImpl) GetSession(sessionID string) (*BrowserSession, error) {
 
 // GetOrCreateDefaultSession gets the default shared session or creates it if it doesn't exist
 func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*BrowserSession, error) {
-	// First try to get existing default session
 	p.sessionsMux.RLock()
 	if session, exists := p.sessions[DefaultSessionID]; exists {
 		session.LastUsed = time.Now()
@@ -257,18 +256,15 @@ func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*Browse
 	}
 	p.sessionsMux.RUnlock()
 
-	// Need to create default session, use write lock
 	p.sessionsMux.Lock()
 	defer p.sessionsMux.Unlock()
 
-	// Double-check in case another goroutine created it while we were waiting
 	if session, exists := p.sessions[DefaultSessionID]; exists {
 		session.LastUsed = time.Now()
 		p.logger.Debug("reusing existing default session (double-check)", zap.String("sessionID", DefaultSessionID))
 		return session, nil
 	}
 
-	// Create new default session
 	config := DefaultBrowserConfig()
 	p.logger.Info("creating new default browser session", zap.String("sessionID", DefaultSessionID))
 
