@@ -335,7 +335,7 @@ spec:
   language:
     go:
       module: github.com/inference-gateway/playwright-agent
-      version: "1.24.5"
+      version: "1.25"
   acronyms:
     - DOM
     - CSS

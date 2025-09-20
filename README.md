@@ -2,7 +2,7 @@
 
 # Playwright-Agent
 [![CI](https://github.com/inference-gateway/playwright-agent/workflows/CI/badge.svg)](https://github.com/inference-gateway/playwright-agent/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/Go-1.24.5+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![A2A Protocol](https://img.shields.io/badge/A2A-Protocol-blue?style=flat)](https://github.com/inference-gateway/adk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -53,6 +53,14 @@ docker run -p 8080:8080 playwright-agent
 ## Configuration
 
 Configure the agent via environment variables:
+
+### Custom Configuration
+
+The following custom configuration variables are available:
+
+| Category | Variable | Description | Default |
+|----------|----------|-------------|---------|
+| **Screenshots** | `SCREENSHOTS_DIR` | Dir configuration | `/tmp/screenshots` |
 
 | Category | Variable | Description | Default |
 |----------|----------|-------------|---------|
