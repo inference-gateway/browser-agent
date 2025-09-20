@@ -64,7 +64,7 @@ services:
       INFER_TOOLS_ENABLED: true
       INFER_TOOLS_QUERY_ENABLED: true
       INFER_TOOLS_TASK_ENABLED:  true
-      INFER_AGENT_MODEL: google/models/gemini-2.5-flash
+      INFER_AGENT_MODEL: deepseek/deepseek-chat
       INFER_A2A_AGENTS: 'http://agent:8080'
       INFER_A2A_CACHE_ENABLED: false
     command:
