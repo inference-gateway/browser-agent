@@ -33,3 +33,6 @@ README.md linguist-documentation=true
 *.md text eol=lf
 Dockerfile text eol=lf
 Taskfile.yml text eol=lf
+
+# Vendored
+example/demo-site/index.html linguist-vendored=true

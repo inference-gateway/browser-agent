@@ -23,6 +23,8 @@ internal/playwright/playwright.go
 go.mod
 go.sum
 
+.gitattributes
+
 # Add your own files to ignore here:
 # my-custom-file.go
 # config/secrets.yaml
