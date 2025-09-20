@@ -1,3 +1,46 @@
 # Example Playwright Automation Script
 
 This script demonstrates how to use the Playwright automation framework to perform basic browser actions such as navigating to a webpage, filling out a form, and taking a screenshot.
+
+
+Configure the environment variables as needed:
+
+```bash
+cp .env.gateway.example .env.gateway
+```
+
+** Add at least two providers, in this example Google and DeepSeek.
+
+First bring up all the containers:
+
+```bash
+docker compose up --build
+```
+
+Go into the CLI for convenience:
+
+```bash
+docker compose run --rm cli
+```
+
+Ask the following:
+
+```text
+Please visit http://demo-site and take a screenshot of the homepage. Use the agent.
+```
+
+You would see the CLI (A2A agent client) submitting a task to the A2A agent server and the screenshot will appear in the `screenshots` directory since it's mounted as a volume.
+
+Check the logs to see that the browser indeed went to the demo site and took a screenshot:
+
+```bash
+docker compose logs -f demo-site
+```
+
+Finally clean up:
+
+```bash
+docker compose down
+```
+
+TODO: I want to use the artifacts feature where I don't have to mount the volume instead I can simply fetch it from the server. But there is some work to be done here.

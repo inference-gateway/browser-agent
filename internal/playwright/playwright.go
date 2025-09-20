@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -42,9 +44,57 @@ func DefaultBrowserConfig() *BrowserConfig {
 		Engine:         Chromium,
 		Headless:       true,
 		Timeout:        30 * time.Second,
-		ViewportWidth:  1280,
-		ViewportHeight: 720,
-		Args:           []string{"--disable-dev-shm-usage", "--no-sandbox"},
+		ViewportWidth:  1920,
+		ViewportHeight: 1080,
+		Args: []string{
+			"--disable-dev-shm-usage",
+			"--no-sandbox",
+			"--disable-blink-features=AutomationControlled",
+			"--disable-features=VizDisplayCompositor",
+			"--no-first-run",
+			"--disable-default-apps",
+			"--disable-extensions",
+			"--disable-plugins",
+			"--disable-sync",
+			"--disable-translate",
+			"--hide-scrollbars",
+			"--mute-audio",
+			"--no-zygote",
+			"--disable-background-timer-throttling",
+			"--disable-backgrounding-occluded-windows",
+			"--disable-renderer-backgrounding",
+			"--disable-ipc-flooding-protection",
+		},
+	}
+}
+
+// NewBrowserConfigFromConfig creates browser config from app configuration
+func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
+	width, _ := strconv.Atoi(cfg.Browser.ViewportWidth)
+	if width == 0 {
+		width = 1920
+	}
+
+	height, _ := strconv.Atoi(cfg.Browser.ViewportHeight)
+	if height == 0 {
+		height = 1080
+	}
+
+	// Parse args from config - remove brackets and split by space
+	argsStr := strings.Trim(cfg.Browser.Args, "[]")
+	args := []string{"--disable-dev-shm-usage", "--no-sandbox"} // Always include these
+	if argsStr != "" {
+		configArgs := strings.Fields(argsStr)
+		args = append(args, configArgs...)
+	}
+
+	return &BrowserConfig{
+		Engine:         Chromium,
+		Headless:       true,
+		Timeout:        30 * time.Second,
+		ViewportWidth:  width,
+		ViewportHeight: height,
+		Args:           args,
 	}
 }
 
@@ -140,7 +190,7 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 // LaunchBrowser launches a new browser instance with the given configuration
 func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfig) (*BrowserSession, error) {
 	if config == nil {
-		config = DefaultBrowserConfig()
+		config = NewBrowserConfigFromConfig(p.config)
 	}
 
 	p.logger.Info("launching browser",
@@ -171,12 +221,7 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 		return nil, fmt.Errorf("failed to launch browser: %w", err)
 	}
 
-	contextOptions := playwright.BrowserNewContextOptions{
-		Viewport: &playwright.Size{
-			Width:  config.ViewportWidth,
-			Height: config.ViewportHeight,
-		},
-	}
+	contextOptions := p.createContextOptions(config)
 
 	context, err := browser.NewContext(contextOptions)
 	if err != nil {
@@ -275,7 +320,7 @@ func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*Browse
 		return session, nil
 	}
 
-	config := DefaultBrowserConfig()
+	config := NewBrowserConfigFromConfig(p.config)
 	p.logger.Info("creating new default browser session", zap.String("sessionID", DefaultSessionID))
 
 	var browserType playwright.BrowserType
@@ -302,12 +347,7 @@ func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*Browse
 		return nil, fmt.Errorf("failed to launch browser: %w", err)
 	}
 
-	contextOptions := playwright.BrowserNewContextOptions{
-		Viewport: &playwright.Size{
-			Width:  config.ViewportWidth,
-			Height: config.ViewportHeight,
-		},
-	}
+	contextOptions := p.createContextOptions(config)
 
 	context, err := browser.NewContext(contextOptions)
 	if err != nil {
@@ -755,4 +795,25 @@ func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 // GetConfig returns the configuration
 func (p *playwrightImpl) GetConfig() *config.Config {
 	return p.config
+}
+
+// createContextOptions creates browser context options from configuration
+func (p *playwrightImpl) createContextOptions(browserConfig *BrowserConfig) playwright.BrowserNewContextOptions {
+	return playwright.BrowserNewContextOptions{
+		Viewport: &playwright.Size{
+			Width:  browserConfig.ViewportWidth,
+			Height: browserConfig.ViewportHeight,
+		},
+		UserAgent: playwright.String(p.config.Browser.UserAgent),
+		ExtraHttpHeaders: map[string]string{
+			"Accept":                    p.config.Browser.HeaderAccept,
+			"Accept-Language":           p.config.Browser.HeaderAcceptLanguage,
+			"Accept-Encoding":           p.config.Browser.HeaderAcceptEncoding,
+			"DNT":                       p.config.Browser.HeaderDnt,
+			"Connection":                p.config.Browser.HeaderConnection,
+			"Upgrade-Insecure-Requests": p.config.Browser.HeaderUpgradeInsecureRequests,
+		},
+		JavaScriptEnabled: playwright.Bool(true),
+		BypassCSP:         playwright.Bool(true),
+	}
 }

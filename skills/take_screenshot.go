@@ -28,7 +28,7 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 		logger:         logger,
 		playwright:     playwright,
 		artifactHelper: server.NewArtifactHelper(),
-		screenshotDir:  cfg.Screenshots.Dir,
+		screenshotDir:  cfg.Browser.ScreenshotsDir,
 	}
 	return server.NewBasicTool(
 		"take_screenshot",

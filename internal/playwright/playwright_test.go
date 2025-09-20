@@ -20,12 +20,12 @@ func TestDefaultBrowserConfig(t *testing.T) {
 		t.Errorf("Expected timeout to be 30s, got %v", config.Timeout)
 	}
 
-	if config.ViewportWidth != 1280 {
-		t.Errorf("Expected viewport width to be 1280, got %d", config.ViewportWidth)
+	if config.ViewportWidth != 1920 {
+		t.Errorf("Expected viewport width to be 1920, got %d", config.ViewportWidth)
 	}
 
-	if config.ViewportHeight != 720 {
-		t.Errorf("Expected viewport height to be 720, got %d", config.ViewportHeight)
+	if config.ViewportHeight != 1080 {
+		t.Errorf("Expected viewport height to be 1080, got %d", config.ViewportHeight)
 	}
 }
 
