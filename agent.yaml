@@ -323,7 +323,7 @@ spec:
       - Optimize for speed while maintaining reliability
       
       Your automation solutions should be maintainable, efficient, and production-ready.
-  dependencies:
+  services:
     playwright:
       type: service
       interface: BrowserAutomation
