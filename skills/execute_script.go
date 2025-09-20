@@ -51,7 +51,7 @@ func NewExecuteScriptSkill(logger *zap.Logger, playwright playwright.BrowserAuto
 				},
 				"args": map[string]any{
 					"description": "Arguments to pass to the script (will be available as arguments[0], arguments[1], etc.)",
-					"items":       map[string]any{"type": "any"},
+					"items":       map[string]any{},
 					"type":        "array",
 					"default":     []any{},
 				},
