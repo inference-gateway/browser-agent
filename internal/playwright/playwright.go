@@ -446,13 +446,13 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 	p.logger.Info("taking screenshot", zap.String("sessionID", sessionID), zap.String("path", path))
 
 	options := playwright.PageScreenshotOptions{
-		Path:     &path,
-		FullPage: &fullPage,
+		Path:     playwright.String(path),
+		FullPage: playwright.Bool(fullPage),
 	}
 
 	if format == "jpeg" {
 		options.Type = playwright.ScreenshotTypeJpeg
-		options.Quality = &quality
+		options.Quality = playwright.Int(quality)
 	} else {
 		options.Type = playwright.ScreenshotTypePng
 	}
@@ -463,10 +463,14 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 			return fmt.Errorf("failed to find element for screenshot: %w", err)
 		}
 		if element != nil {
-			_, err = element.Screenshot(playwright.ElementHandleScreenshotOptions{
-				Path: &path,
+			elementOptions := playwright.ElementHandleScreenshotOptions{
+				Path: playwright.String(path),
 				Type: options.Type,
-			})
+			}
+			if format == "jpeg" {
+				elementOptions.Quality = playwright.Int(quality)
+			}
+			_, err = element.Screenshot(elementOptions)
 			return err
 		}
 	}
