@@ -64,7 +64,6 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 
 // TakeScreenshotHandler handles the take_screenshot skill execution
 func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
-	// Generate deterministic path based on timestamp and parameters
 	generatedPath, err := s.generateDeterministicPath(args)
 	if err != nil {
 		s.logger.Error("failed to generate screenshot path", zap.Error(err))
@@ -178,26 +177,21 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 
 // generateDeterministicPath generates a deterministic file path for the screenshot
 func (s *TakeScreenshotSkill) generateDeterministicPath(args map[string]any) (string, error) {
-	// Ensure screenshots directory exists
 	if err := os.MkdirAll(s.screenshotDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create screenshots directory: %w", err)
 	}
 
-	// Get image type for extension
 	imageType := "png"
 	if t, ok := args["type"].(string); ok && t != "" {
 		imageType = t
 	}
 
-	// Generate timestamp-based filename with milliseconds
 	timestamp := time.Now().Format("2006-01-02_15-04-05.000")
 
-	// Create a descriptive filename based on screenshot type
 	var filename string
 	if fullPage, ok := args["full_page"].(bool); ok && fullPage {
 		filename = fmt.Sprintf("fullpage_%s.%s", timestamp, imageType)
 	} else if selector, ok := args["selector"].(string); ok && selector != "" {
-		// Create a safe filename from selector
 		safeSelector := filepath.Base(selector)
 		if len(safeSelector) > 20 {
 			safeSelector = safeSelector[:20]

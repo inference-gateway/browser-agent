@@ -423,7 +423,7 @@ func (p *playwrightImpl) FillForm(ctx context.Context, sessionID string, fields 
 			} else {
 				err = session.Page.Uncheck(selector)
 			}
-		default: // text input
+		default:
 			err = session.Page.Fill(selector, value)
 		}
 

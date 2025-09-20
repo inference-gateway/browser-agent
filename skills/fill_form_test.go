@@ -104,10 +104,8 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Execute
 			result, err := skill.FillFormHandler(context.Background(), tt.args)
 
-			// Verify
 			if tt.expectedError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -131,13 +129,12 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 		playwright: mockPlaywright,
 	}
 
-	// Setup mock to return a session
 	session := &playwright.BrowserSession{ID: "test-session"}
 	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.FillFormReturns(nil)
-	mockPlaywright.FillFormReturns(nil)     // For field filling
-	mockPlaywright.ClickElementReturns(nil) // For submit tests
+	mockPlaywright.FillFormReturns(nil)
+	mockPlaywright.ClickElementReturns(nil)
 
 	tests := []struct {
 		name string
@@ -195,10 +192,8 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Execute
 			result, err := skill.FillFormHandler(context.Background(), tt.args)
 
-			// Verify
 			assert.NoError(t, err)
 			assert.NotEmpty(t, result)
 			assert.Contains(t, result, "success")
