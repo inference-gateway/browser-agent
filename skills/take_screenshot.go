@@ -9,7 +9,6 @@ import (
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
-	config "github.com/inference-gateway/playwright-agent/config"
 	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
@@ -23,12 +22,13 @@ type TakeScreenshotSkill struct {
 }
 
 // NewTakeScreenshotSkill creates a new take_screenshot skill
-func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation, cfg *config.Config) server.Tool {
+func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	cfg := playwright.GetConfig()
 	skill := &TakeScreenshotSkill{
 		logger:         logger,
 		playwright:     playwright,
 		artifactHelper: server.NewArtifactHelper(),
-		screenshotDir:  cfg.ScreenshotDir,
+		screenshotDir:  cfg.Screenshots.Dir,
 	}
 	return server.NewBasicTool(
 		"take_screenshot",
@@ -191,7 +191,7 @@ func (s *TakeScreenshotSkill) generateDeterministicPath(args map[string]any) (st
 
 	// Generate timestamp-based filename with milliseconds
 	timestamp := time.Now().Format("2006-01-02_15-04-05.000")
-	
+
 	// Create a descriptive filename based on screenshot type
 	var filename string
 	if fullPage, ok := args["full_page"].(bool); ok && fullPage {

@@ -10,11 +10,8 @@ spec:
     pushNotifications: false
     stateTransitionHistory: false
   config:
-    screenshot_dir:
-      env: A2A_SCREENSHOT_DIR
-      type: string
-      description: Directory path for storing screenshots
-      default: "screenshots"
+    screenshots:
+      dir: /tmp/screenshots
   skills:
     - id: navigate_to_url
       name: navigate_to_url
@@ -162,7 +159,7 @@ spec:
         - playwright
     - id: take_screenshot
       name: take_screenshot
-      description: Capture a screenshot of the current page or specific element with deterministic file naming
+      description: Capture a screenshot of the current page or specific element
       tags:
         - screenshot
         - capture

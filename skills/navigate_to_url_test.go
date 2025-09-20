@@ -7,92 +7,23 @@ import (
 	"time"
 
 	"github.com/inference-gateway/playwright-agent/internal/playwright"
+	"github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
 	"go.uber.org/zap/zaptest"
 )
 
-// MockBrowserAutomation is a mock implementation of the BrowserAutomation interface
-type MockBrowserAutomation struct {
-	sessions    map[string]*playwright.BrowserSession
-	navigateErr error
-	launchErr   error
-}
-
-func NewMockBrowserAutomation() *MockBrowserAutomation {
-	return &MockBrowserAutomation{
-		sessions: make(map[string]*playwright.BrowserSession),
-	}
-}
-
-func (m *MockBrowserAutomation) LaunchBrowser(ctx context.Context, config *playwright.BrowserConfig) (*playwright.BrowserSession, error) {
-	if m.launchErr != nil {
-		return nil, m.launchErr
-	}
+func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
+	logger := zaptest.NewLogger(t)
+	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
 	session := &playwright.BrowserSession{
 		ID:       "test-session-123",
 		Created:  time.Now(),
 		LastUsed: time.Now(),
 	}
-	m.sessions[session.ID] = session
-	return session, nil
-}
+	mockPlaywright.LaunchBrowserReturns(session, nil)
+	mockPlaywright.GetSessionReturns(session, nil)
+	mockPlaywright.NavigateToURLReturns(nil)
 
-func (m *MockBrowserAutomation) CloseBrowser(ctx context.Context, sessionID string) error {
-	delete(m.sessions, sessionID)
-	return nil
-}
-
-func (m *MockBrowserAutomation) GetSession(sessionID string) (*playwright.BrowserSession, error) {
-	session, exists := m.sessions[sessionID]
-	if !exists {
-		return nil, nil
-	}
-	return session, nil
-}
-
-func (m *MockBrowserAutomation) NavigateToURL(ctx context.Context, sessionID, url string, waitUntil string, timeout time.Duration) error {
-	return m.navigateErr
-}
-
-func (m *MockBrowserAutomation) ClickElement(ctx context.Context, sessionID, selector string, options map[string]any) error {
-	return nil
-}
-
-func (m *MockBrowserAutomation) FillForm(ctx context.Context, sessionID string, fields []map[string]any, submit bool, submitSelector string) error {
-	return nil
-}
-
-func (m *MockBrowserAutomation) ExtractData(ctx context.Context, sessionID string, extractors []map[string]any, format string) (string, error) {
-	return "", nil
-}
-
-func (m *MockBrowserAutomation) TakeScreenshot(ctx context.Context, sessionID, path string, fullPage bool, selector string, format string, quality int) error {
-	return nil
-}
-
-func (m *MockBrowserAutomation) ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error) {
-	return nil, nil
-}
-
-func (m *MockBrowserAutomation) WaitForCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error {
-	return nil
-}
-
-func (m *MockBrowserAutomation) HandleAuthentication(ctx context.Context, sessionID, authType, username, password, loginURL string, selectors map[string]string) error {
-	return nil
-}
-
-func (m *MockBrowserAutomation) GetHealth(ctx context.Context) error {
-	return nil
-}
-
-func (m *MockBrowserAutomation) Shutdown(ctx context.Context) error {
-	return nil
-}
-
-func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
-	logger := zaptest.NewLogger(t)
-	mockPlaywright := NewMockBrowserAutomation()
 	skill := &NavigateToURLSkill{
 		logger:     logger,
 		playwright: mockPlaywright,

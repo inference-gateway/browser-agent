@@ -5,32 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/inference-gateway/playwright-agent/internal/playwright"
+	"github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
-
-// ExecuteScriptMockBrowserAutomation extends the existing mock for execute script testing
-type ExecuteScriptMockBrowserAutomation struct {
-	*MockBrowserAutomation
-	executeResult any
-	executeError  error
-}
-
-func NewExecuteScriptMockBrowserAutomation() *ExecuteScriptMockBrowserAutomation {
-	return &ExecuteScriptMockBrowserAutomation{
-		MockBrowserAutomation: NewMockBrowserAutomation(),
-	}
-}
-
-func (m *ExecuteScriptMockBrowserAutomation) SetExecuteScriptResult(result any, err error) {
-	m.executeResult = result
-	m.executeError = err
-}
-
-func (m *ExecuteScriptMockBrowserAutomation) ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error) {
-	return m.executeResult, m.executeError
-}
 
 func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 	logger := zap.NewNop()
@@ -155,8 +136,16 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockPlaywright := NewExecuteScriptMockBrowserAutomation()
-			mockPlaywright.SetExecuteScriptResult(tt.executeResult, tt.executeError)
+			mockPlaywright := &mocks.FakeBrowserAutomation{}
+
+			session := &playwright.BrowserSession{
+				ID:       "test-session-123",
+				Created:  time.Now(),
+				LastUsed: time.Now(),
+			}
+			mockPlaywright.LaunchBrowserReturns(session, nil)
+			mockPlaywright.GetSessionReturns(session, nil)
+			mockPlaywright.ExecuteScriptReturns(tt.executeResult, tt.executeError)
 
 			skill := &ExecuteScriptSkill{
 				logger:     logger,
