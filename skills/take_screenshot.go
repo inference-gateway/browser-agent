@@ -18,18 +18,26 @@ type TakeScreenshotSkill struct {
 	logger         *zap.Logger
 	playwright     playwright.BrowserAutomation
 	artifactHelper *server.ArtifactHelper
+	screenshotDir  string
 }
 
 // NewTakeScreenshotSkill creates a new take_screenshot skill
 func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	// Get screenshot directory from environment or use default
+	screenshotDir := os.Getenv("A2A_SCREENSHOT_DIR")
+	if screenshotDir == "" {
+		screenshotDir = "screenshots"
+	}
+	
 	skill := &TakeScreenshotSkill{
 		logger:         logger,
 		playwright:     playwright,
 		artifactHelper: server.NewArtifactHelper(),
+		screenshotDir:  screenshotDir,
 	}
 	return server.NewBasicTool(
 		"take_screenshot",
-		"Capture a screenshot of the current page or specific element",
+		"Capture a screenshot of the current page or specific element with deterministic file naming",
 		map[string]any{
 			"type": "object",
 			"properties": map[string]any{
@@ -37,10 +45,6 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 					"default":     false,
 					"description": "Capture the entire scrollable page",
 					"type":        "boolean",
-				},
-				"path": map[string]any{
-					"description": "File path to save the screenshot",
-					"type":        "string",
 				},
 				"quality": map[string]any{
 					"default":     80,
@@ -57,7 +61,7 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 					"type":        "string",
 				},
 			},
-			"required": []string{"path"},
+			"required": []string{},
 		},
 		skill.TakeScreenshotHandler,
 	)
@@ -65,15 +69,11 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 
 // TakeScreenshotHandler handles the take_screenshot skill execution
 func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
-	path, ok := args["path"].(string)
-	if !ok || path == "" {
-		return "", fmt.Errorf("path parameter is required and must be a non-empty string")
-	}
-
-	normalizedPath, err := s.validateAndNormalizePath(path)
+	// Generate deterministic path based on timestamp and parameters
+	generatedPath, err := s.generateDeterministicPath(args)
 	if err != nil {
-		s.logger.Error("invalid path provided", zap.String("path", path), zap.Error(err))
-		return "", fmt.Errorf("invalid path: %w", err)
+		s.logger.Error("failed to generate screenshot path", zap.Error(err))
+		return "", fmt.Errorf("failed to generate screenshot path: %w", err)
 	}
 
 	fullPage := false
@@ -106,7 +106,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 	}
 
 	s.logger.Info("taking screenshot",
-		zap.String("path", normalizedPath),
+		zap.String("path", generatedPath),
 		zap.Bool("full_page", fullPage),
 		zap.String("type", imageType),
 		zap.Int("quality", quality),
@@ -118,28 +118,28 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	err = s.playwright.TakeScreenshot(ctx, session.ID, normalizedPath, fullPage, selector, imageType, quality)
+	err = s.playwright.TakeScreenshot(ctx, session.ID, generatedPath, fullPage, selector, imageType, quality)
 	if err != nil {
 		s.logger.Error("screenshot failed",
-			zap.String("path", normalizedPath),
+			zap.String("path", generatedPath),
 			zap.String("sessionID", session.ID),
 			zap.Error(err))
 		return "", fmt.Errorf("screenshot failed: %w", err)
 	}
 
-	screenshotData, err := os.ReadFile(normalizedPath)
+	screenshotData, err := os.ReadFile(generatedPath)
 	if err != nil {
-		s.logger.Error("failed to read screenshot file", zap.String("path", normalizedPath), zap.Error(err))
+		s.logger.Error("failed to read screenshot file", zap.String("path", generatedPath), zap.Error(err))
 		return "", fmt.Errorf("failed to read screenshot file: %w", err)
 	}
 
-	metadata, err := s.getScreenshotMetadata(normalizedPath, fullPage, selector, imageType, quality)
+	metadata, err := s.getScreenshotMetadata(generatedPath, fullPage, selector, imageType, quality)
 	if err != nil {
 		s.logger.Warn("failed to get screenshot metadata", zap.Error(err))
 	}
 
 	mimeType := s.getMimeType(imageType)
-	filename := filepath.Base(normalizedPath)
+	filename := filepath.Base(generatedPath)
 
 	screenshotArtifact := s.artifactHelper.CreateFileArtifactFromBytes(
 		fmt.Sprintf("Screenshot: %s", filename),
@@ -154,14 +154,14 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 	}
 
 	s.logger.Info("screenshot completed successfully",
-		zap.String("path", normalizedPath),
+		zap.String("path", generatedPath),
 		zap.String("sessionID", session.ID),
 		zap.String("artifactID", screenshotArtifact.ArtifactID),
 		zap.Int("fileSize", len(screenshotData)))
 
 	response := map[string]any{
 		"success":     true,
-		"path":        normalizedPath,
+		"path":        generatedPath,
 		"full_page":   fullPage,
 		"type":        imageType,
 		"quality":     quality,
@@ -170,7 +170,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		"artifact_id": screenshotArtifact.ArtifactID,
 		"file_size":   len(screenshotData),
 		"timestamp":   s.getCurrentTimestamp(),
-		"message":     "Screenshot captured successfully and stored as artifact",
+		"message":     "Screenshot captured successfully with deterministic naming and stored as artifact",
 	}
 
 	responseJSON, err := json.Marshal(response)
@@ -181,20 +181,39 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 	return string(responseJSON), nil
 }
 
-// validateAndNormalizePath validates and normalizes the file path
-func (s *TakeScreenshotSkill) validateAndNormalizePath(path string) (string, error) {
-	if path == "" {
-		return "", fmt.Errorf("path cannot be empty")
+// generateDeterministicPath generates a deterministic file path for the screenshot
+func (s *TakeScreenshotSkill) generateDeterministicPath(args map[string]any) (string, error) {
+	// Ensure screenshots directory exists
+	if err := os.MkdirAll(s.screenshotDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create screenshots directory: %w", err)
 	}
 
-	cleanPath := filepath.Clean(path)
-
-	dir := filepath.Dir(cleanPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create directory: %w", err)
+	// Get image type for extension
+	imageType := "png"
+	if t, ok := args["type"].(string); ok && t != "" {
+		imageType = t
 	}
 
-	return cleanPath, nil
+	// Generate timestamp-based filename with milliseconds
+	timestamp := time.Now().Format("2006-01-02_15-04-05.000")
+	
+	// Create a descriptive filename based on screenshot type
+	var filename string
+	if fullPage, ok := args["full_page"].(bool); ok && fullPage {
+		filename = fmt.Sprintf("fullpage_%s.%s", timestamp, imageType)
+	} else if selector, ok := args["selector"].(string); ok && selector != "" {
+		// Create a safe filename from selector
+		safeSelector := filepath.Base(selector)
+		if len(safeSelector) > 20 {
+			safeSelector = safeSelector[:20]
+		}
+		filename = fmt.Sprintf("element_%s_%s.%s", safeSelector, timestamp, imageType)
+	} else {
+		filename = fmt.Sprintf("viewport_%s.%s", timestamp, imageType)
+	}
+
+	fullPath := filepath.Join(s.screenshotDir, filename)
+	return fullPath, nil
 }
 
 // isValidImageType validates the image format

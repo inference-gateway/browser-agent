@@ -156,7 +156,7 @@ spec:
         - playwright
     - id: take_screenshot
       name: take_screenshot
-      description: Capture a screenshot of the current page or specific element
+      description: Capture a screenshot of the current page or specific element with deterministic file naming
       tags:
         - screenshot
         - capture
@@ -165,9 +165,6 @@ spec:
       schema:
         type: object
         properties:
-          path:
-            type: string
-            description: File path to save the screenshot
           full_page:
             type: boolean
             description: Capture the entire scrollable page
@@ -183,8 +180,7 @@ spec:
             type: integer
             description: Quality for jpeg images (0-100)
             default: 80
-        required:
-          - path
+        required: []
       inject:
         - logger
         - playwright

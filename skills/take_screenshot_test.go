@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -105,18 +106,14 @@ func createTestSkill() *TakeScreenshotSkill {
 		logger:         logger,
 		playwright:     mockPlaywright,
 		artifactHelper: server.NewArtifactHelper(),
+		screenshotDir:  "test_screenshots",
 	}
 }
 
 func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "test_screenshot.png")
-
-	args := map[string]any{
-		"path": path,
-	}
+	args := map[string]any{}
 
 	ctx := context.Background()
 	result, err := skill.TakeScreenshotHandler(ctx, args)
@@ -134,23 +131,34 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 		t.Errorf("Expected success to be true, got: %v", response["success"])
 	}
 
-	if resultPath, ok := response["path"].(string); !ok || resultPath != path {
-		t.Errorf("Expected path to be %s, got: %v", path, response["path"])
+	// Check that path is deterministically generated
+	resultPath, ok := response["path"].(string)
+	if !ok {
+		t.Errorf("Expected path in response, got: %v", response["path"])
 	}
 
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		t.Errorf("Expected screenshot file to be created at %s", path)
+	// Verify path contains expected directory and timestamp pattern
+	if !filepath.IsAbs(resultPath) && !strings.HasPrefix(resultPath, "test_screenshots/") {
+		t.Errorf("Expected path to start with test_screenshots/, got: %s", resultPath)
 	}
+
+	if !strings.Contains(resultPath, "viewport_") {
+		t.Errorf("Expected viewport screenshot filename, got: %s", resultPath)
+	}
+
+	// Verify file was actually created
+	if _, err := os.Stat(resultPath); os.IsNotExist(err) {
+		t.Errorf("Expected screenshot file to be created at %s", resultPath)
+	}
+
+	// Clean up
+	os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "fullpage_screenshot.png")
-
 	args := map[string]any{
-		"path":      path,
 		"full_page": true,
 	}
 
@@ -169,16 +177,21 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 	if fullPage, ok := response["full_page"].(bool); !ok || !fullPage {
 		t.Errorf("Expected full_page to be true, got: %v", response["full_page"])
 	}
+
+	// Check that filename indicates fullpage screenshot
+	resultPath, ok := response["path"].(string)
+	if !ok || !strings.Contains(resultPath, "fullpage_") {
+		t.Errorf("Expected fullpage screenshot filename, got: %s", resultPath)
+	}
+
+	// Clean up
+	os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "quality_screenshot.jpg")
-
 	args := map[string]any{
-		"path":    path,
 		"type":    "jpeg",
 		"quality": 95,
 	}
@@ -202,16 +215,21 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 	if quality, ok := response["quality"].(float64); !ok || int(quality) != 95 {
 		t.Errorf("Expected quality to be 95, got: %v", response["quality"])
 	}
+
+	// Check that filename has .jpeg extension
+	resultPath, ok := response["path"].(string)
+	if !ok || !strings.HasSuffix(resultPath, ".jpeg") {
+		t.Errorf("Expected .jpeg extension in filename, got: %s", resultPath)
+	}
+
+	// Clean up
+	os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "element_screenshot.png")
-
 	args := map[string]any{
-		"path":     path,
 		"selector": "#main-content",
 	}
 
@@ -230,35 +248,48 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 	if selector, ok := response["selector"].(string); !ok || selector != "#main-content" {
 		t.Errorf("Expected selector to be #main-content, got: %v", response["selector"])
 	}
+
+	// Check that filename indicates element screenshot
+	resultPath, ok := response["path"].(string)
+	if !ok || !strings.Contains(resultPath, "element_") {
+		t.Errorf("Expected element screenshot filename, got: %s", resultPath)
+	}
+
+	// Clean up
+	os.RemoveAll("test_screenshots")
 }
 
-func TestTakeScreenshotHandler_InvalidPath(t *testing.T) {
+func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
 	skill := createTestSkill()
 
-	args := map[string]any{
-		"path": "",
-	}
+	// Test that empty args work (no path required)
+	args := map[string]any{}
 
 	ctx := context.Background()
-	_, err := skill.TakeScreenshotHandler(ctx, args)
+	result, err := skill.TakeScreenshotHandler(ctx, args)
 
-	if err == nil {
-		t.Error("Expected error for empty path, got nil")
+	if err != nil {
+		t.Fatalf("Expected no error for deterministic path generation, got: %v", err)
 	}
 
-	if err.Error() != "path parameter is required and must be a non-empty string" {
-		t.Errorf("Expected specific error message, got: %v", err)
+	var response map[string]any
+	if err := json.Unmarshal([]byte(result), &response); err != nil {
+		t.Fatalf("Failed to parse response JSON: %v", err)
 	}
+
+	// Verify path is generated
+	if _, ok := response["path"]; !ok {
+		t.Error("Expected path to be generated in response")
+	}
+
+	// Clean up
+	os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "test.gif")
-
 	args := map[string]any{
-		"path": path,
 		"type": "gif",
 	}
 
@@ -273,16 +304,15 @@ func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got: %v", expectedMsg, err)
 	}
+
+	// Clean up
+	os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 	skill := createTestSkill()
 
-	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "test.jpg")
-
 	args := map[string]any{
-		"path":    path,
 		"type":    "jpeg",
 		"quality": 150,
 	}
@@ -298,49 +328,44 @@ func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got: %v", expectedMsg, err)
 	}
+
+	// Clean up
+	os.RemoveAll("test_screenshots")
 }
 
-func TestValidateAndNormalizePath(t *testing.T) {
+func TestGenerateDeterministicPath(t *testing.T) {
 	skill := createTestSkill()
 
 	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
-		errMsg  string
+		name     string
+		args     map[string]any
+		expected string // substring that should be in the path
 	}{
 		{
-			name:    "valid relative path",
-			input:   "screenshots/test.png",
-			wantErr: false,
+			name:     "viewport screenshot",
+			args:     map[string]any{},
+			expected: "viewport_",
 		},
 		{
-			name:    "valid absolute path",
-			input:   "/tmp/screenshots/test.png",
-			wantErr: false,
+			name:     "fullpage screenshot",
+			args:     map[string]any{"full_page": true},
+			expected: "fullpage_",
 		},
 		{
-			name:    "empty path",
-			input:   "",
-			wantErr: true,
-			errMsg:  "path cannot be empty",
+			name:     "element screenshot",
+			args:     map[string]any{"selector": "#main"},
+			expected: "element_",
+		},
+		{
+			name:     "jpeg format",
+			args:     map[string]any{"type": "jpeg"},
+			expected: ".jpeg",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.validateAndNormalizePath(tt.input)
-
-			if tt.wantErr {
-				if err == nil {
-					t.Errorf("Expected error, got nil")
-					return
-				}
-				if tt.errMsg != "" && err.Error() != tt.errMsg {
-					t.Errorf("Expected error message '%s', got: %v", tt.errMsg, err)
-				}
-				return
-			}
+			result, err := skill.generateDeterministicPath(tt.args)
 
 			if err != nil {
 				t.Errorf("Expected no error, got: %v", err)
@@ -349,11 +374,20 @@ func TestValidateAndNormalizePath(t *testing.T) {
 
 			if result == "" {
 				t.Error("Expected non-empty result")
+				return
 			}
 
-			if dir := filepath.Dir(result); dir != "." {
-				_ = os.RemoveAll(dir)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("Expected path to contain '%s', got: %s", tt.expected, result)
 			}
+
+			// Verify path starts with screenshot directory
+			if !strings.HasPrefix(result, "test_screenshots/") {
+				t.Errorf("Expected path to start with test_screenshots/, got: %s", result)
+			}
+
+			// Clean up created directory
+			os.RemoveAll("test_screenshots")
 		})
 	}
 }
