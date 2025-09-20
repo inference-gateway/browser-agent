@@ -91,6 +91,16 @@ services:
     profiles:
       - manual
 
+  demo-site:
+    image: nginx:alpine
+    container_name: demo-site
+    ports:
+      - "8090:80"
+    volumes:
+      - ./demo-site:/usr/share/nginx/html:ro
+    networks:
+      - a2a-network
+
 networks:
   a2a-network:
     driver: bridge
