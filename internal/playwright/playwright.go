@@ -22,6 +22,10 @@ const (
 	WebKit   BrowserEngine = "webkit"
 )
 
+const (
+	DefaultSessionID = "default"
+)
+
 // BrowserConfig holds browser configuration options
 type BrowserConfig struct {
 	Engine         BrowserEngine
@@ -61,6 +65,7 @@ type BrowserAutomation interface {
 	LaunchBrowser(ctx context.Context, config *BrowserConfig) (*BrowserSession, error)
 	CloseBrowser(ctx context.Context, sessionID string) error
 	GetSession(sessionID string) (*BrowserSession, error)
+	GetOrCreateDefaultSession(ctx context.Context) (*BrowserSession, error)
 
 	// Page operations
 	NavigateToURL(ctx context.Context, sessionID, url string, waitUntil string, timeout time.Duration) error
@@ -237,6 +242,91 @@ func (p *playwrightImpl) GetSession(sessionID string) (*BrowserSession, error) {
 	}
 
 	session.LastUsed = time.Now()
+	return session, nil
+}
+
+// GetOrCreateDefaultSession gets the default shared session or creates it if it doesn't exist
+func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*BrowserSession, error) {
+	// First try to get existing default session
+	p.sessionsMux.RLock()
+	if session, exists := p.sessions[DefaultSessionID]; exists {
+		session.LastUsed = time.Now()
+		p.sessionsMux.RUnlock()
+		p.logger.Debug("reusing existing default session", zap.String("sessionID", DefaultSessionID))
+		return session, nil
+	}
+	p.sessionsMux.RUnlock()
+
+	// Need to create default session, use write lock
+	p.sessionsMux.Lock()
+	defer p.sessionsMux.Unlock()
+
+	// Double-check in case another goroutine created it while we were waiting
+	if session, exists := p.sessions[DefaultSessionID]; exists {
+		session.LastUsed = time.Now()
+		p.logger.Debug("reusing existing default session (double-check)", zap.String("sessionID", DefaultSessionID))
+		return session, nil
+	}
+
+	// Create new default session
+	config := DefaultBrowserConfig()
+	p.logger.Info("creating new default browser session", zap.String("sessionID", DefaultSessionID))
+
+	var browserType playwright.BrowserType
+	switch config.Engine {
+	case Chromium:
+		browserType = p.pw.Chromium
+	case Firefox:
+		browserType = p.pw.Firefox
+	case WebKit:
+		browserType = p.pw.WebKit
+	default:
+		return nil, fmt.Errorf("unsupported browser engine: %s", config.Engine)
+	}
+
+	timeoutMs := float64(config.Timeout.Milliseconds())
+	launchOptions := playwright.BrowserTypeLaunchOptions{
+		Headless: &config.Headless,
+		Args:     config.Args,
+		Timeout:  &timeoutMs,
+	}
+
+	browser, err := browserType.Launch(launchOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch browser: %w", err)
+	}
+
+	contextOptions := playwright.BrowserNewContextOptions{
+		Viewport: &playwright.Size{
+			Width:  config.ViewportWidth,
+			Height: config.ViewportHeight,
+		},
+	}
+
+	context, err := browser.NewContext(contextOptions)
+	if err != nil {
+		browser.Close()
+		return nil, fmt.Errorf("failed to create browser context: %w", err)
+	}
+
+	page, err := context.NewPage()
+	if err != nil {
+		context.Close()
+		browser.Close()
+		return nil, fmt.Errorf("failed to create page: %w", err)
+	}
+
+	session := &BrowserSession{
+		ID:       DefaultSessionID,
+		Browser:  browser,
+		Context:  context,
+		Page:     page,
+		Created:  time.Now(),
+		LastUsed: time.Now(),
+	}
+
+	p.sessions[DefaultSessionID] = session
+	p.logger.Info("default browser session created successfully", zap.String("sessionID", DefaultSessionID))
 	return session, nil
 }
 

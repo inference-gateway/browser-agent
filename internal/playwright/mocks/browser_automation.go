@@ -118,6 +118,19 @@ type FakeBrowserAutomation struct {
 		result1 *playwright.BrowserSession
 		result2 error
 	}
+	GetOrCreateDefaultSessionStub        func(context.Context) (*playwright.BrowserSession, error)
+	getOrCreateDefaultSessionMutex       sync.RWMutex
+	getOrCreateDefaultSessionArgsForCall []struct {
+		arg1 context.Context
+	}
+	getOrCreateDefaultSessionReturns struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}
+	getOrCreateDefaultSessionReturnsOnCall map[int]struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}
 	HandleAuthenticationStub        func(context.Context, string, string, string, string, string, map[string]string) error
 	handleAuthenticationMutex       sync.RWMutex
 	handleAuthenticationArgsForCall []struct {
@@ -726,6 +739,70 @@ func (fake *FakeBrowserAutomation) GetSessionReturnsOnCall(i int, result1 *playw
 		})
 	}
 	fake.getSessionReturnsOnCall[i] = struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateDefaultSession(arg1 context.Context) (*playwright.BrowserSession, error) {
+	fake.getOrCreateDefaultSessionMutex.Lock()
+	ret, specificReturn := fake.getOrCreateDefaultSessionReturnsOnCall[len(fake.getOrCreateDefaultSessionArgsForCall)]
+	fake.getOrCreateDefaultSessionArgsForCall = append(fake.getOrCreateDefaultSessionArgsForCall, struct {
+		arg1 context.Context
+	}{arg1})
+	stub := fake.GetOrCreateDefaultSessionStub
+	fakeReturns := fake.getOrCreateDefaultSessionReturns
+	fake.recordInvocation("GetOrCreateDefaultSession", []interface{}{arg1})
+	fake.getOrCreateDefaultSessionMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateDefaultSessionCallCount() int {
+	fake.getOrCreateDefaultSessionMutex.RLock()
+	defer fake.getOrCreateDefaultSessionMutex.RUnlock()
+	return len(fake.getOrCreateDefaultSessionArgsForCall)
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateDefaultSessionCalls(stub func(context.Context) (*playwright.BrowserSession, error)) {
+	fake.getOrCreateDefaultSessionMutex.Lock()
+	defer fake.getOrCreateDefaultSessionMutex.Unlock()
+	fake.GetOrCreateDefaultSessionStub = stub
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateDefaultSessionArgsForCall(i int) context.Context {
+	fake.getOrCreateDefaultSessionMutex.RLock()
+	defer fake.getOrCreateDefaultSessionMutex.RUnlock()
+	argsForCall := fake.getOrCreateDefaultSessionArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateDefaultSessionReturns(result1 *playwright.BrowserSession, result2 error) {
+	fake.getOrCreateDefaultSessionMutex.Lock()
+	defer fake.getOrCreateDefaultSessionMutex.Unlock()
+	fake.GetOrCreateDefaultSessionStub = nil
+	fake.getOrCreateDefaultSessionReturns = struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateDefaultSessionReturnsOnCall(i int, result1 *playwright.BrowserSession, result2 error) {
+	fake.getOrCreateDefaultSessionMutex.Lock()
+	defer fake.getOrCreateDefaultSessionMutex.Unlock()
+	fake.GetOrCreateDefaultSessionStub = nil
+	if fake.getOrCreateDefaultSessionReturnsOnCall == nil {
+		fake.getOrCreateDefaultSessionReturnsOnCall = make(map[int]struct {
+			result1 *playwright.BrowserSession
+			result2 error
+		})
+	}
+	fake.getOrCreateDefaultSessionReturnsOnCall[i] = struct {
 		result1 *playwright.BrowserSession
 		result2 error
 	}{result1, result2}

@@ -133,7 +133,7 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 
 	// Setup mock to return a session
 	session := &playwright.BrowserSession{ID: "test-session"}
-	mockPlaywright.LaunchBrowserReturns(session, nil)
+	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.FillFormReturns(nil)
 	mockPlaywright.FillFormReturns(nil)     // For field filling
@@ -230,7 +230,7 @@ func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
 			}
 
 			session := &playwright.BrowserSession{ID: "test-session"}
-			mockPlaywright.LaunchBrowserReturns(session, nil)
+			mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 			mockPlaywright.GetSessionReturns(session, nil)
 			mockPlaywright.FillFormReturns(nil)
 
@@ -262,7 +262,7 @@ func TestFillFormSkill_DefaultFieldType(t *testing.T) {
 	}
 
 	session := &playwright.BrowserSession{ID: "test-session"}
-	mockPlaywright.LaunchBrowserReturns(session, nil)
+	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.FillFormReturns(nil)
 
