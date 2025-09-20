@@ -92,6 +92,11 @@ func main() {
 	toolBox.AddTool(waitForConditionSkill)
 	l.Info("registered skill: wait_for_condition (Wait for specific conditions before proceeding with automation)")
 
+	// Register write_to_csv skill
+	writeToCsvSkill := skills.NewWriteToCsvSkill(l)
+	toolBox.AddTool(writeToCsvSkill)
+	l.Info("registered skill: write_to_csv (Write structured data to CSV files with support for custom headers and file paths)")
+
 	llmClient, err := server.NewOpenAICompatibleLLMClient(&cfg.A2A.AgentConfig, l)
 	if err != nil {
 		l.Fatal("failed to create LLM client", zap.Error(err))
