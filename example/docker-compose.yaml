@@ -93,7 +93,6 @@ services:
 
   demo-site:
     image: nginx:alpine
-    container_name: demo-site
     ports:
       - "8090:80"
     volumes:
