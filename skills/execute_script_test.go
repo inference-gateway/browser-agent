@@ -143,7 +143,7 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 				Created:  time.Now(),
 				LastUsed: time.Now(),
 			}
-			mockPlaywright.LaunchBrowserReturns(session, nil)
+			mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 			mockPlaywright.GetSessionReturns(session, nil)
 			mockPlaywright.ExecuteScriptReturns(tt.executeResult, tt.executeError)
 

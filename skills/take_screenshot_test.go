@@ -25,7 +25,7 @@ func createTestSkill() *TakeScreenshotSkill {
 		Created:  time.Now(),
 		LastUsed: time.Now(),
 	}
-	mockPlaywright.LaunchBrowserReturns(session, nil)
+	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.TakeScreenshotCalls(func(ctx context.Context, sessionID, path string, fullPage bool, selector string, format string, quality int) error {
 		dir := filepath.Dir(path)

@@ -37,7 +37,7 @@ func TestExtractDataHandler(t *testing.T) {
 				"format": "json",
 			},
 			mockSetup: func() {
-				mockPlaywright.LaunchBrowserReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				mockPlaywright.GetOrCreateDefaultSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
 				mockPlaywright.ExtractDataReturns(`map[title:Test Title]`, nil)
 			},
 			expectedErr: false,
@@ -62,7 +62,7 @@ func TestExtractDataHandler(t *testing.T) {
 				"format": "json",
 			},
 			mockSetup: func() {
-				mockPlaywright.LaunchBrowserReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				mockPlaywright.GetOrCreateDefaultSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
 				mockPlaywright.ExtractDataReturns(`map[title:Test Title links:[/page1 /page2]]`, nil)
 			},
 			expectedErr: false,
@@ -80,7 +80,7 @@ func TestExtractDataHandler(t *testing.T) {
 				"format": "csv",
 			},
 			mockSetup: func() {
-				mockPlaywright.LaunchBrowserReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				mockPlaywright.GetOrCreateDefaultSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
 				mockPlaywright.ExtractDataReturns(`map[title:Test Title]`, nil)
 			},
 			expectedErr: false,
@@ -98,7 +98,7 @@ func TestExtractDataHandler(t *testing.T) {
 				"format": "text",
 			},
 			mockSetup: func() {
-				mockPlaywright.LaunchBrowserReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				mockPlaywright.GetOrCreateDefaultSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
 				mockPlaywright.ExtractDataReturns(`map[title:Test Title]`, nil)
 			},
 			expectedErr: false,

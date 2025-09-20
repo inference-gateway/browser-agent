@@ -20,6 +20,7 @@ skills/wait_for_condition.go
 internal/playwright/playwright.go
 
 # Go dependency files
+go.mod
 go.sum
 
 # Add your own files to ignore here:
