@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3](https://github.com/inference-gateway/browser-agent/compare/v0.1.2...v0.1.3) (2025-09-22)
+
+### ♻️ Improvements
+
+* Rename playwright-agent to browser-agent across the project ([d05fb16](https://github.com/inference-gateway/browser-agent/commit/d05fb1686bf90ad5d6b0c13f4154849034b57a17))
+
 ## [0.1.2](https://github.com/inference-gateway/playwright-agent/compare/v0.1.1...v0.1.2) (2025-09-22)
 
 ### 🐛 Bug Fixes
