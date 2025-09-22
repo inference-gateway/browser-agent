@@ -4,7 +4,7 @@ This file describes the agents available in this A2A (Agent-to-Agent) system.
 
 ## Agent Overview
 
-### playwright-agent
+### browser-agent
 **Version**: 0.1.2  
 **Description**: AI agent for browser automation and web testing using Playwright
 
@@ -254,10 +254,10 @@ curl -X POST http://localhost:8080/skills/wait_for_condition \
 ### Docker Deployment
 ```bash
 # Build image
-docker build -t playwright-agent .
+docker build -t browser-agent .
 
 # Run container
-docker run -p 8080:8080 playwright-agent
+docker run -p 8080:8080 browser-agent
 ```
 
 

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inference-gateway/playwright-agent/internal/playwright"
-	"github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
+	"github.com/inference-gateway/browser-agent/internal/playwright"
+	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )

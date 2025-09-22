@@ -1,7 +1,7 @@
 apiVersion: adl.dev/v1
 kind: Agent
 metadata:
-  name: playwright-agent
+  name: browser-agent
   description: AI agent for browser automation and web testing using Playwright
   version: 0.1.2
 spec:
@@ -359,7 +359,7 @@ spec:
     debug: false
   language:
     go:
-      module: github.com/inference-gateway/playwright-agent
+      module: github.com/inference-gateway/browser-agent
       version: "1.25"
   acronyms:
     - DOM
@@ -371,7 +371,7 @@ spec:
     - AJAX
   scm:
     provider: github
-    url: https://github.com/inference-gateway/playwright-agent
+    url: https://github.com/inference-gateway/browser-agent
     github_app: true
     issue_templates: true
   sandbox:

@@ -10,7 +10,7 @@ import (
 	zap "go.uber.org/zap"
 	zapcore "go.uber.org/zap/zapcore"
 
-	config "github.com/inference-gateway/playwright-agent/config"
+	config "github.com/inference-gateway/browser-agent/config"
 )
 
 // NewLogger creates a new zap.Logger instance

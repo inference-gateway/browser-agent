@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
-	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
-	mocks "github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 )
 
 func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {

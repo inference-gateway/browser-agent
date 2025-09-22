@@ -1,12 +1,12 @@
 # Custom Dockerfile for Playwright Agent with proper browser dependencies
-# Based on playwright-go example and optimized for the playwright-agent
+# Based on playwright-go example and optimized for the browser-agent
 
 # Stage 1: Build the Go application
 FROM golang:1.25-alpine AS builder
 
 # Build arguments for version injection
 ARG VERSION="0.1.0"
-ARG AGENT_NAME="playwright-agent"
+ARG AGENT_NAME="browser-agent"
 ARG AGENT_DESCRIPTION="AI agent for browser automation and web testing using Playwright"
 
 WORKDIR /app

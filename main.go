@@ -15,16 +15,16 @@ import (
 	envconfig "github.com/sethvargo/go-envconfig"
 	zap "go.uber.org/zap"
 
-	config "github.com/inference-gateway/playwright-agent/config"
-	skills "github.com/inference-gateway/playwright-agent/skills"
+	config "github.com/inference-gateway/browser-agent/config"
+	skills "github.com/inference-gateway/browser-agent/skills"
 
-	logger "github.com/inference-gateway/playwright-agent/internal/logger"
-	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
+	logger "github.com/inference-gateway/browser-agent/internal/logger"
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 var (
 	Version          = "0.1.2"
-	AgentName        = "playwright-agent"
+	AgentName        = "browser-agent"
 	AgentDescription = "AI agent for browser automation and web testing using Playwright"
 )
 
@@ -164,7 +164,7 @@ Your automation solutions should be maintainable, efficient, and production-read
 		}
 	}()
 
-	l.Info("playwright-agent agent running successfully",
+	l.Info("browser-agent agent running successfully",
 		zap.String("port", cfg.A2A.ServerConfig.Port),
 		zap.String("environment", cfg.Environment))
 
@@ -174,5 +174,5 @@ Your automation solutions should be maintainable, efficient, and production-read
 
 	l.Info("shutdown signal received, gracefully stopping server...")
 	a2aServer.Stop(ctx)
-	l.Info("playwright-agent agent stopped")
+	l.Info("browser-agent agent stopped")
 }

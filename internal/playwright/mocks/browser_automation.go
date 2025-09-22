@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/inference-gateway/playwright-agent/config"
-	"github.com/inference-gateway/playwright-agent/internal/playwright"
+	"github.com/inference-gateway/browser-agent/internal/playwright"
+	"github.com/inference-gateway/browser-agent/config"
 )
 
 type FakeBrowserAutomation struct {

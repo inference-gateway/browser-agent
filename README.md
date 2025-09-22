@@ -1,7 +1,7 @@
 <div align="center">
 
-# Playwright-Agent
-[![CI](https://github.com/inference-gateway/playwright-agent/workflows/CI/badge.svg)](https://github.com/inference-gateway/playwright-agent/actions/workflows/ci.yml)
+# Browser-Agent
+[![CI](https://github.com/inference-gateway/browser-agent/workflows/CI/badge.svg)](https://github.com/inference-gateway/browser-agent/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![A2A Protocol](https://img.shields.io/badge/A2A-Protocol-blue?style=flat)](https://github.com/inference-gateway/adk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -19,8 +19,8 @@ A production-ready [Agent-to-Agent (A2A)](https://github.com/inference-gateway/a
 go run .
 
 # Or with Docker
-docker build -t playwright-agent .
-docker run -p 8080:8080 playwright-agent
+docker build -t browser-agent .
+docker run -p 8080:8080 browser-agent
 ```
 
 ## Features
@@ -147,19 +147,19 @@ The Docker image can be built with custom version information using build argume
 
 ```bash
 # Build with default values from ADL
-docker build -t playwright-agent .
+docker build -t browser-agent .
 
 # Build with custom version information
 docker build \
   --build-arg VERSION=1.2.3 \
   --build-arg AGENT_NAME="My Custom Agent" \
   --build-arg AGENT_DESCRIPTION="Custom agent description" \
-  -t playwright-agent:1.2.3 .
+  -t browser-agent:1.2.3 .
 ```
 
 **Available Build Arguments:**
 - `VERSION` - Agent version (default: `0.1.2`)
-- `AGENT_NAME` - Agent name (default: `playwright-agent`)
+- `AGENT_NAME` - Agent name (default: `browser-agent`)
 - `AGENT_DESCRIPTION` - Agent description (default: `AI agent for browser automation and web testing using Playwright`)
 
 These values are embedded into the binary at build time using linker flags, making them accessible at runtime without requiring environment variables.

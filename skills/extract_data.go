@@ -11,7 +11,7 @@ import (
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
 

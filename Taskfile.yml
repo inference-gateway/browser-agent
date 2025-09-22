@@ -5,7 +5,7 @@
 version: '3'
 
 vars:
-  APP_NAME: playwright-agent
+  APP_NAME: browser-agent
   VERSION: 0.1.2
 
 tasks:

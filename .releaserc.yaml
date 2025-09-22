@@ -7,7 +7,7 @@ branches:
   - { name: main, prerelease: false, channel: latest }
   - { name: 'rc/*', prerelease: rc, channel: rc }
 
-repositoryUrl: 'https://github.com/inference-gateway/playwright-agent'
+repositoryUrl: 'https://github.com/inference-gateway/browser-agent'
 tagFormat: 'v${version}'
 
 verifyConditions:
@@ -61,7 +61,7 @@ plugins:
         echo "Building and pushing Docker image for version ${nextRelease.version}"
         REPO_LOWER=$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
         DESCRIPTION="AI agent for browser automation and web testing using Playwright"
-        TITLE="playwright-agent"
+        TITLE="browser-agent"
         
         if [[ "$GITHUB_REF_NAME" == rc/* ]]; then
           docker buildx build --platform linux/amd64,linux/arm64 \

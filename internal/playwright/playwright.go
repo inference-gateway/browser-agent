@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	config "github.com/inference-gateway/playwright-agent/config"
+	config "github.com/inference-gateway/browser-agent/config"
 	zap "go.uber.org/zap"
 
 	"github.com/playwright-community/playwright-go"
