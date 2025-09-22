@@ -3,7 +3,7 @@ services:
   agent:
     build:
       context: ..
-      dockerfile: Dockerfile.playwright
+      dockerfile: Dockerfile
     container_name: agent
     ports:
       - "8080:8080"
