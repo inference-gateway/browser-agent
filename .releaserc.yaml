@@ -74,7 +74,6 @@ plugins:
             --annotation "index:org.opencontainers.image.version=${nextRelease.version}" \
             --annotation "index:org.opencontainers.image.title=$TITLE" \
             --tag ghcr.io/$REPO_LOWER:${nextRelease.version} \
-            --file Dockerfile.playwright \
             --push .
         else
           docker buildx build --platform linux/amd64,linux/arm64 \
@@ -88,7 +87,6 @@ plugins:
             --annotation "index:org.opencontainers.image.title=$TITLE" \
             --tag ghcr.io/$REPO_LOWER:${nextRelease.version} \
             --tag ghcr.io/$REPO_LOWER:latest \
-            --file Dockerfile.playwright \
             --push .
         fi
 
