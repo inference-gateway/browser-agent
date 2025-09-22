@@ -14,11 +14,30 @@ A production-ready [Agent-to-Agent (A2A)](https://github.com/inference-gateway/a
 
 ## Quick Start
 
+### Local Development Setup
+
+Before running the agent locally, you need to install Playwright's browser dependencies:
+
 ```bash
+# Option 1: Use the setup script (recommended)
+./setup.sh
+
+# Option 2: Install manually with npx
+npx playwright install-deps
+
+# Option 3: Install specific system packages manually
+# sudo apt-get update && sudo apt-get install -y \
+#   libxcursor1 libgtk-3-0t64 libpangocairo-1.0-0 \
+#   libcairo-gobject2 libgdk-pixbuf-2.0-0
+
 # Run the agent
 go run .
+```
 
-# Or with Docker
+### Docker (No additional setup required)
+
+```bash
+# Or with Docker (dependencies included)
 docker build -t playwright-agent .
 docker run -p 8080:8080 playwright-agent
 ```
@@ -105,6 +124,18 @@ The following custom configuration variables are available:
 | **Authentication** | `A2A_AUTH_ENABLE` | Enable OIDC authentication | `false` |
 
 ## Development
+
+### Initial Setup
+
+```bash
+# Install Playwright system dependencies (required for all development)
+./setup.sh
+
+# Or install manually:
+# npx playwright install-deps
+```
+
+### Build and Test
 
 ```bash
 # Generate code from ADL
