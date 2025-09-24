@@ -136,11 +136,11 @@ func (s *WriteToCsvSkill) WriteToCsvHandler(ctx context.Context, args map[string
 
 func (s *WriteToCsvSkill) generateFilePath(filename string) string {
 	var dataDir string
-	
+
 	if s.playwright != nil && s.playwright.GetConfig() != nil {
 		dataDir = s.playwright.GetConfig().Browser.DataDir
 	}
-	
+
 	if dataDir == "" {
 		dataDir = "."
 	}

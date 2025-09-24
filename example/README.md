@@ -6,7 +6,7 @@ This script demonstrates how to use the Playwright automation framework to perfo
 Configure the environment variables as needed:
 
 ```bash
-cp .env.gateway.example .env.gateway
+cp .env.example .env
 ```
 
 ** Add at least two providers, in this example Google and DeepSeek.

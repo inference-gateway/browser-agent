@@ -44,8 +44,8 @@ services:
       A2A_SERVER_IDLE_TIMEOUT: 120s
       A2A_SERVER_DISABLE_HEALTHCHECK_LOG: true
       A2A_AGENT_CARD_FILE_PATH: .well-known/agent.json
-      A2A_AGENT_CLIENT_PROVIDER: google
-      A2A_AGENT_CLIENT_MODEL: models/gemini-2.5-flash
+      A2A_AGENT_CLIENT_PROVIDER: ${A2A_AGENT_CLIENT_PROVIDER}
+      A2A_AGENT_CLIENT_MODEL: ${A2A_AGENT_CLIENT_MODEL}
       A2A_AGENT_CLIENT_API_KEY: ""
       A2A_AGENT_CLIENT_BASE_URL: http://inference-gateway:8080/v1
       A2A_AGENT_CLIENT_TIMEOUT: 30s
@@ -71,13 +71,14 @@ services:
     image: ghcr.io/inference-gateway/inference-gateway:latest
     container_name: inference-gateway
     environment:
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       ENVIRONMENT: development
       SERVER_READ_TIMEOUT: 530s
       SERVER_WRITE_TIMEOUT: 530s
       CLIENT_TIMEOUT: 530s
-      CLIENT_IDLE_CONN_TIMEOUT: 30s
-    env_file:
-      .env.gateway
+      CLIENT_IDLE_CONN_TIMEOUT: 130s
+      CLIENT_RESPONSE_HEADER_TIMEOUT: 120s
     networks:
       - a2a-network
 
