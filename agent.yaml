@@ -37,6 +37,10 @@ spec:
         - "--disable-backgrounding-occluded-windows"
         - "--disable-renderer-backgrounding"
         - "--disable-ipc-flooding-protection"
+    artifacts:
+      enabled: true
+      port: 8081
+      base_url: "http://localhost:8081"
   skills:
     - id: navigate_to_url
       name: navigate_to_url
