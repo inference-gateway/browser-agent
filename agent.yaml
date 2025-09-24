@@ -20,8 +20,7 @@ spec:
       header_dnt: "1"
       header_connection: "keep-alive"
       header_upgrade_insecure_requests: "1"
-      data_files_dir: "/tmp/playwright"
-      screenshots_dir: "/tmp/playwright"
+      data_dir: "/tmp/playwright"
       args:
         - "--disable-blink-features=AutomationControlled"
         - "--disable-features=VizDisplayCompositor"

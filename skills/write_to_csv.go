@@ -21,7 +21,7 @@ type WriteToCsvSkill struct {
 func NewWriteToCsvSkill(logger *zap.Logger, cfg *config.Config) server.Tool {
 	skill := &WriteToCsvSkill{
 		logger:       logger,
-		dataFilesDir: cfg.Browser.DataFilesDir,
+		dataFilesDir: cfg.Browser.DataDir,
 	}
 	return server.NewBasicTool(
 		"write_to_csv",

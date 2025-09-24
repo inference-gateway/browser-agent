@@ -17,12 +17,12 @@ func TestWriteToCsvHandler(t *testing.T) {
 	tempDir := t.TempDir()
 	cfg := &config.Config{
 		Browser: config.BrowserConfig{
-			DataFilesDir: tempDir,
+			DataDir: tempDir,
 		},
 	}
 	skill := &WriteToCsvSkill{
 		logger:       logger,
-		dataFilesDir: cfg.Browser.DataFilesDir,
+		dataFilesDir: cfg.Browser.DataDir,
 	}
 
 	tests := []struct {

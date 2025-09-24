@@ -36,7 +36,7 @@ func createTestSkill() *TakeScreenshotSkill {
 	})
 	mockPlaywright.GetConfigReturns(&config.Config{
 		Browser: config.BrowserConfig{
-			ScreenshotsDir: "test_screenshots",
+			DataDir: "test_screenshots",
 		},
 	})
 
