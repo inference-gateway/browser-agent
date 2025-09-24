@@ -17,6 +17,7 @@ skills/take_screenshot.go
 skills/execute_script.go
 skills/handle_authentication.go
 skills/wait_for_condition.go
+skills/write_to_csv.go
 internal/playwright/playwright.go
 
 # Go dependency files

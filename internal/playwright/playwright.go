@@ -80,9 +80,8 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		height = 1080
 	}
 
-	// Parse args from config - remove brackets and split by space
 	argsStr := strings.Trim(cfg.Browser.Args, "[]")
-	args := []string{"--disable-dev-shm-usage", "--no-sandbox"} // Always include these
+	args := []string{"--disable-dev-shm-usage", "--no-sandbox"}
 	if argsStr != "" {
 		configArgs := strings.Fields(argsStr)
 		args = append(args, configArgs...)

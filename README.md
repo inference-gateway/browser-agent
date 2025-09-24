@@ -49,6 +49,7 @@ docker run -p 8080:8080 browser-agent
 | `execute_script` | Execute custom JavaScript code in the browser context |args, return_value, script |
 | `handle_authentication` | Handle various authentication scenarios including basic auth, OAuth, and custom login forms |login_url, password, password_selector, submit_selector, type, username, username_selector |
 | `wait_for_condition` | Wait for specific conditions before proceeding with automation |condition, custom_function, selector, state, timeout |
+| `write_to_csv` | Write structured data to CSV files with support for custom headers and file paths |append, data, filename, headers, include_headers |
 
 ## Configuration
 
@@ -61,13 +62,13 @@ The following custom configuration variables are available:
 | Category | Variable | Description | Default |
 |----------|----------|-------------|---------|
 | **Browser** | `BROWSER_ARGS` | Args configuration | `[--disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor --no-first-run --disable-default-apps --disable-extensions --disable-plugins --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-zygote --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-ipc-flooding-protection]` |
+| **Browser** | `BROWSER_DATA_DIR` | Data_dir configuration | `/tmp/playwright/artifacts` |
 | **Browser** | `BROWSER_HEADER_ACCEPT` | Header_accept configuration | `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7` |
 | **Browser** | `BROWSER_HEADER_ACCEPT_ENCODING` | Header_accept_encoding configuration | `gzip, deflate, br` |
 | **Browser** | `BROWSER_HEADER_ACCEPT_LANGUAGE` | Header_accept_language configuration | `en-US,en;q=0.9` |
 | **Browser** | `BROWSER_HEADER_CONNECTION` | Header_connection configuration | `keep-alive` |
 | **Browser** | `BROWSER_HEADER_DNT` | Header_dnt configuration | `1` |
 | **Browser** | `BROWSER_HEADER_UPGRADE_INSECURE_REQUESTS` | Header_upgrade_insecure_requests configuration | `1` |
-| **Browser** | `BROWSER_SCREENSHOTS_DIR` | Screenshots_dir configuration | `/tmp/screenshots` |
 | **Browser** | `BROWSER_USER_AGENT` | User_agent configuration | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36` |
 | **Browser** | `BROWSER_VIEWPORT_HEIGHT` | Viewport_height configuration | `1080` |
 | **Browser** | `BROWSER_VIEWPORT_WIDTH` | Viewport_width configuration | `1920` |

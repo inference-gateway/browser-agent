@@ -10,7 +10,7 @@ browser-agent is an A2A (Agent-to-Agent) server implementing the [A2A Protocol](
 
 ### ADL-Generated Structure
 
-The codebase is generated using ADL CLI 0.21.4 and follows a strict generation pattern:
+The codebase is generated using ADL CLI 0.21.5 and follows a strict generation pattern:
 - **Generated Files**: Marked with `DO NOT EDIT` headers - manual changes will be overwritten
 - **Configuration Source**: `agent.yaml` - defines agent capabilities, skills, and metadata
 - **Server Implementation**: Built on the ADK (Agent Development Kit) framework from `github.com/inference-gateway/adk`
@@ -82,6 +82,7 @@ The following skills are currently defined:
 - **execute_script**: Execute custom JavaScript code in the browser context
 - **handle_authentication**: Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 - **wait_for_condition**: Wait for specific conditions before proceeding with automation
+- **write_to_csv**: Write structured data to CSV files with support for custom headers and file paths
 
 To modify skills:
 1. Update `agent.yaml` with skill definitions
@@ -117,7 +118,7 @@ Activate with: `flox activate` (if Flox is installed)
 
 - **Generated Files**: Never manually edit files with "DO NOT EDIT" headers
 - **Configuration Changes**: Always modify `agent.yaml` and regenerate
-- **ADL Version**: Ensure ADL CLI 0.21.4 or compatible version for regeneration
+- **ADL Version**: Ensure ADL CLI 0.21.5 or compatible version for regeneration
 - **Port Configuration**: Default 8080, configurable via `A2A_PORT` or `A2A_SERVER_PORT`
 
 ## Debugging Tips

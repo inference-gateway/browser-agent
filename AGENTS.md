@@ -75,7 +75,7 @@ Your automation solutions should be maintainable, efficient, and production-read
 ## Skills
 
 
-This agent provides 8 skills:
+This agent provides 9 skills:
 
 
 ### navigate_to_url
@@ -130,6 +130,13 @@ This agent provides 8 skills:
 ### wait_for_condition
 - **Description**: Wait for specific conditions before proceeding with automation
 - **Tags**: wait, synchronization, timing, playwright
+- **Input Schema**: Defined in agent configuration
+- **Output Schema**: Defined in agent configuration
+
+
+### write_to_csv
+- **Description**: Write structured data to CSV files with support for custom headers and file paths
+- **Tags**: export, csv, data, file
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
 
@@ -239,6 +246,11 @@ curl -X POST http://localhost:8080/skills/wait_for_condition \
   -H "Content-Type: application/json" \
   -d '{"input": "your_input_here"}'
 
+# Execute write_to_csv skill
+curl -X POST http://localhost:8080/skills/write_to_csv \
+  -H "Content-Type: application/json" \
+  -d '{"input": "your_input_here"}'
+
 
 ```
 
@@ -285,6 +297,8 @@ docker run -p 8080:8080 browser-agent
 │   └── handle_authentication.go   # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 
 │   └── wait_for_condition.go   # Wait for specific conditions before proceeding with automation
+
+│   └── write_to_csv.go   # Write structured data to CSV files with support for custom headers and file paths
 
 ├── .well-known/         # Agent configuration
 │   └── agent.json       # Agent metadata
