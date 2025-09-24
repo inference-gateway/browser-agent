@@ -21,10 +21,9 @@ func TestGlobalManagerIntegration(t *testing.T) {
 	
 	// Create artifact server
 	server := NewArtifactServer(logger, 8082, tempDir)
-	baseURL := "http://localhost:8082"
 	
 	// Initialize global manager
-	manager := InitializeGlobalManager(logger, server, baseURL)
+	manager := InitializeGlobalManager(logger, server)
 	require.NotNil(t, manager)
 	
 	// Test that we can get the global manager
@@ -62,10 +61,7 @@ func TestGlobalManagerIntegration(t *testing.T) {
 	assert.Equal(t, "text/plain", artifacts[0].MimeType)
 	assert.Equal(t, int64(len(testData)), artifacts[0].Size)
 	
-	// Test URL generation
-	url := helper.GetArtifactURL(artifacts[0].ID)
-	expectedURL := baseURL + "/artifacts/" + artifacts[0].ID
-	assert.Equal(t, expectedURL, url)
+	// URL generation removed - now handled by artifact server directly
 }
 
 func TestArtifactFileStorage(t *testing.T) {
@@ -85,7 +81,7 @@ func TestArtifactFileStorage(t *testing.T) {
 	
 	// Create server and manager
 	server := NewArtifactServer(logger, 8083, tempDir)
-	manager := InitializeGlobalManager(logger, server, "http://localhost:8083")
+	manager := InitializeGlobalManager(logger, server)
 	
 	helper := manager.GetHelper()
 	
@@ -123,7 +119,7 @@ func TestMultipleArtifactTypes(t *testing.T) {
 	tempDir := t.TempDir()
 	
 	server := NewArtifactServer(logger, 8084, tempDir)
-	manager := InitializeGlobalManager(logger, server, "http://localhost:8084")
+	manager := InitializeGlobalManager(logger, server)
 	helper := manager.GetHelper()
 	registry := manager.GetRegistry()
 	

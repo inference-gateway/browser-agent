@@ -20,10 +20,10 @@ The A2A Artifacts feature allows the browser-agent to create, store, and serve a
    - Thread-safe operations with mutex protection
    - Stores metadata, file paths, and artifact properties
 
-3. **Enhanced Artifact Helper** (`internal/artifacts/helper.go`)
-   - Extends ADK's ArtifactHelper with registry integration
-   - Creates different artifact types (FilePart, TextPart, DataPart)
-   - Handles file storage and registry updates
+3. **Artifact Helper** (`internal/artifacts/helper.go`)
+   - Wraps ADK's ArtifactHelper with minimal registry integration
+   - Creates different artifact types (FilePart, TextPart, DataPart) using ADK
+   - Handles registry updates for REST endpoint access
 
 4. **Global Manager** (`internal/artifacts/manager.go`)
    - Provides global access to artifact services
@@ -41,8 +41,7 @@ ARTIFACTS_ENABLED=true
 # Port for artifacts server (default: 8081)
 ARTIFACTS_PORT=8081
 
-# Base URL for artifact access
-ARTIFACTS_BASE_URL=http://localhost:8081
+# Base URL configuration is no longer needed
 ```
 
 ### agent.yaml Configuration
@@ -53,7 +52,6 @@ spec:
     artifacts:
       enabled: true
       port: 8081
-      base_url: "http://localhost:8081"
 ```
 
 ## API Endpoints
@@ -204,39 +202,7 @@ The artifacts infrastructure is fully implemented and integrated with:
 
 ### Future Enhancement: `includeArtifacts` Parameter
 
-The `includeArtifacts` parameter for task polling is prepared for implementation but requires deeper integration with the ADK framework's task handling system. The current infrastructure supports this feature once the appropriate ADK hooks are available.
-
-**Planned Usage**:
-```json
-{
-  "method": "task.get",
-  "params": {
-    "taskId": "task_12345",
-    "includeArtifacts": true
-  }
-}
-```
-
-**Expected Response**:
-```json
-{
-  "result": {
-    "taskId": "task_12345",
-    "status": "completed",
-    "artifacts": [
-      {
-        "type": "FilePart",
-        "artifactId": "screenshot_12345",
-        "title": "Screenshot",
-        "description": "Page screenshot",
-        "fileUri": "http://localhost:8081/artifacts/screenshot_12345",
-        "mimeType": "image/png",
-        "size": 45678
-      }
-    ]
-  }
-}
-```
+The `includeArtifacts` parameter for task responses was removed to simplify the implementation and rely more on ADK's built-in artifact handling. The core artifact infrastructure remains for REST endpoint access, and when ADK provides appropriate hooks for response enhancement, this feature can be re-implemented in a cleaner way.
 
 ## Testing
 

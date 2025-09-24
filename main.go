@@ -176,7 +176,7 @@ Your automation solutions should be maintainable, efficient, and production-read
 		artifactsServer = artifacts.NewArtifactServer(l, cfg.Artifacts.Port, cfg.Browser.DataDir)
 		
 		// Initialize the global artifact manager
-		artifacts.InitializeGlobalManager(l, artifactsServer, cfg.Artifacts.BaseURL)
+		artifacts.InitializeGlobalManager(l, artifactsServer)
 		
 		go func() {
 			l.Info("starting artifacts server", zap.Int("port", cfg.Artifacts.Port))

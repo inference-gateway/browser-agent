@@ -29,6 +29,9 @@ func TestArtifactServer(t *testing.T) {
 	err := server.Start(ctx)
 	require.NoError(t, err)
 	
+	// Give server time to start
+	time.Sleep(100 * time.Millisecond)
+	
 	// Verify server is running
 	assert.True(t, server.IsRunning())
 	
@@ -135,18 +138,12 @@ func TestArtifactServerEndpoints(t *testing.T) {
 	// - GET /health (should return healthy status)
 }
 
-func TestEnhancedArtifactHelper(t *testing.T) {
+func TestArtifactHelper(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	registry := NewArtifactRegistry()
-	baseURL := "http://localhost:8081"
 	
-	helper := NewEnhancedArtifactHelper(logger, registry, baseURL)
+	helper := NewArtifactHelper(logger, registry)
 	require.NotNil(t, helper)
-	
-	// Test URL generation
-	url := helper.GetArtifactURL("test-id")
-	expected := "http://localhost:8081/artifacts/test-id"
-	assert.Equal(t, expected, url)
 	
 	// Test text artifact creation
 	textArtifact, err := helper.CreateTextArtifact(
