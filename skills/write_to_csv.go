@@ -9,19 +9,21 @@ import (
 	"strconv"
 
 	server "github.com/inference-gateway/adk/server"
-	"github.com/inference-gateway/browser-agent/config"
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
 
+// WriteToCsvSkill struct holds the skill with services
 type WriteToCsvSkill struct {
-	logger       *zap.Logger
-	dataFilesDir string
+	logger     *zap.Logger
+	playwright playwright.BrowserAutomation
 }
 
-func NewWriteToCsvSkill(logger *zap.Logger, cfg *config.Config) server.Tool {
+// NewWriteToCsvSkill creates a new write_to_csv skill
+func NewWriteToCsvSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
 	skill := &WriteToCsvSkill{
-		logger:       logger,
-		dataFilesDir: cfg.Browser.DataDir,
+		logger:     logger,
+		playwright: playwright,
 	}
 	return server.NewBasicTool(
 		"write_to_csv",
@@ -29,6 +31,11 @@ func NewWriteToCsvSkill(logger *zap.Logger, cfg *config.Config) server.Tool {
 		map[string]any{
 			"type": "object",
 			"properties": map[string]any{
+				"append": map[string]any{
+					"default":     false,
+					"description": "Whether to append to existing file or create new file",
+					"type":        "boolean",
+				},
 				"data": map[string]any{
 					"description": "Array of objects to write to CSV, each object represents a row",
 					"items":       map[string]any{"type": "object"},
@@ -42,11 +49,6 @@ func NewWriteToCsvSkill(logger *zap.Logger, cfg *config.Config) server.Tool {
 					"description": "Custom column headers for the CSV file (optional, will use object keys if not provided)",
 					"items":       map[string]any{"type": "string"},
 					"type":        "array",
-				},
-				"append": map[string]any{
-					"default":     false,
-					"description": "Whether to append to existing file or create new file",
-					"type":        "boolean",
 				},
 				"include_headers": map[string]any{
 					"default":     true,
@@ -133,12 +135,22 @@ func (s *WriteToCsvSkill) WriteToCsvHandler(ctx context.Context, args map[string
 }
 
 func (s *WriteToCsvSkill) generateFilePath(filename string) string {
-	if err := os.MkdirAll(s.dataFilesDir, 0755); err != nil {
-		s.logger.Warn("failed to create data files directory", zap.String("dir", s.dataFilesDir), zap.Error(err))
+	var dataDir string
+	
+	if s.playwright != nil && s.playwright.GetConfig() != nil {
+		dataDir = s.playwright.GetConfig().Browser.DataDir
+	}
+	
+	if dataDir == "" {
+		dataDir = "."
+	}
+
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		s.logger.Warn("failed to create data files directory", zap.String("dir", dataDir), zap.Error(err))
 	}
 
 	if !filepath.IsAbs(filename) {
-		return filepath.Join(s.dataFilesDir, filename)
+		return filepath.Join(dataDir, filename)
 	}
 	return filename
 }

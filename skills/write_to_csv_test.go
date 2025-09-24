@@ -8,21 +8,24 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/inference-gateway/browser-agent/config"
-	"go.uber.org/zap"
+	config "github.com/inference-gateway/browser-agent/config"
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+	zap "go.uber.org/zap"
 )
 
 func TestWriteToCsvHandler(t *testing.T) {
 	logger := zap.NewNop()
 	tempDir := t.TempDir()
-	cfg := &config.Config{
+	mockPlaywright := &mocks.FakeBrowserAutomation{}
+	mockPlaywright.GetConfigReturns(&config.Config{
 		Browser: config.BrowserConfig{
 			DataDir: tempDir,
 		},
-	}
+	})
+
 	skill := &WriteToCsvSkill{
-		logger:       logger,
-		dataFilesDir: cfg.Browser.DataDir,
+		logger:     logger,
+		playwright: mockPlaywright,
 	}
 
 	tests := []struct {
@@ -90,11 +93,10 @@ func TestWriteToCsvHandler(t *testing.T) {
 					t.Fatalf("Failed to read CSV: %v", err)
 				}
 
-				if len(records) != 3 { // header + 2 data rows
+				if len(records) != 3 {
 					t.Errorf("Expected 3 records, got %d", len(records))
 				}
 
-				// Check header order
 				if records[0][0] != "name" || records[0][1] != "age" {
 					t.Errorf("Headers not in expected order: %v", records[0])
 				}
@@ -292,7 +294,7 @@ func TestValueToString(t *testing.T) {
 			if tt.name != "array" && result != tt.expected {
 				t.Errorf("Expected %q, got %q", tt.expected, result)
 			}
-			// For array test, just check it's not empty
+
 			if tt.name == "array" && result == "" {
 				t.Error("Expected non-empty string for array")
 			}

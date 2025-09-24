@@ -82,6 +82,7 @@ The following skills are currently defined:
 - **execute_script**: Execute custom JavaScript code in the browser context
 - **handle_authentication**: Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 - **wait_for_condition**: Wait for specific conditions before proceeding with automation
+- **write_to_csv**: Write structured data to CSV files with support for custom headers and file paths
 
 To modify skills:
 1. Update `agent.yaml` with skill definitions

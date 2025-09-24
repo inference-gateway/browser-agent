@@ -93,7 +93,7 @@ func main() {
 	l.Info("registered skill: wait_for_condition (Wait for specific conditions before proceeding with automation)")
 
 	// Register write_to_csv skill
-	writeToCsvSkill := skills.NewWriteToCsvSkill(l, &cfg)
+	writeToCsvSkill := skills.NewWriteToCsvSkill(l, playwrightSvc)
 	toolBox.AddTool(writeToCsvSkill)
 	l.Info("registered skill: write_to_csv (Write structured data to CSV files with support for custom headers and file paths)")
 

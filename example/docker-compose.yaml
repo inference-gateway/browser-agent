@@ -8,9 +8,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./screenshots:/tmp/screenshots
+      - ./artifacts:/tmp/playwright/artifacts
     environment:
-      BROWSER_SCREENSHOTS_DIR: /tmp/screenshots
       BROWSER_USER_AGENT: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
       BROWSER_VIEWPORT_WIDTH: "1920"
       BROWSER_VIEWPORT_HEIGHT: "1080"
