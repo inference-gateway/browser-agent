@@ -10,9 +10,9 @@ import (
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
-	config "github.com/inference-gateway/playwright-agent/config"
-	playwright "github.com/inference-gateway/playwright-agent/internal/playwright"
-	mocks "github.com/inference-gateway/playwright-agent/internal/playwright/mocks"
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+	config "github.com/inference-gateway/browser-agent/config"
 	zap "go.uber.org/zap"
 )
 

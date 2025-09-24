@@ -30,7 +30,7 @@
       }
     },
     "hook": {
-      "on-activate": "  echo \"🌟 Welcome to playwright-agent development environment!\"\n  echo \"Go version: $(go version)\"\n"
+      "on-activate": "  echo \"🌟 Welcome to browser-agent development environment!\"\n  echo \"Go version: $(go version)\"\n"
     },
     "options": {}
   },

@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-playwright-agent is an A2A (Agent-to-Agent) server implementing the [A2A Protocol](https://github.com/inference-gateway/adk) for agent-to-agent communication. AI agent for browser automation and web testing using Playwright. The project is automatically generated from ADL (Agent Definition Language) specifications defined in `agent.yaml`.
+browser-agent is an A2A (Agent-to-Agent) server implementing the [A2A Protocol](https://github.com/inference-gateway/adk) for agent-to-agent communication. AI agent for browser automation and web testing using Playwright. The project is automatically generated from ADL (Agent Definition Language) specifications defined in `agent.yaml`.
 
 ## Core Architecture
 
 ### ADL-Generated Structure
 
-The codebase is generated using ADL CLI 0.21.3 and follows a strict generation pattern:
+The codebase is generated using ADL CLI 0.21.4 and follows a strict generation pattern:
 - **Generated Files**: Marked with `DO NOT EDIT` headers - manual changes will be overwritten
 - **Configuration Source**: `agent.yaml` - defines agent capabilities, skills, and metadata
 - **Server Implementation**: Built on the ADK (Agent Development Kit) framework from `github.com/inference-gateway/adk`
@@ -44,7 +44,7 @@ task lint         # Run golangci-lint
 task fmt          # Format code with go fmt
 
 # Build
-task build        # Creates bin/playwright-agent
+task build        # Creates bin/browser-agent
 task docker:build # Build Docker image
 
 # Clean build artifacts
@@ -117,7 +117,7 @@ Activate with: `flox activate` (if Flox is installed)
 
 - **Generated Files**: Never manually edit files with "DO NOT EDIT" headers
 - **Configuration Changes**: Always modify `agent.yaml` and regenerate
-- **ADL Version**: Ensure ADL CLI 0.21.3 or compatible version for regeneration
+- **ADL Version**: Ensure ADL CLI 0.21.4 or compatible version for regeneration
 - **Port Configuration**: Default 8080, configurable via `A2A_PORT` or `A2A_SERVER_PORT`
 
 ## Debugging Tips

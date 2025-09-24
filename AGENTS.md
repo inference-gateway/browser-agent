@@ -4,8 +4,8 @@ This file describes the agents available in this A2A (Agent-to-Agent) system.
 
 ## Agent Overview
 
-### playwright-agent
-**Version**: 0.1.0  
+### browser-agent
+**Version**: 0.1.3  
 **Description**: AI agent for browser automation and web testing using Playwright
 
 This agent is built using the Agent Definition Language (ADL) and provides A2A communication capabilities.
@@ -254,10 +254,10 @@ curl -X POST http://localhost:8080/skills/wait_for_condition \
 ### Docker Deployment
 ```bash
 # Build image
-docker build -t playwright-agent .
+docker build -t browser-agent .
 
 # Run container
-docker run -p 8080:8080 playwright-agent
+docker run -p 8080:8080 browser-agent
 ```
 
 
@@ -315,7 +315,7 @@ task test:coverage
 
 ## Agent Metadata
 
-This agent was generated using ADL CLI v0.1.0 with the following configuration:
+This agent was generated using ADL CLI v0.1.3 with the following configuration:
 
 - **Language**: Go
 - **Template**: Minimal A2A Agent

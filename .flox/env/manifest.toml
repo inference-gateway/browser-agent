@@ -22,6 +22,6 @@ claude-code.pkg-group = "common"
 
 [hook]
 on-activate = '''
-  echo "🌟 Welcome to playwright-agent development environment!"
+  echo "🌟 Welcome to browser-agent development environment!"
   echo "Go version: $(go version)"
 '''

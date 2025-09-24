@@ -1,6 +1,6 @@
 # Playwright Service Documentation
 
-The Playwright Service provides comprehensive browser automation capabilities for the playwright-agent. It implements the `BrowserAutomation` interface defined in the agent specification.
+The Playwright Service provides comprehensive browser automation capabilities for the browser-agent. It implements the `BrowserAutomation` interface defined in the agent specification.
 
 ## Features
 
@@ -277,7 +277,7 @@ go test -tags integration ./internal/playwright
 
 Enable debug logging:
 ```bash
-A2A_DEBUG=true ./playwright-agent
+A2A_DEBUG=true ./browser-agent
 ```
 
 The service logs all browser operations with session IDs for tracing.
