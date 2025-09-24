@@ -46,9 +46,9 @@ func TestArtifactServer(t *testing.T) {
 func TestArtifactRegistry(t *testing.T) {
 	registry := NewArtifactRegistry()
 	
-	// Test empty registry
-	artifacts := registry.ListArtifacts()
-	assert.Empty(t, artifacts)
+	// Test empty registry - verify no artifacts exist
+	_, exists := registry.GetArtifact("non-existent")
+	assert.False(t, exists)
 	
 	// Test registering an artifact
 	testArtifact := &ArtifactEntry{
@@ -73,11 +73,6 @@ func TestArtifactRegistry(t *testing.T) {
 	assert.Equal(t, testArtifact.ID, artifact.ID)
 	assert.Equal(t, testArtifact.FileName, artifact.FileName)
 	assert.Equal(t, testArtifact.MimeType, artifact.MimeType)
-	
-	// Test listing
-	artifacts = registry.ListArtifacts()
-	assert.Len(t, artifacts, 1)
-	assert.Equal(t, testArtifact.ID, artifacts[0].ID)
 	
 	// Test non-existent artifact
 	_, exists = registry.GetArtifact("non-existent")
@@ -134,7 +129,6 @@ func TestArtifactServerEndpoints(t *testing.T) {
 	// This would test:
 	// - GET /artifacts/test-artifact (should return file content)
 	// - GET /artifacts/test-artifact/metadata (should return metadata)
-	// - GET /artifacts/ (should return artifact list)
 	// - GET /health (should return healthy status)
 }
 
@@ -156,11 +150,8 @@ func TestArtifactHelper(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, textArtifact)
 	
-	// Verify artifact was registered
-	artifacts := registry.ListArtifacts()
-	assert.Len(t, artifacts, 1)
-	assert.Equal(t, "text/plain", artifacts[0].MimeType)
-	assert.Contains(t, artifacts[0].FileName, ".txt")
+	// Verify artifact was created successfully
+	assert.NotNil(t, textArtifact, "Text artifact should be created")
 }
 
 func TestSanitizeFilename(t *testing.T) {

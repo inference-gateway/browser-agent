@@ -92,29 +92,7 @@ GET /artifacts/{artifactId}/metadata
 }
 ```
 
-### 3. List All Artifacts
-```http
-GET /artifacts/
-```
-
-**Response**:
-```json
-{
-  "artifacts": [
-    {
-      "id": "screenshot_12345",
-      "file_name": "screenshot.png",
-      "mime_type": "image/png",
-      "size": 45678,
-      "created_at": "2025-09-24T12:00:00Z",
-      "title": "Screenshot: screenshot.png"
-    }
-  ],
-  "count": 1
-}
-```
-
-### 4. Health Check
+### 3. Health Check
 ```http
 GET /health
 ```
@@ -246,9 +224,6 @@ go test -v ./internal/artifacts/ -run TestArtifactServer
 ```bash
 # Check server health
 curl http://localhost:8081/health
-
-# List all artifacts
-curl http://localhost:8081/artifacts/
 
 # Get artifact metadata
 curl http://localhost:8081/artifacts/{id}/metadata

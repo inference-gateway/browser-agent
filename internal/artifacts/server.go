@@ -75,17 +75,6 @@ func (r *ArtifactRegistry) GetArtifact(id string) (*ArtifactEntry, bool) {
 	return entry, exists
 }
 
-// ListArtifacts returns all registered artifacts
-func (r *ArtifactRegistry) ListArtifacts() []*ArtifactEntry {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	
-	entries := make([]*ArtifactEntry, 0, len(r.artifacts))
-	for _, entry := range r.artifacts {
-		entries = append(entries, entry)
-	}
-	return entries
-}
 
 // Start starts the artifacts server
 func (s *ArtifactServer) Start(ctx context.Context) error {
@@ -113,7 +102,6 @@ func (s *ArtifactServer) Start(ctx context.Context) error {
 	{
 		v1.GET("/:id", s.getArtifact)
 		v1.GET("/:id/metadata", s.getArtifactMetadata)
-		v1.GET("/", s.listArtifacts)
 	}
 
 	// Health check
@@ -219,14 +207,6 @@ func (s *ArtifactServer) getArtifactMetadata(c *gin.Context) {
 	c.JSON(http.StatusOK, entry)
 }
 
-// listArtifacts returns a list of all artifacts
-func (s *ArtifactServer) listArtifacts(c *gin.Context) {
-	entries := s.registry.ListArtifacts()
-	c.JSON(http.StatusOK, gin.H{
-		"artifacts": entries,
-		"count":     len(entries),
-	})
-}
 
 // healthCheck returns server health status
 func (s *ArtifactServer) healthCheck(c *gin.Context) {
