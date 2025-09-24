@@ -20,7 +20,8 @@ spec:
       header_dnt: "1"
       header_connection: "keep-alive"
       header_upgrade_insecure_requests: "1"
-      screenshots_dir: "/tmp/screenshots"
+      data_files_dir: "/tmp/playwright"
+      screenshots_dir: "/tmp/playwright"
       args:
         - "--disable-blink-features=AutomationControlled"
         - "--disable-features=VizDisplayCompositor"
@@ -326,9 +327,9 @@ spec:
             items:
               type: object
             description: Array of objects to write to CSV, each object represents a row
-          file_path:
+          filename:
             type: string
-            description: Path where the CSV file should be written
+            description: Name of the CSV file (without path, will be saved to configured data directory)
           headers:
             type: array
             items:
@@ -344,7 +345,7 @@ spec:
             default: true
         required:
           - data
-          - file_path
+          - filename
       inject:
         - logger
   agent:

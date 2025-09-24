@@ -8,15 +8,22 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/inference-gateway/browser-agent/config"
 	"go.uber.org/zap"
 )
 
 func TestWriteToCsvHandler(t *testing.T) {
 	logger := zap.NewNop()
-	skill := &WriteToCsvSkill{logger: logger}
-
-	// Create a temporary directory for test files
 	tempDir := t.TempDir()
+	cfg := &config.Config{
+		Browser: config.BrowserConfig{
+			DataFilesDir: tempDir,
+		},
+	}
+	skill := &WriteToCsvSkill{
+		logger:       logger,
+		dataFilesDir: cfg.Browser.DataFilesDir,
+	}
 
 	tests := []struct {
 		name           string
@@ -32,22 +39,22 @@ func TestWriteToCsvHandler(t *testing.T) {
 					map[string]any{"name": "Alice", "age": 30, "city": "New York"},
 					map[string]any{"name": "Bob", "age": 25, "city": "San Francisco"},
 				},
-				"file_path": filepath.Join(tempDir, "basic.csv"),
+				"filename": "basic.csv",
 			},
 			expectedError: false,
 			expectedRows:  2,
 			validateOutput: func(t *testing.T, filePath string) {
-				content, err := os.ReadFile(filePath)
+				fullPath := filepath.Join(tempDir, "basic.csv")
+				content, err := os.ReadFile(fullPath)
 				if err != nil {
 					t.Fatalf("Failed to read output file: %v", err)
 				}
 
 				lines := strings.Split(strings.TrimSpace(string(content)), "\n")
-				if len(lines) != 3 { // header + 2 data rows
+				if len(lines) != 3 {
 					t.Errorf("Expected 3 lines, got %d", len(lines))
 				}
 
-				// Check if headers are present
 				if !strings.Contains(lines[0], "name") {
 					t.Error("Expected headers to contain 'name'")
 				}
@@ -60,13 +67,14 @@ func TestWriteToCsvHandler(t *testing.T) {
 					map[string]any{"name": "Alice", "age": 30},
 					map[string]any{"name": "Bob", "age": 25},
 				},
-				"file_path": filepath.Join(tempDir, "custom_headers.csv"),
-				"headers":   []any{"name", "age"},
+				"filename": "custom_headers.csv",
+				"headers":  []any{"name", "age"},
 			},
 			expectedError: false,
 			expectedRows:  2,
 			validateOutput: func(t *testing.T, filePath string) {
-				file, err := os.Open(filePath)
+				fullPath := filepath.Join(tempDir, "custom_headers.csv")
+				file, err := os.Open(fullPath)
 				if err != nil {
 					t.Fatalf("Failed to open output file: %v", err)
 				}
@@ -99,19 +107,20 @@ func TestWriteToCsvHandler(t *testing.T) {
 					map[string]any{"name": "Alice", "age": 30},
 					map[string]any{"name": "Bob", "age": 25},
 				},
-				"file_path":       filepath.Join(tempDir, "no_headers.csv"),
+				"filename":        "no_headers.csv",
 				"include_headers": false,
 			},
 			expectedError: false,
 			expectedRows:  2,
 			validateOutput: func(t *testing.T, filePath string) {
-				content, err := os.ReadFile(filePath)
+				fullPath := filepath.Join(tempDir, "no_headers.csv")
+				content, err := os.ReadFile(fullPath)
 				if err != nil {
 					t.Fatalf("Failed to read output file: %v", err)
 				}
 
 				lines := strings.Split(strings.TrimSpace(string(content)), "\n")
-				if len(lines) != 2 { // only data rows, no header
+				if len(lines) != 2 {
 					t.Errorf("Expected 2 lines, got %d", len(lines))
 				}
 			},
@@ -122,23 +131,23 @@ func TestWriteToCsvHandler(t *testing.T) {
 				"data": []any{
 					map[string]any{"name": "Charlie", "age": 35},
 				},
-				"file_path": filepath.Join(tempDir, "basic.csv"), // reuse existing file
-				"append":    true,
+				"filename": "basic.csv",
+				"append":   true,
 			},
 			expectedError: false,
 			expectedRows:  1,
 			validateOutput: func(t *testing.T, filePath string) {
-				content, err := os.ReadFile(filePath)
+				fullPath := filepath.Join(tempDir, "basic.csv")
+				content, err := os.ReadFile(fullPath)
 				if err != nil {
 					t.Fatalf("Failed to read output file: %v", err)
 				}
 
 				lines := strings.Split(strings.TrimSpace(string(content)), "\n")
-				if len(lines) != 4 { // original header + 2 original rows + 1 new row
+				if len(lines) != 4 {
 					t.Errorf("Expected 4 lines after append, got %d", len(lines))
 				}
 
-				// Check if new data is appended
 				if !strings.Contains(string(content), "Charlie") {
 					t.Error("Expected appended data to contain 'Charlie'")
 				}
@@ -147,24 +156,24 @@ func TestWriteToCsvHandler(t *testing.T) {
 		{
 			name: "invalid data type",
 			args: map[string]any{
-				"data":      "not an array",
-				"file_path": filepath.Join(tempDir, "invalid.csv"),
+				"data":     "not an array",
+				"filename": "invalid.csv",
 			},
 			expectedError: true,
 		},
 		{
 			name: "empty file path",
 			args: map[string]any{
-				"data":      []any{map[string]any{"name": "Alice"}},
-				"file_path": "",
+				"data":     []any{map[string]any{"name": "Alice"}},
+				"filename": "",
 			},
 			expectedError: true,
 		},
 		{
 			name: "empty data array",
 			args: map[string]any{
-				"data":      []any{},
-				"file_path": filepath.Join(tempDir, "empty.csv"),
+				"data":     []any{},
+				"filename": "empty.csv",
 			},
 			expectedError: true,
 		},
@@ -191,8 +200,8 @@ func TestWriteToCsvHandler(t *testing.T) {
 			}
 
 			if tt.validateOutput != nil {
-				filePath := tt.args["file_path"].(string)
-				tt.validateOutput(t, filePath)
+				filename := tt.args["filename"].(string)
+				tt.validateOutput(t, filename)
 			}
 		})
 	}
