@@ -19,7 +19,6 @@ skills/handle_authentication.go
 skills/wait_for_condition.go
 skills/write_to_csv.go
 internal/playwright/playwright.go
-internal/artifacts/artifacts.go
 
 # Go dependency files
 go.mod
