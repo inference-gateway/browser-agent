@@ -158,7 +158,7 @@ This agent provides 9 skills:
 
 The agent exposes the following HTTP endpoints:
 
-- `GET /.well-known/agent.json` - Agent metadata and capabilities
+- `GET /.well-known/agent-card.json` - Agent metadata and capabilities
 - `POST /skills/{skill_name}` - Execute a specific skill
 - `GET /skills/{skill_name}/stream` - Stream skill execution results
 
@@ -202,7 +202,7 @@ The agent implements the A2A protocol and can be communicated with via HTTP requ
 
 ```bash
 # Get agent information
-curl http://localhost:8080/.well-known/agent.json
+curl http://localhost:8080/.well-known/agent-card.json
 
 
 
@@ -301,7 +301,7 @@ docker run -p 8080:8080 browser-agent
 │   └── write_to_csv.go   # Write structured data to CSV files with support for custom headers and file paths
 
 ├── .well-known/         # Agent configuration
-│   └── agent.json       # Agent metadata
+│   └── agent-card.json  # Agent metadata
 ├── go.mod               # Go module definition
 └── README.md            # Project documentation
 ```
