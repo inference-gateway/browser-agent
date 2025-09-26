@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/inference-gateway/browser-agent/compare/v0.1.3...v0.2.0) (2025-09-26)
+
+### ✨ Features
+
+* **skills:** Add write_to_csv skill for data export workflows ([#25](https://github.com/inference-gateway/browser-agent/issues/25)) ([5b7509f](https://github.com/inference-gateway/browser-agent/commit/5b7509f3bf96d3f5e6f17c54497e35f4c88aebec)), closes [#24](https://github.com/inference-gateway/browser-agent/issues/24)
+
+### ♻️ Improvements
+
+* Update agent metadata to use agent-card.json and increment ADL CLI version to 0.21.6 ([#33](https://github.com/inference-gateway/browser-agent/issues/33)) ([7d91dde](https://github.com/inference-gateway/browser-agent/commit/7d91dde1d272a11c48db71d77d430489926f45af))
+
 ## [0.1.3](https://github.com/inference-gateway/browser-agent/compare/v0.1.2...v0.1.3) (2025-09-22)
 
 ### ♻️ Improvements
