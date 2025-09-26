@@ -46,6 +46,8 @@ func main() {
 
 	toolBox := server.NewDefaultToolBox()
 
+	// TODO: Artifacts server will be implemented in the ADK, since most agents need it and it could be plugged in when needed
+
 	// Initialize services
 	playwrightSvc, err := playwright.NewPlaywrightService(l, &cfg)
 	if err != nil {

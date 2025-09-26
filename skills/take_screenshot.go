@@ -147,6 +147,8 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		screenshotArtifact.Metadata = metadata
 	}
 
+	// TODO: Artifact registration will be handled by the ADK
+
 	s.logger.Info("screenshot completed successfully",
 		zap.String("path", generatedPath),
 		zap.String("sessionID", session.ID),
