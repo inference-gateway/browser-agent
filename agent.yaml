@@ -182,7 +182,6 @@ spec:
       inject:
         - logger
         - playwright
-
     - id: take_screenshot
       name: take_screenshot
       description: Capture a screenshot of the current page or specific element
@@ -213,7 +212,6 @@ spec:
       inject:
         - logger
         - playwright
-
     - id: execute_script
       name: execute_script
       description: Execute custom JavaScript code in the browser context
@@ -242,7 +240,6 @@ spec:
       inject:
         - logger
         - playwright
-
     - id: handle_authentication
       name: handle_authentication
       description: Handle various authentication scenarios including basic auth, OAuth, and custom login forms
@@ -280,7 +277,6 @@ spec:
       inject:
         - logger
         - playwright
-
     - id: wait_for_condition
       name: wait_for_condition
       description: Wait for specific conditions before proceeding with automation
@@ -314,7 +310,6 @@ spec:
       inject:
         - logger
         - playwright
-
     - id: write_to_csv
       name: write_to_csv
       description: Write structured data to CSV files with support for custom headers and file paths
@@ -353,7 +348,6 @@ spec:
       inject:
         - logger
         - playwright
-
   agent:
     provider: ""
     model: ""
