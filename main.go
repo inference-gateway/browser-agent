@@ -18,7 +18,6 @@ import (
 	config "github.com/inference-gateway/browser-agent/config"
 	skills "github.com/inference-gateway/browser-agent/skills"
 
-	artifacts "github.com/inference-gateway/browser-agent/internal/artifacts"
 	logger "github.com/inference-gateway/browser-agent/internal/logger"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
@@ -46,6 +45,8 @@ func main() {
 	l.Info("starting " + AgentName + " agent (version: " + Version + ", environment: " + cfg.Environment + ")")
 
 	toolBox := server.NewDefaultToolBox()
+
+	// TODO: Artifacts server will be implemented in the ADK, since most agents need it and it could be plugged in when needed
 
 	// Initialize services
 	playwrightSvc, err := playwright.NewPlaywrightService(l, &cfg)
@@ -170,22 +171,6 @@ Your automation solutions should be maintainable, efficient, and production-read
 		}
 	}()
 
-	// Start artifacts server if enabled
-	var artifactsServer *artifacts.ArtifactServer
-	if cfg.Artifacts.Enabled {
-		artifactsServer = artifacts.NewArtifactServer(l, cfg.Artifacts.Port, cfg.Browser.DataDir)
-		
-		// Initialize the global artifact manager
-		artifacts.InitializeGlobalManager(l, artifactsServer)
-		
-		go func() {
-			l.Info("starting artifacts server", zap.Int("port", cfg.Artifacts.Port))
-			if err := artifactsServer.Start(ctx); err != nil {
-				l.Error("artifacts server failed to start", zap.Error(err))
-			}
-		}()
-	}
-
 	l.Info("browser-agent agent running successfully",
 		zap.String("port", cfg.A2A.ServerConfig.Port),
 		zap.String("environment", cfg.Environment))
@@ -194,12 +179,7 @@ Your automation solutions should be maintainable, efficient, and production-read
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	l.Info("shutdown signal received, gracefully stopping servers...")
+	l.Info("shutdown signal received, gracefully stopping server...")
 	a2aServer.Stop(ctx)
-	if artifactsServer != nil {
-		if err := artifactsServer.Stop(ctx); err != nil {
-			l.Error("failed to stop artifacts server", zap.Error(err))
-		}
-	}
 	l.Info("browser-agent agent stopped")
 }

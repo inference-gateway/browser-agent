@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
-	artifacts "github.com/inference-gateway/browser-agent/internal/artifacts"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
@@ -149,8 +147,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		screenshotArtifact.Metadata = metadata
 	}
 
-	// Register with global artifact manager if available
-	s.registerWithGlobalManager(screenshotArtifact, generatedPath, filename, mimeType, metadata)
+	// TODO: Artifact registration will be handled by the ADK
 
 	s.logger.Info("screenshot completed successfully",
 		zap.String("path", generatedPath),
@@ -270,64 +267,4 @@ func (s *TakeScreenshotSkill) getScreenshotMetadata(path string, fullPage bool, 
 // getCurrentTimestamp returns the current timestamp in RFC3339 format
 func (s *TakeScreenshotSkill) getCurrentTimestamp() string {
 	return time.Now().Format(time.RFC3339)
-}
-
-// registerWithGlobalManager registers the artifact with the global artifact manager
-func (s *TakeScreenshotSkill) registerWithGlobalManager(artifact interface{}, filePath, filename, mimeType string, metadata map[string]any) {
-	manager := artifacts.GetGlobalManager()
-	if manager == nil {
-		s.logger.Debug("global artifact manager not available, skipping registration")
-		return
-	}
-
-	registry := manager.GetRegistry()
-	if registry == nil {
-		s.logger.Debug("artifact registry not available, skipping registration")
-		return
-	}
-
-	// Get file info
-	fileInfo, err := os.Stat(filePath)
-	if err != nil {
-		s.logger.Warn("failed to get file info for artifact registration", zap.Error(err))
-		return
-	}
-
-	// Extract artifact ID using reflection
-	var artifactID string
-	artifactValue := reflect.ValueOf(artifact)
-	if artifactValue.Kind() == reflect.Ptr {
-		artifactValue = artifactValue.Elem()
-	}
-	
-	if artifactValue.Kind() == reflect.Struct {
-		idField := artifactValue.FieldByName("ArtifactID")
-		if idField.IsValid() && idField.Kind() == reflect.String {
-			artifactID = idField.String()
-		}
-	}
-	
-	if artifactID == "" {
-		// Fallback: generate a unique ID
-		artifactID = fmt.Sprintf("screenshot_%d", time.Now().UnixNano())
-		s.logger.Warn("could not extract artifact ID, using generated ID", zap.String("generatedID", artifactID))
-	}
-
-	entry := &artifacts.ArtifactEntry{
-		ID:          artifactID,
-		FilePath:    filePath,
-		FileName:    filename,
-		MimeType:    mimeType,
-		Size:        fileInfo.Size(),
-		CreatedAt:   fileInfo.ModTime(),
-		Metadata:    metadata,
-		Title:       fmt.Sprintf("Screenshot: %s", filename),
-		Description: "Screenshot captured from browser session",
-	}
-
-	registry.RegisterArtifact(entry)
-	s.logger.Info("registered artifact with global manager",
-		zap.String("artifactID", artifactID),
-		zap.String("filename", filename),
-	)
 }

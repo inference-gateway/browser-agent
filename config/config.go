@@ -17,8 +17,7 @@ type Config struct {
 	A2A serverConfig.Config `env:",prefix=A2A_"`
 
 	// Custom configuration sections
-	Browser   BrowserConfig   `env:",prefix=BROWSER_"`
-	Artifacts ArtifactsConfig `env:",prefix=ARTIFACTS_"`
+	Browser BrowserConfig `env:",prefix=BROWSER_"`
 }
 
 // BrowserConfig represents the browser configuration
@@ -34,11 +33,4 @@ type BrowserConfig struct {
 	UserAgent                     string `env:"USER_AGENT,default=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"`
 	ViewportHeight                string `env:"VIEWPORT_HEIGHT,default=1080"`
 	ViewportWidth                 string `env:"VIEWPORT_WIDTH,default=1920"`
-}
-
-// ArtifactsConfig represents the artifacts server configuration
-type ArtifactsConfig struct {
-	Enabled bool   `env:"ENABLED,default=true"`
-	Port    int    `env:"PORT,default=8081"`
-	BaseURL string `env:"BASE_URL,default=http://localhost:8081"`
 }
