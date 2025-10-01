@@ -20,10 +20,6 @@ skills/wait_for_condition.go
 skills/write_to_csv.go
 internal/playwright/playwright.go
 
-# Go dependency files
-go.mod
-go.sum
-
 .gitattributes
 
 # Add your own files to ignore here:

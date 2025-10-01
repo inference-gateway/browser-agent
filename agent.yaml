@@ -415,3 +415,5 @@ spec:
   sandbox:
     flox:
       enabled: true
+  artifacts:
+    enabled: true
