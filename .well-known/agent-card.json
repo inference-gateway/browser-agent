@@ -1,6 +1,6 @@
 {
 	"name": "browser-agent",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"description": "AI agent for browser automation and web testing using Playwright",
 	"protocolVersion": "0.3.0",
 	"url": "",

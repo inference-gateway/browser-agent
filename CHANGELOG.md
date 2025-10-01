@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/inference-gateway/browser-agent/compare/v0.2.1...v0.3.0) (2025-10-01)
+
+### ✨ Features
+
+* Update ADL CLI version to 0.22.1 and add artifacts configuration ([#34](https://github.com/inference-gateway/browser-agent/issues/34)) ([19c7ff0](https://github.com/inference-gateway/browser-agent/commit/19c7ff06ec28371f16d8e0db2eada1570efd4a7e))
+
 ## [0.2.1](https://github.com/inference-gateway/browser-agent/compare/v0.2.0...v0.2.1) (2025-09-26)
 
 ### ♻️ Improvements
