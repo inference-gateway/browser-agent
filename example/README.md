@@ -37,6 +37,12 @@ Check the logs to see that the browser indeed went to the demo site and took a s
 docker compose logs -f demo-site
 ```
 
+Also you can check the task was successfully submitted to the agent and it's available using the a2a debugger:
+
+```bash
+docker compose run --rm a2a-debugger tasks list
+```
+
 Finally clean up:
 
 ```bash

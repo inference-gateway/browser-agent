@@ -9,26 +9,25 @@ import (
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
+	types "github.com/inference-gateway/adk/types"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
 
 // TakeScreenshotSkill struct holds the skill with dependencies
 type TakeScreenshotSkill struct {
-	logger         *zap.Logger
-	playwright     playwright.BrowserAutomation
-	artifactHelper *server.ArtifactHelper
-	screenshotDir  string
+	logger        *zap.Logger
+	playwright    playwright.BrowserAutomation
+	screenshotDir string
 }
 
 // NewTakeScreenshotSkill creates a new take_screenshot skill
 func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
 	cfg := playwright.GetConfig()
 	skill := &TakeScreenshotSkill{
-		logger:         logger,
-		playwright:     playwright,
-		artifactHelper: server.NewArtifactHelper(),
-		screenshotDir:  cfg.Browser.DataDir,
+		logger:        logger,
+		playwright:    playwright,
+		screenshotDir: cfg.Browser.DataDir,
 	}
 	return server.NewBasicTool(
 		"take_screenshot",
@@ -64,6 +63,18 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 
 // TakeScreenshotHandler handles the take_screenshot skill execution
 func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
+	artifactHelper, ok := ctx.Value(server.ArtifactHelperContextKey).(*server.ArtifactHelper)
+	if !ok {
+		s.logger.Warn("unable to get artifact helper from context")
+		return "", fmt.Errorf("artifact helper not available in context")
+	}
+
+	task, ok := ctx.Value(server.TaskContextKey).(*types.Task)
+	if !ok {
+		s.logger.Warn("unable to get task from context")
+		return "", fmt.Errorf("task not available in context")
+	}
+
 	generatedPath, err := s.generateDeterministicPath(args)
 	if err != nil {
 		s.logger.Error("failed to generate screenshot path", zap.Error(err))
@@ -135,7 +146,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 	mimeType := s.getMimeType(imageType)
 	filename := filepath.Base(generatedPath)
 
-	screenshotArtifact := s.artifactHelper.CreateFileArtifactFromBytes(
+	screenshotArtifact := artifactHelper.CreateFileArtifactFromBytes(
 		fmt.Sprintf("Screenshot: %s", filename),
 		fmt.Sprintf("Screenshot captured from browser session %s", session.ID),
 		filename,
@@ -147,15 +158,27 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		screenshotArtifact.Metadata = metadata
 	}
 
+	artifactHelper.AddArtifactToTask(task, screenshotArtifact)
+	s.logger.Info("artifact added to task",
+		zap.String("taskID", task.ID),
+		zap.String("artifactID", screenshotArtifact.ArtifactID))
+
+	if err := os.Remove(generatedPath); err != nil {
+		s.logger.Warn("failed to clean up temporary screenshot file", 
+			zap.String("path", generatedPath), 
+			zap.Error(err))
+	} else {
+		s.logger.Debug("cleaned up temporary screenshot file", zap.String("path", generatedPath))
+	}
+
 	s.logger.Info("screenshot completed successfully",
-		zap.String("path", generatedPath),
 		zap.String("sessionID", session.ID),
 		zap.String("artifactID", screenshotArtifact.ArtifactID),
 		zap.Int("fileSize", len(screenshotData)))
 
 	response := map[string]any{
 		"success":     true,
-		"path":        generatedPath,
+		"filename":    filename,
 		"full_page":   fullPage,
 		"type":        imageType,
 		"quality":     quality,
@@ -164,7 +187,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		"artifact_id": screenshotArtifact.ArtifactID,
 		"file_size":   len(screenshotData),
 		"timestamp":   s.getCurrentTimestamp(),
-		"message":     "Screenshot captured successfully with deterministic naming and stored as artifact",
+		"message":     "Screenshot captured successfully and stored as artifact",
 	}
 
 	responseJSON, err := json.Marshal(response)
