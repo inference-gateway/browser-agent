@@ -26,7 +26,7 @@ docker compose run --rm cli
 Ask the following:
 
 ```text
-Please visit http://demo-site and take a screenshot of the homepage. Use the agent.
+Please visit http://demo-site which is running locally and take a screenshot of the homepage. Use the agent.
 ```
 
 You would see the CLI (A2A agent client) submitting a task to the A2A agent server and the screenshot will appear in the `screenshots` directory since it's mounted as a volume.
