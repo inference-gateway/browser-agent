@@ -58,7 +58,7 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{
 		ID: "test-task-123",
 	})
-	
+
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
@@ -100,7 +100,7 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
 	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
-	
+
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
@@ -135,7 +135,7 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
 	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
-	
+
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
@@ -173,7 +173,7 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
 	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
-	
+
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
@@ -205,7 +205,7 @@ func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
 	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
-	
+
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
@@ -234,7 +234,7 @@ func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
 	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
-	
+
 	_, err := skill.TakeScreenshotHandler(ctx, args)
 
 	if err == nil {
@@ -260,7 +260,7 @@ func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
 	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
-	
+
 	_, err := skill.TakeScreenshotHandler(ctx, args)
 
 	if err == nil {

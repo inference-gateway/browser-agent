@@ -158,7 +158,7 @@ func TestWriteToCsvHandler(t *testing.T) {
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
 			ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
-			
+
 			result, err := skill.WriteToCsvHandler(ctx, tt.args)
 
 			if tt.expectedError {

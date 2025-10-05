@@ -260,7 +260,6 @@ func (s *WriteToCsvSkill) extractHeadersFromRows(rows []map[string]any) []string
 	return headers
 }
 
-
 func (s *WriteToCsvSkill) valueToString(value any) string {
 	if value == nil {
 		return ""

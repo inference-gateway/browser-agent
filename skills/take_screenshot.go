@@ -164,8 +164,8 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		zap.String("artifactID", screenshotArtifact.ArtifactID))
 
 	if err := os.Remove(generatedPath); err != nil {
-		s.logger.Warn("failed to clean up temporary screenshot file", 
-			zap.String("path", generatedPath), 
+		s.logger.Warn("failed to clean up temporary screenshot file",
+			zap.String("path", generatedPath),
 			zap.Error(err))
 	} else {
 		s.logger.Debug("cleaned up temporary screenshot file", zap.String("path", generatedPath))
