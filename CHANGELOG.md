@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1](https://github.com/inference-gateway/browser-agent/compare/v0.3.0...v0.3.1) (2025-10-06)
+
+### ♻️ Improvements
+
+* Improve screenshot and CSV writing skills with artifact integration ([#35](https://github.com/inference-gateway/browser-agent/issues/35)) ([c95f964](https://github.com/inference-gateway/browser-agent/commit/c95f964906ff5ab87e2c6b38958bdabf9043a566))
+
 ## [0.3.0](https://github.com/inference-gateway/browser-agent/compare/v0.2.1...v0.3.0) (2025-10-01)
 
 ### ✨ Features
