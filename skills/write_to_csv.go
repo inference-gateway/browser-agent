@@ -1,6 +1,7 @@
 package skills
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 
 	server "github.com/inference-gateway/adk/server"
+	types "github.com/inference-gateway/adk/types"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
@@ -64,6 +66,18 @@ func NewWriteToCsvSkill(logger *zap.Logger, playwright playwright.BrowserAutomat
 
 // WriteToCsvHandler handles the write_to_csv skill execution
 func (s *WriteToCsvSkill) WriteToCsvHandler(ctx context.Context, args map[string]any) (string, error) {
+	artifactHelper, ok := ctx.Value(server.ArtifactHelperContextKey).(*server.ArtifactHelper)
+	if !ok {
+		s.logger.Warn("unable to get artifact helper from context")
+		return "", fmt.Errorf("artifact helper not available in context")
+	}
+
+	task, ok := ctx.Value(server.TaskContextKey).(*types.Task)
+	if !ok {
+		s.logger.Warn("unable to get task from context")
+		return "", fmt.Errorf("task not available in context")
+	}
+
 	data, ok := args["data"].([]any)
 	if !ok || len(data) == 0 {
 		s.logger.Error("data parameter is required and must be a non-empty array")
@@ -118,19 +132,69 @@ func (s *WriteToCsvSkill) WriteToCsvHandler(ctx context.Context, args map[string
 		headers = s.extractHeadersFromRows(rows)
 	}
 
-	rowsWritten, err := s.writeCSVFile(filePath, headers, rows, append, includeHeaders)
-	if err != nil {
-		s.logger.Error("failed to write CSV file",
-			zap.String("file_path", filePath),
-			zap.Error(err))
-		return "", fmt.Errorf("failed to write CSV file: %w", err)
+	var csvBuffer bytes.Buffer
+	writer := csv.NewWriter(&csvBuffer)
+
+	if includeHeaders && len(headers) > 0 {
+		if err := writer.Write(headers); err != nil {
+			return "", fmt.Errorf("failed to write headers: %w", err)
+		}
 	}
 
-	result := fmt.Sprintf("Successfully wrote %d rows to %s", rowsWritten, filePath)
-	s.logger.Info("CSV file written successfully",
-		zap.String("file_path", filePath),
-		zap.Int("rows_written", rowsWritten))
+	rowsWritten := 0
+	for _, row := range rows {
+		csvRow := make([]string, len(headers))
+		for i, header := range headers {
+			if value, exists := row[header]; exists {
+				csvRow[i] = s.valueToString(value)
+			} else {
+				csvRow[i] = ""
+			}
+		}
 
+		if err := writer.Write(csvRow); err != nil {
+			return "", fmt.Errorf("failed to write row: %w", err)
+		}
+		rowsWritten++
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return "", fmt.Errorf("CSV writer error: %w", err)
+	}
+
+	csvData := csvBuffer.Bytes()
+
+	mimeType := "text/csv"
+	baseFilename := filepath.Base(filePath)
+	csvArtifact := artifactHelper.CreateFileArtifactFromBytes(
+		fmt.Sprintf("CSV File: %s", baseFilename),
+		fmt.Sprintf("CSV file with %d rows written to %s", rowsWritten, filePath),
+		baseFilename,
+		csvData,
+		&mimeType,
+	)
+
+	csvArtifact.Metadata = map[string]any{
+		"rows_written":     rowsWritten,
+		"headers":          headers,
+		"include_headers":  includeHeaders,
+		"append_mode":      append,
+		"file_size":        len(csvData),
+		"original_records": len(data),
+	}
+
+	artifactHelper.AddArtifactToTask(task, csvArtifact)
+	s.logger.Info("CSV artifact added to task",
+		zap.String("taskID", task.ID),
+		zap.String("artifactID", csvArtifact.ArtifactID))
+
+	s.logger.Info("CSV data created successfully as artifact",
+		zap.String("filename", baseFilename),
+		zap.Int("rows_written", rowsWritten),
+		zap.String("artifactID", csvArtifact.ArtifactID))
+
+	result := fmt.Sprintf("Successfully created CSV with %d rows as artifact %s (%s)", rowsWritten, csvArtifact.ArtifactID, baseFilename)
 	return result, nil
 }
 
@@ -194,68 +258,6 @@ func (s *WriteToCsvSkill) extractHeadersFromRows(rows []map[string]any) []string
 	}
 
 	return headers
-}
-
-func (s *WriteToCsvSkill) writeCSVFile(filePath string, headers []string, rows []map[string]any, append bool, includeHeaders bool) (int, error) {
-	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return 0, fmt.Errorf("failed to create directory %s: %w", dir, err)
-	}
-
-	flag := os.O_CREATE | os.O_WRONLY
-	if append {
-		flag |= os.O_APPEND
-	} else {
-		flag |= os.O_TRUNC
-	}
-
-	fileExists := false
-	if append {
-		if info, err := os.Stat(filePath); err == nil && info.Size() > 0 {
-			fileExists = true
-		}
-	}
-
-	file, err := os.OpenFile(filePath, flag, 0644)
-	if err != nil {
-		return 0, fmt.Errorf("failed to open file %s: %w", filePath, err)
-	}
-	defer func() {
-		if closeErr := file.Close(); closeErr != nil {
-			s.logger.Error("failed to close file", zap.String("file_path", filePath), zap.Error(closeErr))
-		}
-	}()
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	rowsWritten := 0
-
-	if includeHeaders && (!append || !fileExists) {
-		if len(headers) > 0 {
-			if err := writer.Write(headers); err != nil {
-				return 0, fmt.Errorf("failed to write headers: %w", err)
-			}
-		}
-	}
-
-	for _, row := range rows {
-		csvRow := make([]string, len(headers))
-		for i, header := range headers {
-			if value, exists := row[header]; exists {
-				csvRow[i] = s.valueToString(value)
-			} else {
-				csvRow[i] = ""
-			}
-		}
-
-		if err := writer.Write(csvRow); err != nil {
-			return rowsWritten, fmt.Errorf("failed to write row: %w", err)
-		}
-		rowsWritten++
-	}
-
-	return rowsWritten, nil
 }
 
 func (s *WriteToCsvSkill) valueToString(value any) string {

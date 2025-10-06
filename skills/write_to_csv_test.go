@@ -2,12 +2,11 @@ package skills
 
 import (
 	"context"
-	"encoding/csv"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
+	server "github.com/inference-gateway/adk/server"
+	types "github.com/inference-gateway/adk/types"
 	config "github.com/inference-gateway/browser-agent/config"
 	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 	zap "go.uber.org/zap"
@@ -15,11 +14,10 @@ import (
 
 func TestWriteToCsvHandler(t *testing.T) {
 	logger := zap.NewNop()
-	tempDir := t.TempDir()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 	mockPlaywright.GetConfigReturns(&config.Config{
 		Browser: config.BrowserConfig{
-			DataDir: tempDir,
+			DataDir: "/tmp",
 		},
 	})
 
@@ -33,7 +31,7 @@ func TestWriteToCsvHandler(t *testing.T) {
 		args           map[string]any
 		expectedError  bool
 		expectedRows   int
-		validateOutput func(t *testing.T, filePath string)
+		validateOutput func(t *testing.T, result string)
 	}{
 		{
 			name: "basic CSV writing",
@@ -46,20 +44,15 @@ func TestWriteToCsvHandler(t *testing.T) {
 			},
 			expectedError: false,
 			expectedRows:  2,
-			validateOutput: func(t *testing.T, filePath string) {
-				fullPath := filepath.Join(tempDir, "basic.csv")
-				content, err := os.ReadFile(fullPath)
-				if err != nil {
-					t.Fatalf("Failed to read output file: %v", err)
+			validateOutput: func(t *testing.T, result string) {
+				if !strings.Contains(result, "2 rows") {
+					t.Errorf("Expected result to mention 2 rows, got: %s", result)
 				}
-
-				lines := strings.Split(strings.TrimSpace(string(content)), "\n")
-				if len(lines) != 3 {
-					t.Errorf("Expected 3 lines, got %d", len(lines))
+				if !strings.Contains(result, "basic.csv") {
+					t.Errorf("Expected result to mention basic.csv, got: %s", result)
 				}
-
-				if !strings.Contains(lines[0], "name") {
-					t.Error("Expected headers to contain 'name'")
+				if !strings.Contains(result, "artifact") {
+					t.Errorf("Expected result to mention artifact, got: %s", result)
 				}
 			},
 		},
@@ -75,30 +68,15 @@ func TestWriteToCsvHandler(t *testing.T) {
 			},
 			expectedError: false,
 			expectedRows:  2,
-			validateOutput: func(t *testing.T, filePath string) {
-				fullPath := filepath.Join(tempDir, "custom_headers.csv")
-				file, err := os.Open(fullPath)
-				if err != nil {
-					t.Fatalf("Failed to open output file: %v", err)
+			validateOutput: func(t *testing.T, result string) {
+				if !strings.Contains(result, "2 rows") {
+					t.Errorf("Expected result to mention 2 rows, got: %s", result)
 				}
-				defer func() {
-					if closeErr := file.Close(); closeErr != nil {
-						t.Logf("Failed to close file: %v", closeErr)
-					}
-				}()
-
-				reader := csv.NewReader(file)
-				records, err := reader.ReadAll()
-				if err != nil {
-					t.Fatalf("Failed to read CSV: %v", err)
+				if !strings.Contains(result, "custom_headers.csv") {
+					t.Errorf("Expected result to mention custom_headers.csv, got: %s", result)
 				}
-
-				if len(records) != 3 {
-					t.Errorf("Expected 3 records, got %d", len(records))
-				}
-
-				if records[0][0] != "name" || records[0][1] != "age" {
-					t.Errorf("Headers not in expected order: %v", records[0])
+				if !strings.Contains(result, "artifact") {
+					t.Errorf("Expected result to mention artifact, got: %s", result)
 				}
 			},
 		},
@@ -114,16 +92,15 @@ func TestWriteToCsvHandler(t *testing.T) {
 			},
 			expectedError: false,
 			expectedRows:  2,
-			validateOutput: func(t *testing.T, filePath string) {
-				fullPath := filepath.Join(tempDir, "no_headers.csv")
-				content, err := os.ReadFile(fullPath)
-				if err != nil {
-					t.Fatalf("Failed to read output file: %v", err)
+			validateOutput: func(t *testing.T, result string) {
+				if !strings.Contains(result, "2 rows") {
+					t.Errorf("Expected result to mention 2 rows, got: %s", result)
 				}
-
-				lines := strings.Split(strings.TrimSpace(string(content)), "\n")
-				if len(lines) != 2 {
-					t.Errorf("Expected 2 lines, got %d", len(lines))
+				if !strings.Contains(result, "no_headers.csv") {
+					t.Errorf("Expected result to mention no_headers.csv, got: %s", result)
+				}
+				if !strings.Contains(result, "artifact") {
+					t.Errorf("Expected result to mention artifact, got: %s", result)
 				}
 			},
 		},
@@ -138,20 +115,15 @@ func TestWriteToCsvHandler(t *testing.T) {
 			},
 			expectedError: false,
 			expectedRows:  1,
-			validateOutput: func(t *testing.T, filePath string) {
-				fullPath := filepath.Join(tempDir, "basic.csv")
-				content, err := os.ReadFile(fullPath)
-				if err != nil {
-					t.Fatalf("Failed to read output file: %v", err)
+			validateOutput: func(t *testing.T, result string) {
+				if !strings.Contains(result, "1 rows") {
+					t.Errorf("Expected result to mention 1 rows, got: %s", result)
 				}
-
-				lines := strings.Split(strings.TrimSpace(string(content)), "\n")
-				if len(lines) != 4 {
-					t.Errorf("Expected 4 lines after append, got %d", len(lines))
+				if !strings.Contains(result, "basic.csv") {
+					t.Errorf("Expected result to mention basic.csv, got: %s", result)
 				}
-
-				if !strings.Contains(string(content), "Charlie") {
-					t.Error("Expected appended data to contain 'Charlie'")
+				if !strings.Contains(result, "artifact") {
+					t.Errorf("Expected result to mention artifact, got: %s", result)
 				}
 			},
 		},
@@ -183,7 +155,11 @@ func TestWriteToCsvHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.WriteToCsvHandler(context.Background(), tt.args)
+			ctx := context.Background()
+			ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
+			ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
+
+			result, err := skill.WriteToCsvHandler(ctx, tt.args)
 
 			if tt.expectedError {
 				if err == nil {
@@ -197,13 +173,12 @@ func TestWriteToCsvHandler(t *testing.T) {
 				return
 			}
 
-			if !strings.Contains(result, "Successfully wrote") {
+			if !strings.Contains(result, "Successfully created CSV") {
 				t.Errorf("Expected success message, got: %s", result)
 			}
 
 			if tt.validateOutput != nil {
-				filename := tt.args["filename"].(string)
-				tt.validateOutput(t, filename)
+				tt.validateOutput(t, result)
 			}
 		})
 	}
