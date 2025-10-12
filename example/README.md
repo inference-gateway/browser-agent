@@ -31,6 +31,12 @@ Please visit http://demo-site which is running locally and take a screenshot of 
 
 You would see the CLI (A2A agent client) submitting a task to the A2A agent server and the screenshot will appear in the `screenshots` directory since it's mounted as a volume.
 
+```text
+Please visit http://demo-site which is running locally and collect all of the prices, write them to a CSV file. Use the agent.
+```
+
+You would see the CLI (A2A agent client) submitting a task to the A2A agent server and the csv file with all of the prices of the website will appear inside of the artifacts directory.
+
 Check the logs to see that the browser indeed went to the demo site and took a screenshot:
 
 ```bash
@@ -48,5 +54,3 @@ Finally clean up:
 ```bash
 docker compose down
 ```
-
-TODO: I want to use the artifacts feature where I don't have to mount the volume instead I can simply fetch it from the server. But there is some work to be done here.
