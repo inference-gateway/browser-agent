@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.2](https://github.com/inference-gateway/browser-agent/compare/v0.3.1...v0.3.2) (2025-10-12)
+
+### ♻️ Improvements
+
+* Remove duplicate Go package entries in manifest.lock ([e6aa1cd](https://github.com/inference-gateway/browser-agent/commit/e6aa1cdeba6f1d7aa446f3f2548b2a7f366d39b7))
+
+### 📚 Documentation
+
+* Update README to include instructions for collecting prices and writing to CSV ([132ba44](https://github.com/inference-gateway/browser-agent/commit/132ba442568a4ccbe47e85e189158b5ed85a6054))
+
+### 🔧 Miscellaneous
+
+* **deps:** Update ADL CLI version to 0.23.1 in generated files ([f72060f](https://github.com/inference-gateway/browser-agent/commit/f72060f1204f27d80fffc16cfa5fb6c6e0219bb0))
+* Update dependencies and generated files to ADL CLI v0.23.2 ([9ae2bd2](https://github.com/inference-gateway/browser-agent/commit/9ae2bd207e87f4dd3b5e7b14bd6a93d580fa5891))
+
 ## [0.3.1](https://github.com/inference-gateway/browser-agent/compare/v0.3.0...v0.3.1) (2025-10-06)
 
 ### ♻️ Improvements
