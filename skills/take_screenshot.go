@@ -63,17 +63,6 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 
 // TakeScreenshotHandler handles the take_screenshot skill execution
 func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
-	artifactHelper, ok := ctx.Value(server.ArtifactHelperContextKey).(*server.ArtifactHelper)
-	if !ok {
-		s.logger.Warn("unable to get artifact helper from context")
-		return "", fmt.Errorf("artifact helper not available in context")
-	}
-
-	task, ok := ctx.Value(server.TaskContextKey).(*types.Task)
-	if !ok {
-		s.logger.Warn("unable to get task from context")
-		return "", fmt.Errorf("task not available in context")
-	}
 
 	generatedPath, err := s.generateDeterministicPath(args)
 	if err != nil {
@@ -132,62 +121,49 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		return "", fmt.Errorf("screenshot failed: %w", err)
 	}
 
-	screenshotData, err := os.ReadFile(generatedPath)
-	if err != nil {
-		s.logger.Error("failed to read screenshot file", zap.String("path", generatedPath), zap.Error(err))
-		return "", fmt.Errorf("failed to read screenshot file: %w", err)
-	}
-
-	metadata, err := s.getScreenshotMetadata(generatedPath, fullPage, selector, imageType, quality)
-	if err != nil {
-		s.logger.Warn("failed to get screenshot metadata", zap.Error(err))
-	}
-
-	mimeType := s.getMimeType(imageType)
-	filename := filepath.Base(generatedPath)
-
-	screenshotArtifact := artifactHelper.CreateFileArtifactFromBytes(
-		fmt.Sprintf("Screenshot: %s", filename),
-		fmt.Sprintf("Screenshot captured from browser session %s", session.ID),
-		filename,
-		screenshotData,
-		&mimeType,
-	)
-
-	if metadata != nil {
-		screenshotArtifact.Metadata = metadata
-	}
-
-	artifactHelper.AddArtifactToTask(task, screenshotArtifact)
-	s.logger.Info("artifact added to task",
-		zap.String("taskID", task.ID),
-		zap.String("artifactID", screenshotArtifact.ArtifactID))
-
-	if err := os.Remove(generatedPath); err != nil {
-		s.logger.Warn("failed to clean up temporary screenshot file",
-			zap.String("path", generatedPath),
-			zap.Error(err))
-	} else {
-		s.logger.Debug("cleaned up temporary screenshot file", zap.String("path", generatedPath))
-	}
-
 	s.logger.Info("screenshot completed successfully",
 		zap.String("sessionID", session.ID),
-		zap.String("artifactID", screenshotArtifact.ArtifactID),
-		zap.Int("fileSize", len(screenshotData)))
+		zap.String("path", generatedPath))
+
+	artifactURL, artifactID, err := s.createArtifactFromScreenshot(ctx, generatedPath, imageType)
+	if err != nil {
+		s.logger.Debug("artifact creation skipped or failed, returning file path only",
+			zap.Error(err),
+			zap.String("path", generatedPath))
+
+		response := map[string]any{
+			"success":    true,
+			"path":       generatedPath,
+			"filename":   filepath.Base(generatedPath),
+			"full_page":  fullPage,
+			"type":       imageType,
+			"quality":    quality,
+			"selector":   selector,
+			"session_id": session.ID,
+			"timestamp":  s.getCurrentTimestamp(),
+			"message":    fmt.Sprintf("Screenshot captured successfully and saved to %s", generatedPath),
+		}
+
+		responseJSON, err := json.Marshal(response)
+		if err != nil {
+			return "", fmt.Errorf("failed to marshal response: %w", err)
+		}
+		return string(responseJSON), nil
+	}
 
 	response := map[string]any{
 		"success":     true,
-		"filename":    filename,
+		"path":        generatedPath,
+		"filename":    filepath.Base(generatedPath),
 		"full_page":   fullPage,
 		"type":        imageType,
 		"quality":     quality,
 		"selector":    selector,
 		"session_id":  session.ID,
-		"artifact_id": screenshotArtifact.ArtifactID,
-		"file_size":   len(screenshotData),
 		"timestamp":   s.getCurrentTimestamp(),
-		"message":     "Screenshot captured successfully and stored as artifact",
+		"artifact_id": artifactID,
+		"url":         artifactURL,
+		"message":     fmt.Sprintf("Screenshot captured successfully. Download URL: %s", artifactURL),
 	}
 
 	responseJSON, err := json.Marshal(response)
@@ -256,36 +232,51 @@ func (s *TakeScreenshotSkill) getOrCreateSession(ctx context.Context) (*playwrig
 	return s.playwright.GetOrCreateDefaultSession(ctx)
 }
 
-// getScreenshotMetadata extracts metadata about the screenshot file
-func (s *TakeScreenshotSkill) getScreenshotMetadata(path string, fullPage bool, selector, imageType string, quality int) (map[string]any, error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get file info: %w", err)
-	}
-
-	metadata := map[string]any{
-		"file_size":    fileInfo.Size(),
-		"created_at":   fileInfo.ModTime().Format(time.RFC3339),
-		"permissions":  fileInfo.Mode().String(),
-		"full_page":    fullPage,
-		"image_type":   imageType,
-		"quality":      quality,
-		"capture_type": "viewport",
-	}
-
-	if fullPage {
-		metadata["capture_type"] = "full_page"
-	}
-
-	if selector != "" {
-		metadata["capture_type"] = "element"
-		metadata["selector"] = selector
-	}
-
-	return metadata, nil
-}
-
 // getCurrentTimestamp returns the current timestamp in RFC3339 format
 func (s *TakeScreenshotSkill) getCurrentTimestamp() string {
 	return time.Now().Format(time.RFC3339)
+}
+
+// createArtifactFromScreenshot creates an artifact from the screenshot file
+func (s *TakeScreenshotSkill) createArtifactFromScreenshot(ctx context.Context, filePath, imageType string) (url string, artifactID string, err error) {
+	task, ok := ctx.Value(server.TaskContextKey).(*types.Task)
+	if !ok {
+		return "", "", fmt.Errorf("task not found in context")
+	}
+
+	artifactService, ok := ctx.Value(server.ArtifactServiceContextKey).(server.ArtifactService)
+	if !ok || artifactService == nil {
+		return "", "", fmt.Errorf("artifact service not available")
+	}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read screenshot file: %w", err)
+	}
+
+	mimeType := s.getMimeType(imageType)
+
+	filename := filepath.Base(filePath)
+	artifact, err := artifactService.CreateFileArtifact(
+		fmt.Sprintf("Screenshot - %s", filename),
+		fmt.Sprintf("Screenshot captured at %s", s.getCurrentTimestamp()),
+		filename,
+		data,
+		&mimeType,
+	)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create artifact: %w", err)
+	}
+
+	artifactService.AddArtifactToTask(task, artifact)
+
+	if len(artifact.Parts) > 0 {
+		if filePart, ok := artifact.Parts[0].(types.FilePart); ok {
+			if fileWithURI, ok := filePart.File.(types.FileWithUri); ok {
+				return fileWithURI.URI, artifact.ArtifactID, nil
+			}
+		}
+	}
+
+	return "", artifact.ArtifactID, nil
 }

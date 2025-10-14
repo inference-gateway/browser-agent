@@ -49,7 +49,6 @@ docker run -p 8080:8080 browser-agent
 | `execute_script` | Execute custom JavaScript code in the browser context |args, return_value, script |
 | `handle_authentication` | Handle various authentication scenarios including basic auth, OAuth, and custom login forms |login_url, password, password_selector, submit_selector, type, username, username_selector |
 | `wait_for_condition` | Wait for specific conditions before proceeding with automation |condition, custom_function, selector, state, timeout |
-| `write_to_csv` | Write structured data to CSV files with support for custom headers and file paths |append, data, filename, headers, include_headers |
 
 ## Configuration
 

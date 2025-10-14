@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	server "github.com/inference-gateway/adk/server"
-	types "github.com/inference-gateway/adk/types"
 	config "github.com/inference-gateway/browser-agent/config"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
@@ -54,10 +52,6 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 	args := map[string]any{}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
-	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{
-		ID: "test-task-123",
-	})
 
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
@@ -72,6 +66,15 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 
 	if success, ok := response["success"].(bool); !ok || !success {
 		t.Errorf("Expected success to be true, got: %v", response["success"])
+	}
+
+	resultPath, ok := response["path"].(string)
+	if !ok {
+		t.Errorf("Expected path in response, got: %v", response["path"])
+	}
+
+	if !strings.Contains(resultPath, "viewport_") {
+		t.Errorf("Expected viewport screenshot path, got: %s", resultPath)
 	}
 
 	resultFilename, ok := response["filename"].(string)
@@ -98,8 +101,6 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
-	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
 
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
@@ -133,8 +134,6 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
-	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
 
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
@@ -171,8 +170,6 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
-	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
 
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
@@ -203,8 +200,6 @@ func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
 	args := map[string]any{}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
-	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
 
 	result, err := skill.TakeScreenshotHandler(ctx, args)
 
@@ -232,8 +227,6 @@ func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
-	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
 
 	_, err := skill.TakeScreenshotHandler(ctx, args)
 
@@ -258,8 +251,6 @@ func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, server.ArtifactHelperContextKey, server.NewArtifactHelper())
-	ctx = context.WithValue(ctx, server.TaskContextKey, &types.Task{ID: "test-task-123"})
 
 	_, err := skill.TakeScreenshotHandler(ctx, args)
 

@@ -30,7 +30,7 @@ This agent is built using the Agent Definition Language (ADL) and provides A2A c
 
 
 
-**System Prompt**: You are an expert Playwright browser automation assistant. Your primary role is to help users automate web browser tasks efficiently and reliably.
+**System Prompt**: You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
 
 Your core capabilities include:
 1. **Web Navigation**: Navigate to URLs, handle redirects, and manage page loads
@@ -41,6 +41,7 @@ Your core capabilities include:
 6. **JavaScript Execution**: Run custom scripts in the browser context
 7. **Authentication Handling**: Manage various authentication methods
 8. **Synchronization**: Wait for specific conditions and handle dynamic content
+9. **Artifact Creation**: Create downloadable files for screenshots, extracted data, and CSV exports
 
 Key expertise areas:
 - Modern web technologies (SPA, dynamic content, AJAX)
@@ -63,6 +64,11 @@ When helping users:
 - Provide clear explanations of automation steps
 - Optimize for speed while maintaining reliability
 
+**IMPORTANT - Artifact Creation**:
+When users request screenshots, the take_screenshot tool automatically creates downloadable artifacts. The screenshot will be available via a download URL returned in the response.
+
+For data extraction, you can use the create_artifact tool to save extracted data as downloadable files (JSON/CSV/TXT).
+
 Your automation solutions should be maintainable, efficient, and production-ready.
 
 
@@ -75,7 +81,7 @@ Your automation solutions should be maintainable, efficient, and production-read
 ## Skills
 
 
-This agent provides 9 skills:
+This agent provides 8 skills:
 
 
 ### navigate_to_url
@@ -130,13 +136,6 @@ This agent provides 9 skills:
 ### wait_for_condition
 - **Description**: Wait for specific conditions before proceeding with automation
 - **Tags**: wait, synchronization, timing, playwright
-- **Input Schema**: Defined in agent configuration
-- **Output Schema**: Defined in agent configuration
-
-
-### write_to_csv
-- **Description**: Write structured data to CSV files with support for custom headers and file paths
-- **Tags**: export, csv, data, file
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
 
@@ -246,11 +245,6 @@ curl -X POST http://localhost:8080/skills/wait_for_condition \
   -H "Content-Type: application/json" \
   -d '{"input": "your_input_here"}'
 
-# Execute write_to_csv skill
-curl -X POST http://localhost:8080/skills/write_to_csv \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
 
 ```
 
@@ -297,8 +291,6 @@ docker run -p 8080:8080 browser-agent
 │   └── handle_authentication.go   # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 
 │   └── wait_for_condition.go   # Wait for specific conditions before proceeding with automation
-
-│   └── write_to_csv.go   # Write structured data to CSV files with support for custom headers and file paths
 
 ├── .well-known/         # Agent configuration
 │   └── agent-card.json  # Agent metadata

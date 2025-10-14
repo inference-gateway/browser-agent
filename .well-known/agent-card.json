@@ -68,13 +68,6 @@
 			"description": "Wait for specific conditions before proceeding with automation",
 			"tags": ["wait","synchronization","timing","playwright"],
 			"schema": {"properties":{"condition":{"description":"Type of condition (selector, navigation, function, timeout, networkidle)","type":"string"},"custom_function":{"description":"Custom JavaScript function to evaluate for 'function' condition","type":"string"},"selector":{"description":"Selector to wait for if condition is 'selector'","type":"string"},"state":{"default":"visible","description":"State to wait for (visible, hidden, attached, detached)","type":"string"},"timeout":{"default":30000,"description":"Maximum time to wait in milliseconds","type":"integer"}},"required":["condition"],"type":"object"}
-		},
-		{
-			"id": "write_to_csv",
-			"name": "write_to_csv",
-			"description": "Write structured data to CSV files with support for custom headers and file paths",
-			"tags": ["export","csv","data","file"],
-			"schema": {"properties":{"append":{"default":false,"description":"Whether to append to existing file or create new file","type":"boolean"},"data":{"description":"Array of objects to write to CSV, each object represents a row","items":{"type":"object"},"type":"array"},"filename":{"description":"Name of the CSV file (without path, will be saved to configured data directory)","type":"string"},"headers":{"description":"Custom column headers for the CSV file (optional, will use object keys if not provided)","items":{"type":"string"},"type":"array"},"include_headers":{"default":true,"description":"Whether to include headers in the CSV output","type":"boolean"}},"required":["data","filename"],"type":"object"}
 		}
 	]
 }
