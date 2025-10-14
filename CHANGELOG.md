@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.3](https://github.com/inference-gateway/browser-agent/compare/v0.3.2...v0.3.3) (2025-10-14)
+
+### ♻️ Improvements
+
+* Remove write_to_csv skill and related tests ([#36](https://github.com/inference-gateway/browser-agent/issues/36)) ([144d901](https://github.com/inference-gateway/browser-agent/commit/144d901cf409200da76b4e90baae074b0c1cbf57))
+
 ## [0.3.2](https://github.com/inference-gateway/browser-agent/compare/v0.3.1...v0.3.2) (2025-10-12)
 
 ### ♻️ Improvements
