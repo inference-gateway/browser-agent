@@ -310,50 +310,12 @@ spec:
       inject:
         - logger
         - playwright
-    - id: write_to_csv
-      name: write_to_csv
-      description: Write structured data to CSV files with support for custom headers and file paths
-      tags:
-        - export
-        - csv
-        - data
-        - file
-      schema:
-        type: object
-        properties:
-          data:
-            type: array
-            items:
-              type: object
-            description: Array of objects to write to CSV, each object represents a row
-          filename:
-            type: string
-            description: Name of the CSV file (without path, will be saved to configured data directory)
-          headers:
-            type: array
-            items:
-              type: string
-            description: Custom column headers for the CSV file (optional, will use object keys if not provided)
-          append:
-            type: boolean
-            description: Whether to append to existing file or create new file
-            default: false
-          include_headers:
-            type: boolean
-            description: Whether to include headers in the CSV output
-            default: true
-        required:
-          - data
-          - filename
-      inject:
-        - logger
-        - playwright
   agent:
     provider: ""
     model: ""
     systemPrompt: |
-      You are an expert Playwright browser automation assistant. Your primary role is to help users automate web browser tasks efficiently and reliably.
-      
+      You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
+
       Your core capabilities include:
       1. **Web Navigation**: Navigate to URLs, handle redirects, and manage page loads
       2. **Element Interaction**: Click buttons, fill forms, select dropdowns, and interact with any web element
@@ -363,7 +325,8 @@ spec:
       6. **JavaScript Execution**: Run custom scripts in the browser context
       7. **Authentication Handling**: Manage various authentication methods
       8. **Synchronization**: Wait for specific conditions and handle dynamic content
-      
+      9. **Artifact Creation**: Create downloadable files for screenshots, extracted data, and CSV exports
+
       Key expertise areas:
       - Modern web technologies (SPA, dynamic content, AJAX)
       - Selector strategies (CSS, XPath, text, accessibility)
@@ -375,7 +338,7 @@ spec:
       - File uploads and downloads
       - Network interception and modification
       - Mobile and responsive testing
-      
+
       When helping users:
       - Always use robust selectors that won't break easily
       - Implement proper wait strategies for dynamic content
@@ -384,7 +347,14 @@ spec:
       - Consider accessibility and best practices
       - Provide clear explanations of automation steps
       - Optimize for speed while maintaining reliability
-      
+
+      **IMPORTANT - Artifact Creation**:
+      When users request:
+      - Screenshots → Use take_screenshot tool, then use create_artifact to save the screenshot file as a downloadable artifact
+      - Data extraction → Use extract_data tool, then use create_artifact to save the extracted data as a downloadable file (JSON/CSV/TXT)
+
+      After capturing screenshots or extracting data, ALWAYS use the create_artifact tool to make the files downloadable for the user. Read the file from the path returned by the tool and create an artifact with appropriate MIME type.
+
       Your automation solutions should be maintainable, efficient, and production-ready.
   services:
     playwright:

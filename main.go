@@ -44,13 +44,14 @@ func main() {
 
 	l.Info("starting " + AgentName + " agent (version: " + Version + ", environment: " + cfg.Environment + ")")
 
-	toolBox := server.NewDefaultToolBox()
-
 	// Initialize services
 	playwrightSvc, err := playwright.NewPlaywrightService(l, &cfg)
 	if err != nil {
 		l.Fatal("failed to initialize playwright service", zap.Error(err))
 	}
+
+	// Create toolbox for browser automation skills
+	toolBox := server.NewToolBox()
 
 	// Register navigate_to_url skill
 	navigateToURLSkill := skills.NewNavigateToURLSkill(l, playwrightSvc)
@@ -92,11 +93,6 @@ func main() {
 	toolBox.AddTool(waitForConditionSkill)
 	l.Info("registered skill: wait_for_condition (Wait for specific conditions before proceeding with automation)")
 
-	// Register write_to_csv skill
-	writeToCsvSkill := skills.NewWriteToCsvSkill(l, playwrightSvc)
-	toolBox.AddTool(writeToCsvSkill)
-	l.Info("registered skill: write_to_csv (Write structured data to CSV files with support for custom headers and file paths)")
-
 	llmClient, err := server.NewOpenAICompatibleLLMClient(&cfg.A2A.AgentConfig, l)
 	if err != nil {
 		l.Fatal("failed to create LLM client", zap.Error(err))
@@ -105,9 +101,10 @@ func main() {
 	agent, err := server.NewAgentBuilder(l).
 		WithConfig(&cfg.A2A.AgentConfig).
 		WithLLMClient(llmClient).
+		WithDefaultToolBox().
 		WithToolBox(toolBox).
 		WithMaxChatCompletion(cfg.A2A.AgentConfig.MaxChatCompletionIterations).
-		WithSystemPrompt(`You are an expert Playwright browser automation assistant. Your primary role is to help users automate web browser tasks efficiently and reliably.
+		WithSystemPrompt(`You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
 
 Your core capabilities include:
 1. **Web Navigation**: Navigate to URLs, handle redirects, and manage page loads
@@ -118,6 +115,7 @@ Your core capabilities include:
 6. **JavaScript Execution**: Run custom scripts in the browser context
 7. **Authentication Handling**: Manage various authentication methods
 8. **Synchronization**: Wait for specific conditions and handle dynamic content
+9. **Artifact Creation**: Create downloadable files for screenshots, extracted data, and CSV exports
 
 Key expertise areas:
 - Modern web technologies (SPA, dynamic content, AJAX)
@@ -140,6 +138,13 @@ When helping users:
 - Provide clear explanations of automation steps
 - Optimize for speed while maintaining reliability
 
+**IMPORTANT - Artifact Creation**:
+When users request:
+- Screenshots → Use take_screenshot tool, then use create_artifact to save the screenshot file as a downloadable artifact
+- Data extraction → Use extract_data tool, then use create_artifact to save the extracted data as a downloadable file (JSON/CSV/TXT)
+
+After capturing screenshots or extracting data, ALWAYS use the create_artifact tool to make the files downloadable for the user. Read the file from the path returned by the tool and create an artifact with appropriate MIME type.
+
 Your automation solutions should be maintainable, efficient, and production-ready.
 `).
 		Build()
@@ -147,24 +152,36 @@ Your automation solutions should be maintainable, efficient, and production-read
 		l.Fatal("failed to create agent", zap.Error(err))
 	}
 
+	artifactService, err := server.NewArtifactService(&cfg.A2A.ArtifactsConfig, l)
+	if err != nil {
+		l.Warn("artifact service could not be created - check ARTIFACTS_ENABLE environment variable", zap.Error(err))
+		l.Info("continuing without artifact service support")
+		artifactService = nil
+	}
+
 	artifactsServer, err := server.
 		NewArtifactsServerBuilder(&cfg.A2A.ArtifactsConfig, l).
 		Build()
 	if err != nil {
-		l.Warn("artifacts server could not be created - check ARTIFACTS_ENABLE environment variable", zap.Error(err))
-		l.Info("continuing without artifacts server support")
+		l.Warn("artifacts server could not be created", zap.Error(err))
+		l.Info("continuing without artifacts server")
 		artifactsServer = nil
 	}
 
-	a2aServer, err := server.NewA2AServerBuilder(cfg.A2A, l).
+	serverBuilder := server.NewA2AServerBuilder(cfg.A2A, l).
 		WithAgent(agent).
 		WithAgentCardFromFile(".well-known/agent-card.json", map[string]any{
 			"name":        AgentName,
 			"version":     Version,
 			"description": AgentDescription,
 			"url":         cfg.A2A.AgentURL,
-		}).
-		WithArtifactStorage(artifactsServer.GetStorage()).
+		})
+
+	if artifactService != nil {
+		serverBuilder = serverBuilder.WithArtifactService(artifactService)
+	}
+
+	a2aServer, err := serverBuilder.
 		WithDefaultBackgroundTaskHandler().
 		WithDefaultStreamingTaskHandler().
 		Build()

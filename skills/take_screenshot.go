@@ -9,7 +9,6 @@ import (
 	"time"
 
 	server "github.com/inference-gateway/adk/server"
-	types "github.com/inference-gateway/adk/types"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
 )
@@ -63,17 +62,6 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 
 // TakeScreenshotHandler handles the take_screenshot skill execution
 func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
-	artifactHelper, ok := ctx.Value(server.ArtifactHelperContextKey).(*server.ArtifactHelper)
-	if !ok {
-		s.logger.Warn("unable to get artifact helper from context")
-		return "", fmt.Errorf("artifact helper not available in context")
-	}
-
-	task, ok := ctx.Value(server.TaskContextKey).(*types.Task)
-	if !ok {
-		s.logger.Warn("unable to get task from context")
-		return "", fmt.Errorf("task not available in context")
-	}
 
 	generatedPath, err := s.generateDeterministicPath(args)
 	if err != nil {
@@ -132,62 +120,21 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		return "", fmt.Errorf("screenshot failed: %w", err)
 	}
 
-	screenshotData, err := os.ReadFile(generatedPath)
-	if err != nil {
-		s.logger.Error("failed to read screenshot file", zap.String("path", generatedPath), zap.Error(err))
-		return "", fmt.Errorf("failed to read screenshot file: %w", err)
-	}
-
-	metadata, err := s.getScreenshotMetadata(generatedPath, fullPage, selector, imageType, quality)
-	if err != nil {
-		s.logger.Warn("failed to get screenshot metadata", zap.Error(err))
-	}
-
-	mimeType := s.getMimeType(imageType)
-	filename := filepath.Base(generatedPath)
-
-	screenshotArtifact := artifactHelper.CreateFileArtifactFromBytes(
-		fmt.Sprintf("Screenshot: %s", filename),
-		fmt.Sprintf("Screenshot captured from browser session %s", session.ID),
-		filename,
-		screenshotData,
-		&mimeType,
-	)
-
-	if metadata != nil {
-		screenshotArtifact.Metadata = metadata
-	}
-
-	artifactHelper.AddArtifactToTask(task, screenshotArtifact)
-	s.logger.Info("artifact added to task",
-		zap.String("taskID", task.ID),
-		zap.String("artifactID", screenshotArtifact.ArtifactID))
-
-	if err := os.Remove(generatedPath); err != nil {
-		s.logger.Warn("failed to clean up temporary screenshot file",
-			zap.String("path", generatedPath),
-			zap.Error(err))
-	} else {
-		s.logger.Debug("cleaned up temporary screenshot file", zap.String("path", generatedPath))
-	}
-
 	s.logger.Info("screenshot completed successfully",
 		zap.String("sessionID", session.ID),
-		zap.String("artifactID", screenshotArtifact.ArtifactID),
-		zap.Int("fileSize", len(screenshotData)))
+		zap.String("path", generatedPath))
 
 	response := map[string]any{
-		"success":     true,
-		"filename":    filename,
-		"full_page":   fullPage,
-		"type":        imageType,
-		"quality":     quality,
-		"selector":    selector,
-		"session_id":  session.ID,
-		"artifact_id": screenshotArtifact.ArtifactID,
-		"file_size":   len(screenshotData),
-		"timestamp":   s.getCurrentTimestamp(),
-		"message":     "Screenshot captured successfully and stored as artifact",
+		"success":    true,
+		"path":       generatedPath,
+		"filename":   filepath.Base(generatedPath),
+		"full_page":  fullPage,
+		"type":       imageType,
+		"quality":    quality,
+		"selector":   selector,
+		"session_id": session.ID,
+		"timestamp":  s.getCurrentTimestamp(),
+		"message":    fmt.Sprintf("Screenshot captured successfully and saved to %s", generatedPath),
 	}
 
 	responseJSON, err := json.Marshal(response)
