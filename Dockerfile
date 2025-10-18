@@ -46,6 +46,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     tzdata \
     curl \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/
@@ -57,8 +58,8 @@ COPY --from=builder /go/bin/playwright /usr/local/bin/playwright
 # Copy agent card
 COPY --from=builder /app/.well-known ./.well-known
 
-# Install only Chromium browser with dependencies
-RUN playwright install --with-deps chromium
+# Install Chromium and Firefox browsers with dependencies
+RUN playwright install --with-deps chromium firefox
 
 # Expose port
 EXPOSE 8080
@@ -66,6 +67,21 @@ EXPOSE 8080
 # Set environment variables
 ENV A2A_SERVER_PORT=8080
 ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
+ENV DISPLAY=:99
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+# Start Xvfb in the background with disabled access control\n\
+Xvfb :99 -screen 0 1920x1080x24 -ac &\n\
+\n\
+# Wait a moment for Xvfb to start\n\
+sleep 1\n\
+\n\
+# Start the main application\n\
+exec ./main\n\
+' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
 # Run the application
-CMD ["./main"]
+CMD ["/usr/local/bin/start.sh"]
