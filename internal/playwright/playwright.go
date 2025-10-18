@@ -2,6 +2,8 @@ package playwright
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strconv"
@@ -27,6 +29,8 @@ const (
 
 const (
 	DefaultSessionID = "default"
+	SessionTimeout   = 10 * time.Minute // Default session timeout
+	CleanupInterval  = 2 * time.Minute  // How often to run cleanup
 )
 
 // BrowserConfig holds browser configuration options
@@ -110,12 +114,14 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 
 // BrowserSession represents an active browser session
 type BrowserSession struct {
-	ID       string
-	Browser  playwright.Browser
-	Context  playwright.BrowserContext
-	Page     playwright.Page
-	Created  time.Time
-	LastUsed time.Time
+	ID        string
+	Browser   playwright.Browser
+	Context   playwright.BrowserContext
+	Page      playwright.Page
+	Created   time.Time
+	LastUsed  time.Time
+	ExpiresAt time.Time
+	TaskID    string // Optional task identifier for debugging
 }
 
 // BrowserAutomation represents the playwright dependency interface
@@ -126,6 +132,10 @@ type BrowserAutomation interface {
 	CloseBrowser(ctx context.Context, sessionID string) error
 	GetSession(sessionID string) (*BrowserSession, error)
 	GetOrCreateDefaultSession(ctx context.Context) (*BrowserSession, error)
+	
+	// Task-scoped session management
+	GetOrCreateTaskSession(ctx context.Context) (*BrowserSession, error)
+	CloseExpiredSessions(ctx context.Context) error
 
 	// Page operations
 	NavigateToURL(ctx context.Context, sessionID, url string, waitUntil string, timeout time.Duration) error
@@ -145,12 +155,14 @@ type BrowserAutomation interface {
 
 // playwrightImpl is the implementation of BrowserAutomation
 type playwrightImpl struct {
-	logger      *zap.Logger
-	config      *config.Config
-	pw          *playwright.Playwright
-	sessions    map[string]*BrowserSession
-	sessionsMux sync.RWMutex
-	isInstalled bool
+	logger       *zap.Logger
+	config       *config.Config
+	pw           *playwright.Playwright
+	sessions     map[string]*BrowserSession
+	sessionsMux  sync.RWMutex
+	isInstalled  bool
+	cleanupStop  chan struct{}
+	cleanupDone  chan struct{}
 }
 
 // NewPlaywrightService creates a new instance of BrowserAutomation
@@ -158,9 +170,11 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 	logger.Info("initializing playwright dependency")
 
 	service := &playwrightImpl{
-		logger:   logger,
-		config:   cfg,
-		sessions: make(map[string]*BrowserSession),
+		logger:      logger,
+		config:      cfg,
+		sessions:    make(map[string]*BrowserSession),
+		cleanupStop: make(chan struct{}),
+		cleanupDone: make(chan struct{}),
 	}
 
 	if err := service.ensurePlaywrightInstalled(); err != nil {
@@ -179,6 +193,9 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 		zap.Bool("headless", browserConfig.Headless),
 		zap.Int("viewport_width", browserConfig.ViewportWidth),
 		zap.Int("viewport_height", browserConfig.ViewportHeight))
+
+	// Start background session cleanup goroutine
+	go service.sessionCleanupWorker()
 
 	return service, nil
 }
@@ -267,13 +284,15 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 	}
 
 	sessionID := fmt.Sprintf("session_%d", time.Now().UnixNano())
+	now := time.Now()
 	session := &BrowserSession{
-		ID:       sessionID,
-		Browser:  browser,
-		Context:  context,
-		Page:     page,
-		Created:  time.Now(),
-		LastUsed: time.Now(),
+		ID:        sessionID,
+		Browser:   browser,
+		Context:   context,
+		Page:      page,
+		Created:   now,
+		LastUsed:  now,
+		ExpiresAt: now.Add(SessionTimeout),
 	}
 
 	p.sessionsMux.Lock()
@@ -320,7 +339,14 @@ func (p *playwrightImpl) GetSession(sessionID string) (*BrowserSession, error) {
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
 
-	session.LastUsed = time.Now()
+	// Check if session has expired
+	if time.Now().After(session.ExpiresAt) {
+		return nil, fmt.Errorf("session expired: %s", sessionID)
+	}
+
+	now := time.Now()
+	session.LastUsed = now
+	session.ExpiresAt = now.Add(SessionTimeout) // Extend session
 	return session, nil
 }
 
@@ -400,18 +426,188 @@ func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*Browse
 		}
 	}
 
+	now := time.Now()
 	session := &BrowserSession{
-		ID:       DefaultSessionID,
-		Browser:  browser,
-		Context:  context,
-		Page:     page,
-		Created:  time.Now(),
-		LastUsed: time.Now(),
+		ID:        DefaultSessionID,
+		Browser:   browser,
+		Context:   context,
+		Page:      page,
+		Created:   now,
+		LastUsed:  now,
+		ExpiresAt: now.Add(SessionTimeout),
 	}
 
 	p.sessions[DefaultSessionID] = session
 	p.logger.Info("default browser session created successfully", zap.String("sessionID", DefaultSessionID))
 	return session, nil
+}
+
+// generateSessionID creates a unique session ID for task isolation
+func generateSessionID() string {
+	bytes := make([]byte, 8)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		// Fallback to timestamp-based ID if random fails
+		return fmt.Sprintf("task_%d", time.Now().UnixNano())
+	}
+	return fmt.Sprintf("task_%s", hex.EncodeToString(bytes))
+}
+
+// GetOrCreateTaskSession creates a new isolated session for each task execution
+func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSession, error) {
+	// Generate a unique session ID for this task/execution context
+	sessionID := generateSessionID()
+	
+	p.logger.Info("creating new task-scoped browser session", zap.String("sessionID", sessionID))
+	
+	config := NewBrowserConfigFromConfig(p.config)
+	
+	var browserType playwright.BrowserType
+	switch config.Engine {
+	case Chromium:
+		browserType = p.pw.Chromium
+	case Firefox:
+		browserType = p.pw.Firefox
+	case WebKit:
+		browserType = p.pw.WebKit
+	default:
+		return nil, fmt.Errorf("unsupported browser engine: %s", config.Engine)
+	}
+
+	timeoutMs := float64(config.Timeout.Milliseconds())
+	launchOptions := playwright.BrowserTypeLaunchOptions{
+		Headless: &config.Headless,
+		Args:     config.Args,
+		Timeout:  &timeoutMs,
+	}
+
+	browser, err := browserType.Launch(launchOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch browser: %w", err)
+	}
+
+	contextOptions := p.createContextOptions(config)
+
+	context, err := browser.NewContext(contextOptions)
+	if err != nil {
+		if closeErr := browser.Close(); closeErr != nil {
+			p.logger.Error("failed to close browser after context creation error", zap.Error(closeErr))
+		}
+		return nil, fmt.Errorf("failed to create browser context: %w", err)
+	}
+
+	page, err := context.NewPage()
+	if err != nil {
+		if closeErr := context.Close(); closeErr != nil {
+			p.logger.Error("failed to close context after page creation error", zap.Error(closeErr))
+		}
+		if closeErr := browser.Close(); closeErr != nil {
+			p.logger.Error("failed to close browser after page creation error", zap.Error(closeErr))
+		}
+		return nil, fmt.Errorf("failed to create page: %w", err)
+	}
+
+	if p.config.Browser.StealthMode {
+		if err := stealth.Inject(page); err != nil {
+			p.logger.Warn("failed to inject stealth script", zap.Error(err))
+		} else {
+			p.logger.Info("stealth mode enabled - stealth script injected")
+		}
+	}
+
+	now := time.Now()
+	session := &BrowserSession{
+		ID:        sessionID,
+		Browser:   browser,
+		Context:   context,
+		Page:      page,
+		Created:   now,
+		LastUsed:  now,
+		ExpiresAt: now.Add(SessionTimeout),
+		TaskID:    sessionID, // Use session ID as task ID for now
+	}
+
+	p.sessionsMux.Lock()
+	p.sessions[sessionID] = session
+	p.sessionsMux.Unlock()
+
+	p.logger.Info("task-scoped browser session created successfully", 
+		zap.String("sessionID", sessionID),
+		zap.Time("expiresAt", session.ExpiresAt))
+	return session, nil
+}
+
+// CloseExpiredSessions removes and closes sessions that have expired
+func (p *playwrightImpl) CloseExpiredSessions(ctx context.Context) error {
+	p.sessionsMux.Lock()
+	defer p.sessionsMux.Unlock()
+
+	now := time.Now()
+	expiredSessions := make([]string, 0)
+
+	// Find expired sessions
+	for sessionID, session := range p.sessions {
+		if now.After(session.ExpiresAt) {
+			expiredSessions = append(expiredSessions, sessionID)
+		}
+	}
+
+	// Close and remove expired sessions
+	for _, sessionID := range expiredSessions {
+		session := p.sessions[sessionID]
+		p.logger.Info("closing expired session", 
+			zap.String("sessionID", sessionID),
+			zap.Time("expiredAt", session.ExpiresAt))
+
+		if session.Context != nil {
+			if err := session.Context.Close(); err != nil {
+				p.logger.Error("failed to close expired session context", 
+					zap.String("sessionID", sessionID), 
+					zap.Error(err))
+			}
+		}
+		if session.Browser != nil {
+			if err := session.Browser.Close(); err != nil {
+				p.logger.Error("failed to close expired session browser", 
+					zap.String("sessionID", sessionID), 
+					zap.Error(err))
+			}
+		}
+
+		delete(p.sessions, sessionID)
+	}
+
+	if len(expiredSessions) > 0 {
+		p.logger.Info("cleaned up expired sessions", 
+			zap.Int("count", len(expiredSessions)),
+			zap.Strings("sessionIDs", expiredSessions))
+	}
+
+	return nil
+}
+
+// sessionCleanupWorker runs in background to periodically clean up expired sessions
+func (p *playwrightImpl) sessionCleanupWorker() {
+	defer close(p.cleanupDone)
+	
+	ticker := time.NewTicker(CleanupInterval)
+	defer ticker.Stop()
+
+	p.logger.Info("started session cleanup worker", 
+		zap.Duration("interval", CleanupInterval),
+		zap.Duration("sessionTimeout", SessionTimeout))
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := p.CloseExpiredSessions(context.Background()); err != nil {
+				p.logger.Error("error during session cleanup", zap.Error(err))
+			}
+		case <-p.cleanupStop:
+			p.logger.Info("stopping session cleanup worker")
+			return
+		}
+	}
 }
 
 // NavigateToURL navigates to a URL in the specified session
@@ -793,6 +989,15 @@ func (p *playwrightImpl) GetHealth(ctx context.Context) error {
 // Shutdown gracefully shuts down the service
 func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 	p.logger.Info("shutting down playwright service")
+
+	// Stop the cleanup worker
+	close(p.cleanupStop)
+	select {
+	case <-p.cleanupDone:
+		p.logger.Info("session cleanup worker stopped")
+	case <-time.After(5 * time.Second):
+		p.logger.Warn("timeout waiting for session cleanup worker to stop")
+	}
 
 	p.sessionsMux.Lock()
 	for sessionID := range p.sessions {

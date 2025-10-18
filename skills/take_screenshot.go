@@ -227,9 +227,9 @@ func (s *TakeScreenshotSkill) getMimeType(imageType string) string {
 	}
 }
 
-// getOrCreateSession gets the shared default session
+// getOrCreateSession gets a task-scoped isolated session
 func (s *TakeScreenshotSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
+	return s.playwright.GetOrCreateTaskSession(ctx)
 }
 
 // getCurrentTimestamp returns the current timestamp in RFC3339 format

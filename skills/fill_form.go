@@ -259,7 +259,7 @@ func (s *FillFormSkill) fillSingleField(ctx context.Context, sessionID string, f
 	return s.playwright.FillForm(ctx, sessionID, fields, false, "")
 }
 
-// getOrCreateSession gets the shared default session
+// getOrCreateSession gets a task-scoped isolated session
 func (s *FillFormSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
+	return s.playwright.GetOrCreateTaskSession(ctx)
 }

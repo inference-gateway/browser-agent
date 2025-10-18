@@ -157,7 +157,7 @@ func (s *NavigateToURLSkill) isValidWaitCondition(condition string) bool {
 	return false
 }
 
-// getOrCreateSession gets the shared default session
+// getOrCreateSession gets a task-scoped isolated session
 func (s *NavigateToURLSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
+	return s.playwright.GetOrCreateTaskSession(ctx)
 }

@@ -1222,4 +1222,15 @@ func (fake *FakeBrowserAutomation) recordInvocation(key string, args []interface
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
+// CloseExpiredSessions stub implementation for interface compatibility
+func (fake *FakeBrowserAutomation) CloseExpiredSessions(ctx context.Context) error {
+	return nil
+}
+
+// GetOrCreateTaskSession stub implementation for interface compatibility
+func (fake *FakeBrowserAutomation) GetOrCreateTaskSession(ctx context.Context) (*playwright.BrowserSession, error) {
+	// Delegate to GetOrCreateDefaultSession for testing compatibility
+	return fake.GetOrCreateDefaultSession(ctx)
+}
+
 var _ playwright.BrowserAutomation = new(FakeBrowserAutomation)

@@ -288,7 +288,7 @@ func (s *ExecuteScriptSkill) getResultType(result any) string {
 	}
 }
 
-// getOrCreateSession gets the shared default session
+// getOrCreateSession gets a task-scoped isolated session
 func (s *ExecuteScriptSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
+	return s.playwright.GetOrCreateTaskSession(ctx)
 }

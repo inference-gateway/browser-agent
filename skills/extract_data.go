@@ -514,7 +514,7 @@ func (s *ExtractDataSkill) cleanString(text string) string {
 	return cleaned
 }
 
-// getOrCreateSession gets the shared default session
+// getOrCreateSession gets a task-scoped isolated session
 func (s *ExtractDataSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
+	return s.playwright.GetOrCreateTaskSession(ctx)
 }

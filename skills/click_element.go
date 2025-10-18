@@ -249,7 +249,7 @@ func (s *ClickElementSkill) checkElementInIframes(ctx context.Context, session *
 	return fmt.Errorf("element not found in main frame, %d iframes detected but cross-frame clicking not yet implemented", iframeCount)
 }
 
-// getOrCreateSession gets the shared default session
+// getOrCreateSession gets a task-scoped isolated session
 func (s *ClickElementSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
+	return s.playwright.GetOrCreateTaskSession(ctx)
 }
