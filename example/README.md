@@ -26,16 +26,16 @@ docker compose up --build
 
 To view the browser in real-time via VNC:
 
-1. **Update docker-compose.yaml agent service:**
-   ```yaml
-   BROWSER_HEADLESS: false
-   BROWSER_XVFB_ENABLED: true
-   BROWSER_STEALTH_MODE: true  # Optional: helps avoid bot detection
+1. **Update .env file:**
+   ```bash
+   BROWSER_HEADLESS=false
+   BROWSER_XVFB_ENABLED=true
+   BROWSER_STEALTH_MODE=true  # Optional: helps avoid bot detection
    ```
 
-2. **Start with VNC profile:**
+2. **Start with VNC:**
    ```bash
-   docker compose --profile vnc up --build
+   docker compose up --build
    ```
 
 3. **Connect to VNC:**
