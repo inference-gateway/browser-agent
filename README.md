@@ -68,6 +68,7 @@ The following custom configuration variables are available:
 | **Browser** | `BROWSER_HEADER_CONNECTION` | Header_connection configuration | `keep-alive` |
 | **Browser** | `BROWSER_HEADER_DNT` | Header_dnt configuration | `1` |
 | **Browser** | `BROWSER_HEADER_UPGRADE_INSECURE_REQUESTS` | Header_upgrade_insecure_requests configuration | `1` |
+| **Browser** | `BROWSER_HEADLESS` | Headless configuration | `true` |
 | **Browser** | `BROWSER_USER_AGENT` | User_agent configuration | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36` |
 | **Browser** | `BROWSER_VIEWPORT_HEIGHT` | Viewport_height configuration | `1080` |
 | **Browser** | `BROWSER_VIEWPORT_WIDTH` | Viewport_width configuration | `1920` |
