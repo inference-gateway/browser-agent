@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/inference-gateway/browser-agent/compare/v0.3.4...v0.4.0) (2025-10-18)
+
+### ✨ Features
+
+* Add headless configuration ([#37](https://github.com/inference-gateway/browser-agent/issues/37)) ([c08b4fb](https://github.com/inference-gateway/browser-agent/commit/c08b4fb4d2a7a42c22000037811f3e0dcf6b1509))
+
 ## [0.3.4](https://github.com/inference-gateway/browser-agent/compare/v0.3.3...v0.3.4) (2025-10-17)
 
 ### 🔧 Miscellaneous
