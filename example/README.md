@@ -55,19 +55,50 @@ Go into the CLI for convenience:
 docker compose run --rm cli
 ```
 
-Ask the following:
+### Example Prompts
 
+The demo site includes several features for testing automation capabilities:
+
+#### Basic Screenshot
 ```text
 Please visit http://demo-site which is running locally and take a screenshot of the homepage. Use the agent.
 ```
 
 You would see the CLI (A2A agent client) submitting a task to the A2A agent server and the screenshot will appear in the `screenshots` directory since it's mounted as a volume.
 
+#### Data Extraction with Pagination
 ```text
-Please visit http://demo-site which is running locally and collect all of the prices, write them to a CSV file. Use the agent.
+Please visit http://demo-site which is running locally and collect all of the prices from all pages, write them to a CSV file. Use the agent.
 ```
 
-You would see the CLI (A2A agent client) submitting a task to the A2A agent server and the csv file with all of the prices of the website will appear inside of the artifacts directory.
+The demo site has 24 products across 4 pages. The agent will:
+- Navigate through all pages using the pagination buttons
+- Extract product names and prices from each page
+- Write the complete data to a CSV file in the artifacts directory
+
+#### Pop-up Handling
+```text
+Please visit http://demo-site?popup=true and dismiss the special offer pop-up, then collect all product prices from the first page. Use the agent.
+```
+
+The agent will:
+- Navigate to the demo site with the popup parameter
+- Wait for the pop-up modal to appear
+- Click the "Dismiss Offer" button to close it
+- Extract the product data from the page
+
+**Note:** The pop-up only appears when visiting with `?popup=true` or `#popup` URL parameter, making it easy to test with or without this challenge.
+
+#### Complex Multi-step Task
+```text
+Please visit http://demo-site?popup=true, close any pop-ups, navigate through all 4 pages of products, extract all product names and prices, and save them to a CSV file with columns: Product Name, Price, Page Number. Use the agent.
+```
+
+This demonstrates the agent's ability to:
+- Handle intrusive modals that require specific button clicks
+- Navigate multi-page content using pagination
+- Extract structured data across multiple pages
+- Format and save data to files
 
 Check the logs to see that the browser indeed went to the demo site and took a screenshot:
 

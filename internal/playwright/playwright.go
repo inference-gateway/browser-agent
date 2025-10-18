@@ -88,7 +88,7 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		args = append(args, configArgs...)
 	}
 
-	engine := Chromium
+	var engine BrowserEngine
 	switch strings.ToLower(cfg.Browser.Engine) {
 	case "firefox":
 		engine = Firefox
@@ -831,9 +831,7 @@ func (p *playwrightImpl) GetConfig() *config.Config {
 
 // createContextOptions creates browser context options from configuration
 func (p *playwrightImpl) createContextOptions(browserConfig *BrowserConfig) playwright.BrowserNewContextOptions {
-	storagePath := p.config.Browser.DataDir + "/browser-state"
-
-	return playwright.BrowserNewContextOptions{
+	contextOptions := playwright.BrowserNewContextOptions{
 		Viewport: &playwright.Size{
 			Width:  browserConfig.ViewportWidth,
 			Height: browserConfig.ViewportHeight,
@@ -847,9 +845,18 @@ func (p *playwrightImpl) createContextOptions(browserConfig *BrowserConfig) play
 			"Connection":                p.config.Browser.HeaderConnection,
 			"Upgrade-Insecure-Requests": p.config.Browser.HeaderUpgradeInsecureRequests,
 		},
-		StorageStatePath:  &storagePath,
 		AcceptDownloads:   playwright.Bool(false),
 		JavaScriptEnabled: playwright.Bool(true),
 		BypassCSP:         playwright.Bool(true),
 	}
+
+	storagePath := p.config.Browser.DataDir + "/browser-state"
+	if _, err := os.Stat(storagePath); err == nil {
+		contextOptions.StorageStatePath = &storagePath
+		p.logger.Debug("using existing storage state", zap.String("path", storagePath))
+	} else {
+		p.logger.Debug("storage state file not found, creating fresh browser context", zap.String("path", storagePath))
+	}
+
+	return contextOptions
 }
