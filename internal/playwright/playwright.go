@@ -10,6 +10,7 @@ import (
 	"time"
 
 	config "github.com/inference-gateway/browser-agent/config"
+	stealth "github.com/jonfriesen/playwright-go-stealth"
 	zap "go.uber.org/zap"
 
 	"github.com/playwright-community/playwright-go"
@@ -87,8 +88,18 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		args = append(args, configArgs...)
 	}
 
+	var engine BrowserEngine
+	switch strings.ToLower(cfg.Browser.Engine) {
+	case "firefox":
+		engine = Firefox
+	case "webkit":
+		engine = WebKit
+	default:
+		engine = Chromium
+	}
+
 	return &BrowserConfig{
-		Engine:         Chromium,
+		Engine:         engine,
 		Headless:       cfg.Browser.Headless,
 		Timeout:        30 * time.Second,
 		ViewportWidth:  width,
@@ -247,6 +258,14 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 		return nil, fmt.Errorf("failed to create page: %w", err)
 	}
 
+	if p.config.Browser.StealthMode {
+		if err := stealth.Inject(page); err != nil {
+			p.logger.Warn("failed to inject stealth script", zap.Error(err))
+		} else {
+			p.logger.Info("stealth mode enabled - stealth script injected")
+		}
+	}
+
 	sessionID := fmt.Sprintf("session_%d", time.Now().UnixNano())
 	session := &BrowserSession{
 		ID:       sessionID,
@@ -371,6 +390,14 @@ func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*Browse
 			p.logger.Error("failed to close browser after page creation error", zap.Error(closeErr))
 		}
 		return nil, fmt.Errorf("failed to create page: %w", err)
+	}
+
+	if p.config.Browser.StealthMode {
+		if err := stealth.Inject(page); err != nil {
+			p.logger.Warn("failed to inject stealth script", zap.Error(err))
+		} else {
+			p.logger.Info("stealth mode enabled - stealth script injected")
+		}
 	}
 
 	session := &BrowserSession{
@@ -804,7 +831,7 @@ func (p *playwrightImpl) GetConfig() *config.Config {
 
 // createContextOptions creates browser context options from configuration
 func (p *playwrightImpl) createContextOptions(browserConfig *BrowserConfig) playwright.BrowserNewContextOptions {
-	return playwright.BrowserNewContextOptions{
+	contextOptions := playwright.BrowserNewContextOptions{
 		Viewport: &playwright.Size{
 			Width:  browserConfig.ViewportWidth,
 			Height: browserConfig.ViewportHeight,
@@ -818,7 +845,18 @@ func (p *playwrightImpl) createContextOptions(browserConfig *BrowserConfig) play
 			"Connection":                p.config.Browser.HeaderConnection,
 			"Upgrade-Insecure-Requests": p.config.Browser.HeaderUpgradeInsecureRequests,
 		},
+		AcceptDownloads:   playwright.Bool(false),
 		JavaScriptEnabled: playwright.Bool(true),
 		BypassCSP:         playwright.Bool(true),
 	}
+
+	storagePath := p.config.Browser.DataDir + "/browser-state"
+	if _, err := os.Stat(storagePath); err == nil {
+		contextOptions.StorageStatePath = &storagePath
+		p.logger.Debug("using existing storage state", zap.String("path", storagePath))
+	} else {
+		p.logger.Debug("storage state file not found, creating fresh browser context", zap.String("path", storagePath))
+	}
+
+	return contextOptions
 }
