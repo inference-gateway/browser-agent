@@ -3,7 +3,7 @@ module github.com/inference-gateway/browser-agent
 go 1.25
 
 require (
-	github.com/inference-gateway/adk v0.15.1
+	github.com/inference-gateway/adk v0.15.2
 	github.com/playwright-community/playwright-go v0.5200.1
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/stretchr/testify v1.10.0
