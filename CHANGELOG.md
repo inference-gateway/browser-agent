@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1](https://github.com/inference-gateway/browser-agent/compare/v0.4.0...v0.4.1) (2025-10-18)
+
+### ♻️ Improvements
+
+* **logs:** Add browser configuration logging at service initialization ([7faea50](https://github.com/inference-gateway/browser-agent/commit/7faea50267018038e26ee6f2a0e8af7a645af889))
+* **manifest:** Remove duplicate Go package entries and consolidate versions ([f95fd38](https://github.com/inference-gateway/browser-agent/commit/f95fd38f2829caddebd4c819b1a73260e36836e4))
+
 ## [0.4.0](https://github.com/inference-gateway/browser-agent/compare/v0.3.4...v0.4.0) (2025-10-18)
 
 ### ✨ Features
