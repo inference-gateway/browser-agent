@@ -1,21 +1,53 @@
-# Example Playwright Automation Script
+# Browser Agent Example
 
-This script demonstrates how to use the Playwright automation framework to perform basic browser actions such as navigating to a webpage, filling out a form, and taking a screenshot.
+This example demonstrates how to use the browser-agent for AI-powered browser automation using Playwright. The agent can navigate webpages, fill forms, take screenshots, extract data, and more.
 
+## Prerequisites
 
-Configure the environment variables as needed:
+Configure the environment variables:
 
 ```bash
 cp .env.example .env
 ```
 
-** Add at least two providers, in this example Google and DeepSeek.
+**Note:** Add at least two LLM provider API keys (e.g., Google and DeepSeek) in the `.env` file.
 
-First bring up all the containers:
+## Quick Start
+
+### Headless Mode (Default)
+
+Start all containers in headless mode (fastest, most secure):
 
 ```bash
 docker compose up --build
 ```
+
+### Headed Mode with VNC (Visual Debugging)
+
+To view the browser in real-time via VNC:
+
+1. **Update docker-compose.yaml agent service:**
+   ```yaml
+   BROWSER_HEADLESS: false
+   BROWSER_XVFB_ENABLED: true
+   BROWSER_STEALTH_MODE: true  # Optional: helps avoid bot detection
+   ```
+
+2. **Start with VNC profile:**
+   ```bash
+   docker compose --profile vnc up --build
+   ```
+
+3. **Connect to VNC:**
+   ```bash
+   # macOS
+   open vnc://localhost:5900
+   # Password: password
+
+   # Or use any VNC client: localhost:5900
+   ```
+
+## Usage
 
 Go into the CLI for convenience:
 
@@ -53,4 +85,81 @@ Finally clean up:
 
 ```bash
 docker compose down
+```
+
+## Configuration Options
+
+### Browser Modes
+
+The browser-agent supports different operational modes:
+
+**Headless Production Mode (Default):**
+- `BROWSER_HEADLESS: true`
+- `BROWSER_XVFB_ENABLED: false`
+- `BROWSER_STEALTH_MODE: false`
+- Fastest, most secure, lowest resource usage
+- Best for production/CI/CD
+
+**Headed Mode with VNC (Development):**
+- `BROWSER_HEADLESS: false`
+- `BROWSER_XVFB_ENABLED: true`
+- `BROWSER_STEALTH_MODE: true`
+- Visual browser viewing via VNC
+- Best for development, debugging, demos
+
+**Headless with Extensions:**
+- `BROWSER_HEADLESS: true`
+- `BROWSER_XVFB_ENABLED: true`
+- Required for browser extensions
+- Specific rendering features
+
+### Browser Engines
+
+You can choose different browser engines by modifying the build args and environment:
+
+```yaml
+build:
+  args:
+    BROWSER_ENGINE: firefox  # chromium (default), firefox, webkit, or all
+environment:
+  BROWSER_ENGINE: firefox
+```
+
+### Xvfb Configuration
+
+When Xvfb is enabled, you can customize:
+
+```yaml
+BROWSER_XVFB_DISPLAY: ":99"                    # X11 display number
+BROWSER_XVFB_SCREEN_RESOLUTION: "1920x1080x24" # Resolution and color depth
+```
+
+**Security Note:** Xvfb is configured without the `-ac` flag (access control enabled) and uses `-nolisten tcp` to prevent remote network access.
+
+## Troubleshooting
+
+### VNC Connection Issues
+
+If VNC doesn't connect:
+
+1. Check Xvfb is enabled:
+   ```bash
+   docker compose exec agent env | grep XVFB
+   ```
+
+2. Check X11 socket exists:
+   ```bash
+   docker compose exec agent ls -la /tmp/.X11-unix/
+   ```
+
+3. Check VNC logs:
+   ```bash
+   docker compose logs browser-vnc
+   ```
+
+### Browser Not Starting
+
+Check agent logs for errors:
+```bash
+docker compose logs agent
 ```

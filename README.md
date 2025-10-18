@@ -15,12 +15,18 @@ A production-ready [Agent-to-Agent (A2A)](https://github.com/inference-gateway/a
 ## Quick Start
 
 ```bash
-# Run the agent
+# Run the agent locally
 go run .
 
-# Or with Docker
+# Or with Docker (Chromium only - smallest image)
 docker build -t browser-agent .
 docker run -p 8080:8080 browser-agent
+
+# Build with specific browser engine
+docker build --build-arg BROWSER_ENGINE=firefox -t browser-agent:firefox .
+
+# Run with Xvfb enabled (for extensions or specific rendering features)
+docker run -p 8080:8080 -e BROWSER_XVFB_ENABLED=true browser-agent
 ```
 
 ## Features
@@ -62,6 +68,7 @@ The following custom configuration variables are available:
 |----------|----------|-------------|---------|
 | **Browser** | `BROWSER_ARGS` | Args configuration | `[--disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor --no-first-run --disable-default-apps --disable-extensions --disable-plugins --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-zygote --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-ipc-flooding-protection]` |
 | **Browser** | `BROWSER_DATA_DIR` | Data_dir configuration | `/tmp/playwright/artifacts` |
+| **Browser** | `BROWSER_ENGINE` | Engine configuration | `chromium` |
 | **Browser** | `BROWSER_HEADER_ACCEPT` | Header_accept configuration | `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7` |
 | **Browser** | `BROWSER_HEADER_ACCEPT_ENCODING` | Header_accept_encoding configuration | `gzip, deflate, br` |
 | **Browser** | `BROWSER_HEADER_ACCEPT_LANGUAGE` | Header_accept_language configuration | `en-US,en;q=0.9` |
@@ -69,9 +76,13 @@ The following custom configuration variables are available:
 | **Browser** | `BROWSER_HEADER_DNT` | Header_dnt configuration | `1` |
 | **Browser** | `BROWSER_HEADER_UPGRADE_INSECURE_REQUESTS` | Header_upgrade_insecure_requests configuration | `1` |
 | **Browser** | `BROWSER_HEADLESS` | Headless configuration | `true` |
+| **Browser** | `BROWSER_STEALTH_MODE` | Stealth_mode configuration | `false` |
 | **Browser** | `BROWSER_USER_AGENT` | User_agent configuration | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36` |
 | **Browser** | `BROWSER_VIEWPORT_HEIGHT` | Viewport_height configuration | `1080` |
 | **Browser** | `BROWSER_VIEWPORT_WIDTH` | Viewport_width configuration | `1920` |
+| **Browser** | `BROWSER_XVFB_DISPLAY` | Xvfb_display configuration | `:99` |
+| **Browser** | `BROWSER_XVFB_ENABLED` | Xvfb_enabled configuration | `false` |
+| **Browser** | `BROWSER_XVFB_SCREEN_RESOLUTION` | Xvfb_screen_resolution configuration | `1920x1080x24` |
 
 | Category | Variable | Description | Default |
 |----------|----------|-------------|---------|
@@ -158,10 +169,10 @@ docker run --rm -it --network host ghcr.io/inference-gateway/a2a-debugger:latest
 
 ### Docker
 
-The Docker image can be built with custom version information using build arguments:
+The Docker image can be built with custom version information and browser selection using build arguments:
 
 ```bash
-# Build with default values from ADL
+# Build with default values from ADL (Chromium only)
 docker build -t browser-agent .
 
 # Build with custom version information
@@ -170,14 +181,41 @@ docker build \
   --build-arg AGENT_NAME="My Custom Agent" \
   --build-arg AGENT_DESCRIPTION="Custom agent description" \
   -t browser-agent:1.2.3 .
+
+# Build with specific browser engine
+docker build --build-arg BROWSER_ENGINE=firefox -t browser-agent:firefox .
+
+# Build with all browsers (larger image)
+docker build --build-arg BROWSER_ENGINE=all -t browser-agent:all .
 ```
 
 **Available Build Arguments:**
 - `VERSION` - Agent version (default: `0.4.1`)
 - `AGENT_NAME` - Agent name (default: `browser-agent`)
 - `AGENT_DESCRIPTION` - Agent description (default: `AI agent for browser automation and web testing using Playwright`)
+- `BROWSER_ENGINE` - Browser to install (`chromium`, `firefox`, `webkit`, or `all`) (default: `chromium`)
 
 These values are embedded into the binary at build time using linker flags, making them accessible at runtime without requiring environment variables.
+
+#### Xvfb Configuration
+
+By default, the browser runs in native headless mode. For cases requiring a virtual display (e.g., extensions, specific rendering features), you can enable Xvfb:
+
+```bash
+# Run with Xvfb enabled
+docker run -p 8080:8080 \
+  -e BROWSER_XVFB_ENABLED=true \
+  browser-agent
+
+# Customize Xvfb display settings
+docker run -p 8080:8080 \
+  -e BROWSER_XVFB_ENABLED=true \
+  -e BROWSER_XVFB_DISPLAY=:99 \
+  -e BROWSER_XVFB_SCREEN_RESOLUTION=1920x1080x24 \
+  browser-agent
+```
+
+**Security Note:** Xvfb is configured without the `-ac` flag (access control disabled) for security. The X server uses `-nolisten tcp` to prevent network access.
 
 ## License
 

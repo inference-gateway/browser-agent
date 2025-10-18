@@ -5,7 +5,7 @@
 FROM golang:1.25-alpine AS builder
 
 # Build arguments for version injection
-ARG VERSION="0.3.0"
+ARG VERSION="0.4.1"
 ARG AGENT_NAME="browser-agent"
 ARG AGENT_DESCRIPTION="AI agent for browser automation and web testing using Playwright"
 
@@ -41,12 +41,17 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 # Stage 2: Final image with browser dependencies
 FROM ubuntu:24.04
 
-# Install system dependencies and browsers
+# Build arguments for browser selection
+ARG BROWSER_ENGINE=chromium
+
+# Install system dependencies
+# Note: x11-utils added for xdpyinfo (Xvfb health check)
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     tzdata \
     curl \
     xvfb \
+    x11-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/
@@ -55,11 +60,22 @@ WORKDIR /root/
 COPY --from=builder /app/main .
 COPY --from=builder /go/bin/playwright /usr/local/bin/playwright
 
-# Copy agent card
+# Copy agent card and entrypoint script
 COPY --from=builder /app/.well-known ./.well-known
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Install Chromium and Firefox browsers with dependencies
-RUN playwright install --with-deps chromium firefox
+# Install browsers based on build argument
+# Supports: chromium, firefox, webkit, or "all" for multiple browsers
+RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
+        playwright install --with-deps chromium firefox webkit; \
+    elif [ "$BROWSER_ENGINE" = "firefox" ]; then \
+        playwright install --with-deps firefox; \
+    elif [ "$BROWSER_ENGINE" = "webkit" ]; then \
+        playwright install --with-deps webkit; \
+    else \
+        playwright install --with-deps chromium; \
+    fi
 
 # Expose port
 EXPOSE 8080
@@ -67,21 +83,14 @@ EXPOSE 8080
 # Set environment variables
 ENV A2A_SERVER_PORT=8080
 ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
-ENV DISPLAY=:99
 
-# Create startup script
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-# Start Xvfb in the background with disabled access control\n\
-Xvfb :99 -screen 0 1920x1080x24 -ac &\n\
-\n\
-# Wait a moment for Xvfb to start\n\
-sleep 1\n\
-\n\
-# Start the main application\n\
-exec ./main\n\
-' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
+# Browser configuration defaults (can be overridden at runtime)
+ENV BROWSER_ENGINE=chromium
+ENV BROWSER_HEADLESS=true
+ENV BROWSER_STEALTH_MODE=false
+ENV BROWSER_XVFB_ENABLED=false
+ENV BROWSER_XVFB_DISPLAY=:99
+ENV BROWSER_XVFB_SCREEN_RESOLUTION=1920x1080x24
 
-# Run the application
-CMD ["/usr/local/bin/start.sh"]
+# Run the application via entrypoint script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

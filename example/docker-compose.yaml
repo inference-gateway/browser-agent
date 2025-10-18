@@ -4,12 +4,18 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
+      args:
+        BROWSER_ENGINE: chromium
     container_name: agent
     ports:
       - 8081:8081
     volumes:
       - ./artifacts:/tmp/artifacts
+      - x11-socket:/tmp/.X11-unix
     environment:
+      BROWSER_ENGINE: chromium
+      BROWSER_HEADLESS: true
+      BROWSER_STEALTH_MODE: false
       BROWSER_USER_AGENT: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
       BROWSER_VIEWPORT_WIDTH: "1920"
       BROWSER_VIEWPORT_HEIGHT: "1080"
@@ -35,6 +41,9 @@ services:
         --disable-backgrounding-occluded-windows
         --disable-renderer-backgrounding
         --disable-ipc-flooding-protection
+      BROWSER_XVFB_ENABLED: false
+      BROWSER_XVFB_DISPLAY: ":99"
+      BROWSER_XVFB_SCREEN_RESOLUTION: "1920x1080x24"
       A2A_PORT: 8080
       A2A_DEBUG: true
       A2A_AGENT_URL: http://localhost:8080
@@ -135,6 +144,27 @@ services:
     networks:
       - a2a-network
 
+  browser-vnc:
+    build:
+      context: .
+      dockerfile: Dockerfile.vnc
+    container_name: browser-vnc
+    environment:
+      DISPLAY: :99
+    volumes:
+      - x11-socket:/tmp/.X11-unix
+    ports:
+      - "5900:5900"
+    depends_on:
+      - agent
+    networks:
+      - a2a-network
+    profiles:
+      - vnc
+
 networks:
   a2a-network:
     driver: bridge
+
+volumes:
+  x11-socket:

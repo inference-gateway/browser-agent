@@ -12,6 +12,8 @@ spec:
   config:
     browser:
       headless: true
+      engine: "chromium"
+      stealth_mode: false
       user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
       viewport_width: 1920
       viewport_height: 1080
@@ -22,6 +24,9 @@ spec:
       header_connection: "keep-alive"
       header_upgrade_insecure_requests: "1"
       data_dir: "/tmp/playwright/artifacts"
+      xvfb_enabled: false
+      xvfb_display: ":99"
+      xvfb_screen_resolution: "1920x1080x24"
       args:
         - "--disable-blink-features=AutomationControlled"
         - "--disable-features=VizDisplayCompositor"
