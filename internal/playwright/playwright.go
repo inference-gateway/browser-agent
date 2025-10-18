@@ -162,7 +162,13 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 	}
 	service.pw = pw
 
-	logger.Info("playwright service initialized successfully")
+	browserConfig := NewBrowserConfigFromConfig(cfg)
+	logger.Info("playwright service initialized successfully",
+		zap.String("engine", string(browserConfig.Engine)),
+		zap.Bool("headless", browserConfig.Headless),
+		zap.Int("viewport_width", browserConfig.ViewportWidth),
+		zap.Int("viewport_height", browserConfig.ViewportHeight))
+
 	return service, nil
 }
 
