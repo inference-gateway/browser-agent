@@ -89,7 +89,7 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 
 	return &BrowserConfig{
 		Engine:         Chromium,
-		Headless:       true,
+		Headless:       cfg.Browser.Headless,
 		Timeout:        30 * time.Second,
 		ViewportWidth:  width,
 		ViewportHeight: height,
