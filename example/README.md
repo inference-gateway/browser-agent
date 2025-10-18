@@ -125,6 +125,25 @@ environment:
   BROWSER_ENGINE: firefox
 ```
 
+Or build directly with docker:
+
+```bash
+# Build with default browser (chromium)
+docker build -t browser-agent ..
+
+# Build with specific browser engine
+docker build --build-arg BROWSER_ENGINE=firefox -t browser-agent:firefox ..
+
+# Build with all browsers (larger image)
+docker build --build-arg BROWSER_ENGINE=all -t browser-agent:all ..
+```
+
+**Available Build Arguments:**
+- `VERSION` - Agent version (default: from agent.yaml)
+- `AGENT_NAME` - Agent name (default: from agent.yaml)
+- `AGENT_DESCRIPTION` - Agent description (default: from agent.yaml)
+- `BROWSER_ENGINE` - Browser to install (`chromium`, `firefox`, `webkit`, or `all`) (default: `chromium`)
+
 ### Xvfb Configuration
 
 When Xvfb is enabled, you can customize:
