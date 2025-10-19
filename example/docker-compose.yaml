@@ -88,7 +88,7 @@ services:
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
-      ENVIRONMENT: development
+      ENVIRONMENT: ${ENVIRONMENT:-production}
       SERVER_READ_TIMEOUT: 530s
       SERVER_WRITE_TIMEOUT: 530s
       CLIENT_TIMEOUT: 530s

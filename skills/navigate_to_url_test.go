@@ -20,7 +20,7 @@ func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
 		Created:  time.Now(),
 		LastUsed: time.Now(),
 	}
-	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
+	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.NavigateToURLReturns(nil)
 

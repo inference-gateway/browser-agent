@@ -149,7 +149,7 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 		zap.Bool("submit", submit),
 		zap.String("submit_selector", submitSelector))
 
-	session, err := s.getOrCreateSession(ctx)
+	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
@@ -257,9 +257,4 @@ func (s *FillFormSkill) fillSingleField(ctx context.Context, sessionID string, f
 		zap.String("value", value))
 
 	return s.playwright.FillForm(ctx, sessionID, fields, false, "")
-}
-
-// getOrCreateSession gets the shared default session
-func (s *FillFormSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
 }

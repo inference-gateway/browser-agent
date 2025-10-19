@@ -104,7 +104,7 @@ func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, arg
 		zap.Int("timeout_ms", timeout),
 		zap.String("custom_function", customFunction))
 
-	session, err := s.getOrCreateSession(ctx)
+	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
@@ -245,9 +245,4 @@ func (s *WaitForConditionSkill) executeWaitCondition(ctx context.Context, sessio
 	default:
 		return fmt.Errorf("unsupported condition type: %s", condition)
 	}
-}
-
-// getOrCreateSession gets the shared default session
-func (s *WaitForConditionSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
 }

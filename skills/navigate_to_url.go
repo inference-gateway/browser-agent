@@ -84,7 +84,7 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 		zap.String("wait_until", waitUntil),
 		zap.Int("timeout_ms", timeout))
 
-	session, err := s.getOrCreateSession(ctx)
+	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
@@ -155,9 +155,4 @@ func (s *NavigateToURLSkill) isValidWaitCondition(condition string) bool {
 		}
 	}
 	return false
-}
-
-// getOrCreateSession gets the shared default session
-func (s *NavigateToURLSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
 }

@@ -130,7 +130,7 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 	}
 
 	session := &playwright.BrowserSession{ID: "test-session"}
-	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
+	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.FillFormReturns(nil)
 	mockPlaywright.FillFormReturns(nil)
@@ -225,7 +225,7 @@ func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
 			}
 
 			session := &playwright.BrowserSession{ID: "test-session"}
-			mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
+			mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
 			mockPlaywright.GetSessionReturns(session, nil)
 			mockPlaywright.FillFormReturns(nil)
 
@@ -257,7 +257,7 @@ func TestFillFormSkill_DefaultFieldType(t *testing.T) {
 	}
 
 	session := &playwright.BrowserSession{ID: "test-session"}
-	mockPlaywright.GetOrCreateDefaultSessionReturns(session, nil)
+	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.FillFormReturns(nil)
 

@@ -32,6 +32,7 @@ type BrowserConfig struct {
 	HeaderDnt                     string `env:"HEADER_DNT,default=1"`
 	HeaderUpgradeInsecureRequests string `env:"HEADER_UPGRADE_INSECURE_REQUESTS,default=1"`
 	Headless                      bool   `env:"HEADLESS,default=true"`
+	SessionTimeout                string `env:"SESSION_TIMEOUT,default=2m"`
 	StealthMode                   bool   `env:"STEALTH_MODE,default=false"`
 	UserAgent                     string `env:"USER_AGENT,default=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"`
 	ViewportHeight                string `env:"VIEWPORT_HEIGHT,default=1080"`

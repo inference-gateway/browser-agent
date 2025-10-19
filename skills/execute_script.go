@@ -128,7 +128,7 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 		zap.Int("timeout_ms", timeout),
 		zap.Bool("async", isAsync))
 
-	session, err := s.getOrCreateSession(ctx)
+	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
@@ -286,9 +286,4 @@ func (s *ExecuteScriptSkill) getResultType(result any) string {
 	default:
 		return fmt.Sprintf("unknown:%T", result)
 	}
-}
-
-// getOrCreateSession gets the shared default session
-func (s *ExecuteScriptSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateDefaultSession(ctx)
 }

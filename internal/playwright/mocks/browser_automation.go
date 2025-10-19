@@ -37,6 +37,17 @@ type FakeBrowserAutomation struct {
 	closeBrowserReturnsOnCall map[int]struct {
 		result1 error
 	}
+	CloseExpiredSessionsStub        func(context.Context) error
+	closeExpiredSessionsMutex       sync.RWMutex
+	closeExpiredSessionsArgsForCall []struct {
+		arg1 context.Context
+	}
+	closeExpiredSessionsReturns struct {
+		result1 error
+	}
+	closeExpiredSessionsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	ExecuteScriptStub        func(context.Context, string, string, []any) (any, error)
 	executeScriptMutex       sync.RWMutex
 	executeScriptArgsForCall []struct {
@@ -115,6 +126,19 @@ type FakeBrowserAutomation struct {
 		result2 error
 	}
 	getOrCreateDefaultSessionReturnsOnCall map[int]struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}
+	GetOrCreateTaskSessionStub        func(context.Context) (*playwright.BrowserSession, error)
+	getOrCreateTaskSessionMutex       sync.RWMutex
+	getOrCreateTaskSessionArgsForCall []struct {
+		arg1 context.Context
+	}
+	getOrCreateTaskSessionReturns struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}
+	getOrCreateTaskSessionReturnsOnCall map[int]struct {
 		result1 *playwright.BrowserSession
 		result2 error
 	}
@@ -348,6 +372,67 @@ func (fake *FakeBrowserAutomation) CloseBrowserReturnsOnCall(i int, result1 erro
 		})
 	}
 	fake.closeBrowserReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBrowserAutomation) CloseExpiredSessions(arg1 context.Context) error {
+	fake.closeExpiredSessionsMutex.Lock()
+	ret, specificReturn := fake.closeExpiredSessionsReturnsOnCall[len(fake.closeExpiredSessionsArgsForCall)]
+	fake.closeExpiredSessionsArgsForCall = append(fake.closeExpiredSessionsArgsForCall, struct {
+		arg1 context.Context
+	}{arg1})
+	stub := fake.CloseExpiredSessionsStub
+	fakeReturns := fake.closeExpiredSessionsReturns
+	fake.recordInvocation("CloseExpiredSessions", []interface{}{arg1})
+	fake.closeExpiredSessionsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeBrowserAutomation) CloseExpiredSessionsCallCount() int {
+	fake.closeExpiredSessionsMutex.RLock()
+	defer fake.closeExpiredSessionsMutex.RUnlock()
+	return len(fake.closeExpiredSessionsArgsForCall)
+}
+
+func (fake *FakeBrowserAutomation) CloseExpiredSessionsCalls(stub func(context.Context) error) {
+	fake.closeExpiredSessionsMutex.Lock()
+	defer fake.closeExpiredSessionsMutex.Unlock()
+	fake.CloseExpiredSessionsStub = stub
+}
+
+func (fake *FakeBrowserAutomation) CloseExpiredSessionsArgsForCall(i int) context.Context {
+	fake.closeExpiredSessionsMutex.RLock()
+	defer fake.closeExpiredSessionsMutex.RUnlock()
+	argsForCall := fake.closeExpiredSessionsArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeBrowserAutomation) CloseExpiredSessionsReturns(result1 error) {
+	fake.closeExpiredSessionsMutex.Lock()
+	defer fake.closeExpiredSessionsMutex.Unlock()
+	fake.CloseExpiredSessionsStub = nil
+	fake.closeExpiredSessionsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBrowserAutomation) CloseExpiredSessionsReturnsOnCall(i int, result1 error) {
+	fake.closeExpiredSessionsMutex.Lock()
+	defer fake.closeExpiredSessionsMutex.Unlock()
+	fake.CloseExpiredSessionsStub = nil
+	if fake.closeExpiredSessionsReturnsOnCall == nil {
+		fake.closeExpiredSessionsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.closeExpiredSessionsReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -739,6 +824,70 @@ func (fake *FakeBrowserAutomation) GetOrCreateDefaultSessionReturnsOnCall(i int,
 		})
 	}
 	fake.getOrCreateDefaultSessionReturnsOnCall[i] = struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateTaskSession(arg1 context.Context) (*playwright.BrowserSession, error) {
+	fake.getOrCreateTaskSessionMutex.Lock()
+	ret, specificReturn := fake.getOrCreateTaskSessionReturnsOnCall[len(fake.getOrCreateTaskSessionArgsForCall)]
+	fake.getOrCreateTaskSessionArgsForCall = append(fake.getOrCreateTaskSessionArgsForCall, struct {
+		arg1 context.Context
+	}{arg1})
+	stub := fake.GetOrCreateTaskSessionStub
+	fakeReturns := fake.getOrCreateTaskSessionReturns
+	fake.recordInvocation("GetOrCreateTaskSession", []interface{}{arg1})
+	fake.getOrCreateTaskSessionMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateTaskSessionCallCount() int {
+	fake.getOrCreateTaskSessionMutex.RLock()
+	defer fake.getOrCreateTaskSessionMutex.RUnlock()
+	return len(fake.getOrCreateTaskSessionArgsForCall)
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateTaskSessionCalls(stub func(context.Context) (*playwright.BrowserSession, error)) {
+	fake.getOrCreateTaskSessionMutex.Lock()
+	defer fake.getOrCreateTaskSessionMutex.Unlock()
+	fake.GetOrCreateTaskSessionStub = stub
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateTaskSessionArgsForCall(i int) context.Context {
+	fake.getOrCreateTaskSessionMutex.RLock()
+	defer fake.getOrCreateTaskSessionMutex.RUnlock()
+	argsForCall := fake.getOrCreateTaskSessionArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateTaskSessionReturns(result1 *playwright.BrowserSession, result2 error) {
+	fake.getOrCreateTaskSessionMutex.Lock()
+	defer fake.getOrCreateTaskSessionMutex.Unlock()
+	fake.GetOrCreateTaskSessionStub = nil
+	fake.getOrCreateTaskSessionReturns = struct {
+		result1 *playwright.BrowserSession
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBrowserAutomation) GetOrCreateTaskSessionReturnsOnCall(i int, result1 *playwright.BrowserSession, result2 error) {
+	fake.getOrCreateTaskSessionMutex.Lock()
+	defer fake.getOrCreateTaskSessionMutex.Unlock()
+	fake.GetOrCreateTaskSessionStub = nil
+	if fake.getOrCreateTaskSessionReturnsOnCall == nil {
+		fake.getOrCreateTaskSessionReturnsOnCall = make(map[int]struct {
+			result1 *playwright.BrowserSession
+			result2 error
+		})
+	}
+	fake.getOrCreateTaskSessionReturnsOnCall[i] = struct {
 		result1 *playwright.BrowserSession
 		result2 error
 	}{result1, result2}
@@ -1203,6 +1352,40 @@ func (fake *FakeBrowserAutomation) WaitForConditionReturnsOnCall(i int, result1 
 func (fake *FakeBrowserAutomation) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.clickElementMutex.RLock()
+	defer fake.clickElementMutex.RUnlock()
+	fake.closeBrowserMutex.RLock()
+	defer fake.closeBrowserMutex.RUnlock()
+	fake.closeExpiredSessionsMutex.RLock()
+	defer fake.closeExpiredSessionsMutex.RUnlock()
+	fake.executeScriptMutex.RLock()
+	defer fake.executeScriptMutex.RUnlock()
+	fake.extractDataMutex.RLock()
+	defer fake.extractDataMutex.RUnlock()
+	fake.fillFormMutex.RLock()
+	defer fake.fillFormMutex.RUnlock()
+	fake.getConfigMutex.RLock()
+	defer fake.getConfigMutex.RUnlock()
+	fake.getHealthMutex.RLock()
+	defer fake.getHealthMutex.RUnlock()
+	fake.getOrCreateDefaultSessionMutex.RLock()
+	defer fake.getOrCreateDefaultSessionMutex.RUnlock()
+	fake.getOrCreateTaskSessionMutex.RLock()
+	defer fake.getOrCreateTaskSessionMutex.RUnlock()
+	fake.getSessionMutex.RLock()
+	defer fake.getSessionMutex.RUnlock()
+	fake.handleAuthenticationMutex.RLock()
+	defer fake.handleAuthenticationMutex.RUnlock()
+	fake.launchBrowserMutex.RLock()
+	defer fake.launchBrowserMutex.RUnlock()
+	fake.navigateToURLMutex.RLock()
+	defer fake.navigateToURLMutex.RUnlock()
+	fake.shutdownMutex.RLock()
+	defer fake.shutdownMutex.RUnlock()
+	fake.takeScreenshotMutex.RLock()
+	defer fake.takeScreenshotMutex.RUnlock()
+	fake.waitForConditionMutex.RLock()
+	defer fake.waitForConditionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
