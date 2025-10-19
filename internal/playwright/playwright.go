@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	server "github.com/inference-gateway/adk/server"
+	types "github.com/inference-gateway/adk/types"
 	config "github.com/inference-gateway/browser-agent/config"
 	stealth "github.com/jonfriesen/playwright-go-stealth"
 	zap "go.uber.org/zap"
@@ -450,11 +452,36 @@ func generateSessionID() string {
 	return fmt.Sprintf("task_%s", hex.EncodeToString(bytes))
 }
 
-// GetOrCreateTaskSession creates a new isolated session for each task execution
+// GetOrCreateTaskSession creates or retrieves an isolated session for each task execution
 func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSession, error) {
-	sessionID := generateSessionID()
+	var taskID string
+	if task, ok := ctx.Value(server.TaskContextKey).(*types.Task); ok && task != nil {
+		taskID = task.ID
+	}
 
-	p.logger.Info("creating new task-scoped browser session", zap.String("sessionID", sessionID))
+	if taskID == "" {
+		return nil, fmt.Errorf("no task ID found in context - cannot create task-scoped session")
+	}
+
+	p.sessionsMux.RLock()
+	if session, exists := p.sessions[taskID]; exists && !time.Now().After(session.ExpiresAt) {
+		session.LastUsed = time.Now()
+		p.sessionsMux.RUnlock()
+		p.logger.Debug("reusing existing task-scoped session", zap.String("sessionID", taskID))
+		return session, nil
+	}
+	p.sessionsMux.RUnlock()
+
+	p.sessionsMux.Lock()
+	defer p.sessionsMux.Unlock()
+
+	if session, exists := p.sessions[taskID]; exists && !time.Now().After(session.ExpiresAt) {
+		session.LastUsed = time.Now()
+		p.logger.Debug("reusing existing task-scoped session (double-check)", zap.String("sessionID", taskID))
+		return session, nil
+	}
+
+	p.logger.Info("creating new task-scoped browser session", zap.String("sessionID", taskID))
 
 	config := NewBrowserConfigFromConfig(p.config)
 
@@ -513,22 +540,20 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 
 	now := time.Now()
 	session := &BrowserSession{
-		ID:        sessionID,
+		ID:        taskID,
 		Browser:   browser,
 		Context:   context,
 		Page:      page,
 		Created:   now,
 		LastUsed:  now,
 		ExpiresAt: now.Add(SessionTimeout),
-		TaskID:    sessionID,
+		TaskID:    taskID,
 	}
 
-	p.sessionsMux.Lock()
-	p.sessions[sessionID] = session
-	p.sessionsMux.Unlock()
+	p.sessions[taskID] = session
 
 	p.logger.Info("task-scoped browser session created successfully",
-		zap.String("sessionID", sessionID),
+		zap.String("sessionID", taskID),
 		zap.Time("expiresAt", session.ExpiresAt))
 	return session, nil
 }
