@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2](https://github.com/inference-gateway/browser-agent/compare/v0.4.1...v0.4.2) (2025-10-19)
+
+### ♻️ Improvements
+
+* Implement multi-tenant browser session isolation ([#41](https://github.com/inference-gateway/browser-agent/issues/41)) ([5661bde](https://github.com/inference-gateway/browser-agent/commit/5661bdebbb1b9e069d97de3cc4d51780ee2fe56a)), closes [#40](https://github.com/inference-gateway/browser-agent/issues/40)
+* Improve the configurations ([#38](https://github.com/inference-gateway/browser-agent/issues/38)) ([9579694](https://github.com/inference-gateway/browser-agent/commit/9579694e5b877fad9ce394765ff95ab84c5af3f7))
+
 ## [0.4.1](https://github.com/inference-gateway/browser-agent/compare/v0.4.0...v0.4.1) (2025-10-18)
 
 ### ♻️ Improvements
