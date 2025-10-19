@@ -121,7 +121,7 @@ type BrowserSession struct {
 	Created   time.Time
 	LastUsed  time.Time
 	ExpiresAt time.Time
-	TaskID    string // Optional task identifier for debugging
+	TaskID    string
 }
 
 // BrowserAutomation represents the playwright dependency interface
@@ -132,7 +132,7 @@ type BrowserAutomation interface {
 	CloseBrowser(ctx context.Context, sessionID string) error
 	GetSession(sessionID string) (*BrowserSession, error)
 	GetOrCreateDefaultSession(ctx context.Context) (*BrowserSession, error)
-	
+
 	// Task-scoped session management
 	GetOrCreateTaskSession(ctx context.Context) (*BrowserSession, error)
 	CloseExpiredSessions(ctx context.Context) error
@@ -155,14 +155,14 @@ type BrowserAutomation interface {
 
 // playwrightImpl is the implementation of BrowserAutomation
 type playwrightImpl struct {
-	logger       *zap.Logger
-	config       *config.Config
-	pw           *playwright.Playwright
-	sessions     map[string]*BrowserSession
-	sessionsMux  sync.RWMutex
-	isInstalled  bool
-	cleanupStop  chan struct{}
-	cleanupDone  chan struct{}
+	logger      *zap.Logger
+	config      *config.Config
+	pw          *playwright.Playwright
+	sessions    map[string]*BrowserSession
+	sessionsMux sync.RWMutex
+	isInstalled bool
+	cleanupStop chan struct{}
+	cleanupDone chan struct{}
 }
 
 // NewPlaywrightService creates a new instance of BrowserAutomation
@@ -453,11 +453,11 @@ func generateSessionID() string {
 // GetOrCreateTaskSession creates a new isolated session for each task execution
 func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSession, error) {
 	sessionID := generateSessionID()
-	
+
 	p.logger.Info("creating new task-scoped browser session", zap.String("sessionID", sessionID))
-	
+
 	config := NewBrowserConfigFromConfig(p.config)
-	
+
 	var browserType playwright.BrowserType
 	switch config.Engine {
 	case Chromium:
@@ -527,7 +527,7 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 	p.sessions[sessionID] = session
 	p.sessionsMux.Unlock()
 
-	p.logger.Info("task-scoped browser session created successfully", 
+	p.logger.Info("task-scoped browser session created successfully",
 		zap.String("sessionID", sessionID),
 		zap.Time("expiresAt", session.ExpiresAt))
 	return session, nil
@@ -549,21 +549,21 @@ func (p *playwrightImpl) CloseExpiredSessions(ctx context.Context) error {
 
 	for _, sessionID := range expiredSessions {
 		session := p.sessions[sessionID]
-		p.logger.Info("closing expired session", 
+		p.logger.Info("closing expired session",
 			zap.String("sessionID", sessionID),
 			zap.Time("expiredAt", session.ExpiresAt))
 
 		if session.Context != nil {
 			if err := session.Context.Close(); err != nil {
-				p.logger.Error("failed to close expired session context", 
-					zap.String("sessionID", sessionID), 
+				p.logger.Error("failed to close expired session context",
+					zap.String("sessionID", sessionID),
 					zap.Error(err))
 			}
 		}
 		if session.Browser != nil {
 			if err := session.Browser.Close(); err != nil {
-				p.logger.Error("failed to close expired session browser", 
-					zap.String("sessionID", sessionID), 
+				p.logger.Error("failed to close expired session browser",
+					zap.String("sessionID", sessionID),
 					zap.Error(err))
 			}
 		}
@@ -572,7 +572,7 @@ func (p *playwrightImpl) CloseExpiredSessions(ctx context.Context) error {
 	}
 
 	if len(expiredSessions) > 0 {
-		p.logger.Info("cleaned up expired sessions", 
+		p.logger.Info("cleaned up expired sessions",
 			zap.Int("count", len(expiredSessions)),
 			zap.Strings("sessionIDs", expiredSessions))
 	}
@@ -583,11 +583,11 @@ func (p *playwrightImpl) CloseExpiredSessions(ctx context.Context) error {
 // sessionCleanupWorker runs in background to periodically clean up expired sessions
 func (p *playwrightImpl) sessionCleanupWorker() {
 	defer close(p.cleanupDone)
-	
+
 	ticker := time.NewTicker(CleanupInterval)
 	defer ticker.Stop()
 
-	p.logger.Info("started session cleanup worker", 
+	p.logger.Info("started session cleanup worker",
 		zap.Duration("interval", CleanupInterval),
 		zap.Duration("sessionTimeout", SessionTimeout))
 
