@@ -102,7 +102,7 @@ func (s *ClickElementSkill) ClickElementHandler(ctx context.Context, args map[st
 		zap.Bool("force", force),
 		zap.Int("timeout_ms", timeout))
 
-	session, err := s.getOrCreateSession(ctx)
+	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
@@ -247,9 +247,4 @@ func (s *ClickElementSkill) checkElementInIframes(ctx context.Context, session *
 		zap.Int("iframe_count", iframeCount))
 
 	return fmt.Errorf("element not found in main frame, %d iframes detected but cross-frame clicking not yet implemented", iframeCount)
-}
-
-// getOrCreateSession gets a task-scoped isolated session
-func (s *ClickElementSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateTaskSession(ctx)
 }

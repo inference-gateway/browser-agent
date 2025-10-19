@@ -70,7 +70,7 @@ func (s *ExtractDataSkill) ExtractDataHandler(ctx context.Context, args map[stri
 		zap.Int("extractors_count", len(extractors)),
 		zap.String("format", format))
 
-	session, err := s.getOrCreateSession(ctx)
+	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
@@ -512,9 +512,4 @@ func (s *ExtractDataSkill) cleanString(text string) string {
 	cleaned = controlRegex.ReplaceAllString(cleaned, "")
 
 	return cleaned
-}
-
-// getOrCreateSession gets a task-scoped isolated session
-func (s *ExtractDataSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateTaskSession(ctx)
 }

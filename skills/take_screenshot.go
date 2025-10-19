@@ -106,7 +106,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 		zap.Int("quality", quality),
 		zap.String("selector", selector))
 
-	session, err := s.getOrCreateSession(ctx)
+	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
 		s.logger.Error("failed to get browser session", zap.Error(err))
 		return "", fmt.Errorf("failed to get browser session: %w", err)
@@ -225,11 +225,6 @@ func (s *TakeScreenshotSkill) getMimeType(imageType string) string {
 	default:
 		return "image/png"
 	}
-}
-
-// getOrCreateSession gets a task-scoped isolated session
-func (s *TakeScreenshotSkill) getOrCreateSession(ctx context.Context) (*playwright.BrowserSession, error) {
-	return s.playwright.GetOrCreateTaskSession(ctx)
 }
 
 // getCurrentTimestamp returns the current timestamp in RFC3339 format

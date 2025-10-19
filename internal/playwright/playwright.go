@@ -194,7 +194,6 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 		zap.Int("viewport_width", browserConfig.ViewportWidth),
 		zap.Int("viewport_height", browserConfig.ViewportHeight))
 
-	// Start background session cleanup goroutine
 	go service.sessionCleanupWorker()
 
 	return service, nil
@@ -339,14 +338,13 @@ func (p *playwrightImpl) GetSession(sessionID string) (*BrowserSession, error) {
 		return nil, fmt.Errorf("session not found: %s", sessionID)
 	}
 
-	// Check if session has expired
 	if time.Now().After(session.ExpiresAt) {
 		return nil, fmt.Errorf("session expired: %s", sessionID)
 	}
 
 	now := time.Now()
 	session.LastUsed = now
-	session.ExpiresAt = now.Add(SessionTimeout) // Extend session
+	session.ExpiresAt = now.Add(SessionTimeout)
 	return session, nil
 }
 
@@ -447,7 +445,6 @@ func generateSessionID() string {
 	bytes := make([]byte, 8)
 	_, err := rand.Read(bytes)
 	if err != nil {
-		// Fallback to timestamp-based ID if random fails
 		return fmt.Sprintf("task_%d", time.Now().UnixNano())
 	}
 	return fmt.Sprintf("task_%s", hex.EncodeToString(bytes))
@@ -455,7 +452,6 @@ func generateSessionID() string {
 
 // GetOrCreateTaskSession creates a new isolated session for each task execution
 func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSession, error) {
-	// Generate a unique session ID for this task/execution context
 	sessionID := generateSessionID()
 	
 	p.logger.Info("creating new task-scoped browser session", zap.String("sessionID", sessionID))
@@ -524,7 +520,7 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 		Created:   now,
 		LastUsed:  now,
 		ExpiresAt: now.Add(SessionTimeout),
-		TaskID:    sessionID, // Use session ID as task ID for now
+		TaskID:    sessionID,
 	}
 
 	p.sessionsMux.Lock()
@@ -545,14 +541,12 @@ func (p *playwrightImpl) CloseExpiredSessions(ctx context.Context) error {
 	now := time.Now()
 	expiredSessions := make([]string, 0)
 
-	// Find expired sessions
 	for sessionID, session := range p.sessions {
 		if now.After(session.ExpiresAt) {
 			expiredSessions = append(expiredSessions, sessionID)
 		}
 	}
 
-	// Close and remove expired sessions
 	for _, sessionID := range expiredSessions {
 		session := p.sessions[sessionID]
 		p.logger.Info("closing expired session", 
@@ -990,7 +984,6 @@ func (p *playwrightImpl) GetHealth(ctx context.Context) error {
 func (p *playwrightImpl) Shutdown(ctx context.Context) error {
 	p.logger.Info("shutting down playwright service")
 
-	// Stop the cleanup worker
 	close(p.cleanupStop)
 	select {
 	case <-p.cleanupDone:
