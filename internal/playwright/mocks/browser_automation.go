@@ -246,6 +246,27 @@ type FakeBrowserAutomation struct {
 	waitForConditionReturnsOnCall map[int]struct {
 		result1 error
 	}
+	ScrollStub        func(context.Context, string, string, string, string, string, string, string, int, int, int) error
+	scrollMutex       sync.RWMutex
+	scrollArgsForCall []struct {
+		arg1  context.Context
+		arg2  string
+		arg3  string
+		arg4  string
+		arg5  string
+		arg6  string
+		arg7  string
+		arg8  string
+		arg9  int
+		arg10 int
+		arg11 int
+	}
+	scrollReturns struct {
+		result1 error
+	}
+	scrollReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -1386,6 +1407,8 @@ func (fake *FakeBrowserAutomation) Invocations() map[string][][]interface{} {
 	defer fake.takeScreenshotMutex.RUnlock()
 	fake.waitForConditionMutex.RLock()
 	defer fake.waitForConditionMutex.RUnlock()
+	fake.scrollMutex.RLock()
+	defer fake.scrollMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
@@ -1403,6 +1426,77 @@ func (fake *FakeBrowserAutomation) recordInvocation(key string, args []interface
 		fake.invocations[key] = [][]interface{}{}
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
+}
+
+func (fake *FakeBrowserAutomation) Scroll(arg1 context.Context, arg2 string, arg3 string, arg4 string, arg5 string, arg6 string, arg7 string, arg8 string, arg9 int, arg10 int, arg11 int) error {
+	fake.scrollMutex.Lock()
+	ret, specificReturn := fake.scrollReturnsOnCall[len(fake.scrollArgsForCall)]
+	fake.scrollArgsForCall = append(fake.scrollArgsForCall, struct {
+		arg1  context.Context
+		arg2  string
+		arg3  string
+		arg4  string
+		arg5  string
+		arg6  string
+		arg7  string
+		arg8  string
+		arg9  int
+		arg10 int
+		arg11 int
+	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11})
+	stub := fake.ScrollStub
+	fakeReturns := fake.scrollReturns
+	fake.recordInvocation("Scroll", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11})
+	fake.scrollMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeBrowserAutomation) ScrollCallCount() int {
+	fake.scrollMutex.RLock()
+	defer fake.scrollMutex.RUnlock()
+	return len(fake.scrollArgsForCall)
+}
+
+func (fake *FakeBrowserAutomation) ScrollCalls(stub func(context.Context, string, string, string, string, string, string, string, int, int, int) error) {
+	fake.scrollMutex.Lock()
+	defer fake.scrollMutex.Unlock()
+	fake.ScrollStub = stub
+}
+
+func (fake *FakeBrowserAutomation) ScrollArgsForCall(i int) (context.Context, string, string, string, string, string, string, string, int, int, int) {
+	fake.scrollMutex.RLock()
+	defer fake.scrollMutex.RUnlock()
+	argsForCall := fake.scrollArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7, argsForCall.arg8, argsForCall.arg9, argsForCall.arg10, argsForCall.arg11
+}
+
+func (fake *FakeBrowserAutomation) ScrollReturns(result1 error) {
+	fake.scrollMutex.Lock()
+	defer fake.scrollMutex.Unlock()
+	fake.ScrollStub = nil
+	fake.scrollReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBrowserAutomation) ScrollReturnsOnCall(i int, result1 error) {
+	fake.scrollMutex.Lock()
+	defer fake.scrollMutex.Unlock()
+	fake.ScrollStub = nil
+	if fake.scrollReturnsOnCall == nil {
+		fake.scrollReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.scrollReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 var _ playwright.BrowserAutomation = new(FakeBrowserAutomation)
