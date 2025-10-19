@@ -11,6 +11,7 @@ All tests use mocks for fast execution (~0.18s). No browser downloads required.
 go test -v ./internal/playwright
 
 # Generate mocks (after interface changes)
+# Note: counterfeiter is declared as a tool in go.mod
 go run github.com/maxbrunsfeld/counterfeiter/v6 -o internal/playwright/mocks/browser_automation.go internal/playwright BrowserAutomation
 ```
 
