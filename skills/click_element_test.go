@@ -30,7 +30,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				session := &playwright.BrowserSession{
 					ID: "test-session",
 				}
-				m.GetOrCreateDefaultSessionReturns(session, nil)
+				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
 				m.ClickElementReturns(nil)
@@ -50,7 +50,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				session := &playwright.BrowserSession{
 					ID: "test-session",
 				}
-				m.GetOrCreateDefaultSessionReturns(session, nil)
+				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
 				m.ClickElementReturns(nil)
@@ -66,7 +66,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				session := &playwright.BrowserSession{
 					ID: "test-session",
 				}
-				m.GetOrCreateDefaultSessionReturns(session, nil)
+				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
 				m.ClickElementReturns(nil)
@@ -82,7 +82,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				session := &playwright.BrowserSession{
 					ID: "test-session",
 				}
-				m.GetOrCreateDefaultSessionReturns(session, nil)
+				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
 				m.ClickElementReturns(nil)
@@ -120,7 +120,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				"selector": "#button",
 			},
 			setupMock: func(m *mocks.FakeBrowserAutomation) {
-				m.GetOrCreateDefaultSessionReturns(nil, errors.New("browser launch failed"))
+				m.GetOrCreateTaskSessionReturns(nil, errors.New("browser launch failed"))
 			},
 			expectedError: true,
 		},
@@ -133,7 +133,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				session := &playwright.BrowserSession{
 					ID: "test-session",
 				}
-				m.GetOrCreateDefaultSessionReturns(session, nil)
+				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(errors.New("element not found"))
 			},
@@ -148,7 +148,7 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 				session := &playwright.BrowserSession{
 					ID: "test-session",
 				}
-				m.GetOrCreateDefaultSessionReturns(session, nil)
+				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
 				m.ClickElementReturns(errors.New("click failed"))

@@ -2,8 +2,6 @@ package playwright
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"strconv"
@@ -30,9 +28,7 @@ const (
 )
 
 const (
-	DefaultSessionID = "default"
-	SessionTimeout   = 10 * time.Minute // Default session timeout
-	CleanupInterval  = 2 * time.Minute  // How often to run cleanup
+	CleanupInterval = 2 * time.Minute // How often to run cleanup
 )
 
 // BrowserConfig holds browser configuration options
@@ -133,7 +129,6 @@ type BrowserAutomation interface {
 	LaunchBrowser(ctx context.Context, config *BrowserConfig) (*BrowserSession, error)
 	CloseBrowser(ctx context.Context, sessionID string) error
 	GetSession(sessionID string) (*BrowserSession, error)
-	GetOrCreateDefaultSession(ctx context.Context) (*BrowserSession, error)
 
 	// Task-scoped session management
 	GetOrCreateTaskSession(ctx context.Context) (*BrowserSession, error)
@@ -157,26 +152,40 @@ type BrowserAutomation interface {
 
 // playwrightImpl is the implementation of BrowserAutomation
 type playwrightImpl struct {
-	logger      *zap.Logger
-	config      *config.Config
-	pw          *playwright.Playwright
-	sessions    map[string]*BrowserSession
-	sessionsMux sync.RWMutex
-	isInstalled bool
-	cleanupStop chan struct{}
-	cleanupDone chan struct{}
+	logger         *zap.Logger
+	config         *config.Config
+	pw             *playwright.Playwright
+	sessions       map[string]*BrowserSession
+	sessionsMux    sync.RWMutex
+	sessionTimeout time.Duration
+	isInstalled    bool
+	cleanupStop    chan struct{}
+	cleanupDone    chan struct{}
 }
 
 // NewPlaywrightService creates a new instance of BrowserAutomation
 func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutomation, error) {
 	logger.Info("initializing playwright dependency")
 
+	sessionTimeout := 2 * time.Minute
+	if cfg.Browser.SessionTimeout != "" {
+		if duration, err := time.ParseDuration(cfg.Browser.SessionTimeout); err == nil {
+			sessionTimeout = duration
+		} else {
+			logger.Warn("invalid session timeout value, using default",
+				zap.String("configured", cfg.Browser.SessionTimeout),
+				zap.Duration("default", sessionTimeout),
+				zap.Error(err))
+		}
+	}
+
 	service := &playwrightImpl{
-		logger:      logger,
-		config:      cfg,
-		sessions:    make(map[string]*BrowserSession),
-		cleanupStop: make(chan struct{}),
-		cleanupDone: make(chan struct{}),
+		logger:         logger,
+		config:         cfg,
+		sessions:       make(map[string]*BrowserSession),
+		sessionTimeout: sessionTimeout,
+		cleanupStop:    make(chan struct{}),
+		cleanupDone:    make(chan struct{}),
 	}
 
 	if err := service.ensurePlaywrightInstalled(); err != nil {
@@ -194,7 +203,8 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 		zap.String("engine", string(browserConfig.Engine)),
 		zap.Bool("headless", browserConfig.Headless),
 		zap.Int("viewport_width", browserConfig.ViewportWidth),
-		zap.Int("viewport_height", browserConfig.ViewportHeight))
+		zap.Int("viewport_height", browserConfig.ViewportHeight),
+		zap.Duration("session_timeout", sessionTimeout))
 
 	go service.sessionCleanupWorker()
 
@@ -293,7 +303,7 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 		Page:      page,
 		Created:   now,
 		LastUsed:  now,
-		ExpiresAt: now.Add(SessionTimeout),
+		ExpiresAt: now.Add(p.sessionTimeout),
 	}
 
 	p.sessionsMux.Lock()
@@ -346,110 +356,8 @@ func (p *playwrightImpl) GetSession(sessionID string) (*BrowserSession, error) {
 
 	now := time.Now()
 	session.LastUsed = now
-	session.ExpiresAt = now.Add(SessionTimeout)
+	session.ExpiresAt = now.Add(p.sessionTimeout)
 	return session, nil
-}
-
-// GetOrCreateDefaultSession gets the default shared session or creates it if it doesn't exist
-func (p *playwrightImpl) GetOrCreateDefaultSession(ctx context.Context) (*BrowserSession, error) {
-	p.sessionsMux.RLock()
-	if session, exists := p.sessions[DefaultSessionID]; exists {
-		session.LastUsed = time.Now()
-		p.sessionsMux.RUnlock()
-		p.logger.Debug("reusing existing default session", zap.String("sessionID", DefaultSessionID))
-		return session, nil
-	}
-	p.sessionsMux.RUnlock()
-
-	p.sessionsMux.Lock()
-	defer p.sessionsMux.Unlock()
-
-	if session, exists := p.sessions[DefaultSessionID]; exists {
-		session.LastUsed = time.Now()
-		p.logger.Debug("reusing existing default session (double-check)", zap.String("sessionID", DefaultSessionID))
-		return session, nil
-	}
-
-	config := NewBrowserConfigFromConfig(p.config)
-	p.logger.Info("creating new default browser session", zap.String("sessionID", DefaultSessionID))
-
-	var browserType playwright.BrowserType
-	switch config.Engine {
-	case Chromium:
-		browserType = p.pw.Chromium
-	case Firefox:
-		browserType = p.pw.Firefox
-	case WebKit:
-		browserType = p.pw.WebKit
-	default:
-		return nil, fmt.Errorf("unsupported browser engine: %s", config.Engine)
-	}
-
-	timeoutMs := float64(config.Timeout.Milliseconds())
-	launchOptions := playwright.BrowserTypeLaunchOptions{
-		Headless: &config.Headless,
-		Args:     config.Args,
-		Timeout:  &timeoutMs,
-	}
-
-	browser, err := browserType.Launch(launchOptions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to launch browser: %w", err)
-	}
-
-	contextOptions := p.createContextOptions(config)
-
-	context, err := browser.NewContext(contextOptions)
-	if err != nil {
-		if closeErr := browser.Close(); closeErr != nil {
-			p.logger.Error("failed to close browser after context creation error", zap.Error(closeErr))
-		}
-		return nil, fmt.Errorf("failed to create browser context: %w", err)
-	}
-
-	page, err := context.NewPage()
-	if err != nil {
-		if closeErr := context.Close(); closeErr != nil {
-			p.logger.Error("failed to close context after page creation error", zap.Error(closeErr))
-		}
-		if closeErr := browser.Close(); closeErr != nil {
-			p.logger.Error("failed to close browser after page creation error", zap.Error(closeErr))
-		}
-		return nil, fmt.Errorf("failed to create page: %w", err)
-	}
-
-	if p.config.Browser.StealthMode {
-		if err := stealth.Inject(page); err != nil {
-			p.logger.Warn("failed to inject stealth script", zap.Error(err))
-		} else {
-			p.logger.Info("stealth mode enabled - stealth script injected")
-		}
-	}
-
-	now := time.Now()
-	session := &BrowserSession{
-		ID:        DefaultSessionID,
-		Browser:   browser,
-		Context:   context,
-		Page:      page,
-		Created:   now,
-		LastUsed:  now,
-		ExpiresAt: now.Add(SessionTimeout),
-	}
-
-	p.sessions[DefaultSessionID] = session
-	p.logger.Info("default browser session created successfully", zap.String("sessionID", DefaultSessionID))
-	return session, nil
-}
-
-// generateSessionID creates a unique session ID for task isolation
-func generateSessionID() string {
-	bytes := make([]byte, 8)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return fmt.Sprintf("task_%d", time.Now().UnixNano())
-	}
-	return fmt.Sprintf("task_%s", hex.EncodeToString(bytes))
 }
 
 // GetOrCreateTaskSession creates or retrieves an isolated session for each task execution
@@ -546,7 +454,7 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 		Page:      page,
 		Created:   now,
 		LastUsed:  now,
-		ExpiresAt: now.Add(SessionTimeout),
+		ExpiresAt: now.Add(p.sessionTimeout),
 		TaskID:    taskID,
 	}
 
@@ -614,7 +522,7 @@ func (p *playwrightImpl) sessionCleanupWorker() {
 
 	p.logger.Info("started session cleanup worker",
 		zap.Duration("interval", CleanupInterval),
-		zap.Duration("sessionTimeout", SessionTimeout))
+		zap.Duration("sessionTimeout", p.sessionTimeout))
 
 	for {
 		select {
