@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.3](https://github.com/inference-gateway/browser-agent/compare/v0.4.2...v0.4.3) (2025-10-20)
+
+### ♻️ Improvements
+
+* **tests:** Remove redundant comments in session isolation tests ([1c54151](https://github.com/inference-gateway/browser-agent/commit/1c54151b4e279e08d3018d2e14180ad6cafeec2a))
+
+### 🔧 Miscellaneous
+
+* **deps:** Update ADL CLI version to 0.23.11 in generated files ([c7dbb1c](https://github.com/inference-gateway/browser-agent/commit/c7dbb1cc85f56ec4b41f403f191f5821112f9b02))
+
 ## [0.4.2](https://github.com/inference-gateway/browser-agent/compare/v0.4.1...v0.4.2) (2025-10-19)
 
 ### ♻️ Improvements
