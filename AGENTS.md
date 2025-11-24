@@ -11,24 +11,11 @@ This file describes the agents available in this A2A (Agent-to-Agent) system.
 This agent is built using the Agent Definition Language (ADL) and provides A2A communication capabilities.
 
 ## Agent Capabilities
-
-
-
 - **Streaming**: ✅ Real-time response streaming supported
-
-
 - **Push Notifications**: ❌ Server-sent events not supported
-
-
 - **State History**: ❌ State transition history not tracked
 
-
-
 ## AI Configuration
-
-
-
-
 
 **System Prompt**: You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
 
@@ -72,17 +59,11 @@ For data extraction, you can use the create_artifact tool to save extracted data
 Your automation solutions should be maintainable, efficient, and production-ready.
 
 
-
 **Configuration:**
-
-
-
 
 ## Skills
 
-
 This agent provides 8 skills:
-
 
 ### navigate_to_url
 - **Description**: Navigate to a specific URL and wait for the page to fully load
@@ -90,13 +71,11 @@ This agent provides 8 skills:
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
 
-
 ### click_element
 - **Description**: Click on an element identified by selector, text, or other locator strategies
 - **Tags**: interaction, click, playwright
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
-
 
 ### fill_form
 - **Description**: Fill form fields with provided data, handling various input types
@@ -104,13 +83,11 @@ This agent provides 8 skills:
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
 
-
 ### extract_data
 - **Description**: Extract data from the page using selectors and return structured information
 - **Tags**: scraping, extraction, data, playwright
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
-
 
 ### take_screenshot
 - **Description**: Capture a screenshot of the current page or specific element
@@ -118,13 +95,11 @@ This agent provides 8 skills:
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
 
-
 ### execute_script
 - **Description**: Execute custom JavaScript code in the browser context
 - **Tags**: javascript, execution, custom, playwright
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
-
 
 ### handle_authentication
 - **Description**: Handle various authentication scenarios including basic auth, OAuth, and custom login forms
@@ -132,52 +107,35 @@ This agent provides 8 skills:
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
 
-
 ### wait_for_condition
 - **Description**: Wait for specific conditions before proceeding with automation
 - **Tags**: wait, synchronization, timing, playwright
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
 
-
-
-
 ## Server Configuration
 
 **Port**: 8080
-
 **Debug Mode**: ❌ Disabled
-
-
-
 **Authentication**: ❌ Not required
-
 
 ## API Endpoints
 
 The agent exposes the following HTTP endpoints:
 
 - `GET /.well-known/agent-card.json` - Agent metadata and capabilities
-- `POST /skills/{skill_name}` - Execute a specific skill
-- `GET /skills/{skill_name}/stream` - Stream skill execution results
+- `GET /health` - Health check endpoint
+- `POST /a2a` - JSON-RPC endpoint for all A2A operations (skill execution, streaming, etc.)
 
 ## Environment Setup
 
 ### Required Environment Variables
 
 Key environment variables you'll need to configure:
-
-
-
-- `PORT` - Server port (default: 8080)
+- `PORT` - Server port (configured: 8080)
 
 ### Development Environment
-
-
 **Flox Environment**: ✅ Configured for reproducible development setup
-
-
-
 
 ## Usage
 
@@ -194,7 +152,6 @@ go run main.go
 task run
 ```
 
-
 ### Communicating with the Agent
 
 The agent implements the A2A protocol and can be communicated with via HTTP requests:
@@ -202,62 +159,18 @@ The agent implements the A2A protocol and can be communicated with via HTTP requ
 ```bash
 # Get agent information
 curl http://localhost:8080/.well-known/agent-card.json
-
-
-
-# Execute navigate_to_url skill
-curl -X POST http://localhost:8080/skills/navigate_to_url \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-# Execute click_element skill
-curl -X POST http://localhost:8080/skills/click_element \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-# Execute fill_form skill
-curl -X POST http://localhost:8080/skills/fill_form \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-# Execute extract_data skill
-curl -X POST http://localhost:8080/skills/extract_data \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-# Execute take_screenshot skill
-curl -X POST http://localhost:8080/skills/take_screenshot \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-# Execute execute_script skill
-curl -X POST http://localhost:8080/skills/execute_script \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-# Execute handle_authentication skill
-curl -X POST http://localhost:8080/skills/handle_authentication \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-# Execute wait_for_condition skill
-curl -X POST http://localhost:8080/skills/wait_for_condition \
-  -H "Content-Type: application/json" \
-  -d '{"input": "your_input_here"}'
-
-
 ```
 
-## Deployment
+Refer to the main README.md for specific skill execution examples and input schemas.
 
+## Deployment
 
 **Deployment Type**: Manual
 - Build and run the agent binary directly
 - Use provided Dockerfile for containerized deployment
 
-
-
 ### Docker Deployment
+
 ```bash
 # Build image
 docker build -t browser-agent .
@@ -266,38 +179,27 @@ docker build -t browser-agent .
 docker run -p 8080:8080 browser-agent
 ```
 
-
 ## Development
 
 ### Project Structure
 
 ```
 .
-├── main.go              # Server entry point
-├── skills/              # Business logic skills
-
-│   └── navigate_to_url.go   # Navigate to a specific URL and wait for the page to fully load
-
-│   └── click_element.go   # Click on an element identified by selector, text, or other locator strategies
-
-│   └── fill_form.go   # Fill form fields with provided data, handling various input types
-
-│   └── extract_data.go   # Extract data from the page using selectors and return structured information
-
-│   └── take_screenshot.go   # Capture a screenshot of the current page or specific element
-
-│   └── execute_script.go   # Execute custom JavaScript code in the browser context
-
-│   └── handle_authentication.go   # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
-
-│   └── wait_for_condition.go   # Wait for specific conditions before proceeding with automation
-
-├── .well-known/         # Agent configuration
-│   └── agent-card.json  # Agent metadata
-├── go.mod               # Go module definition
-└── README.md            # Project documentation
+├── main.go                       # Server entry point
+├── skills/                       # Business logic skills
+│   └── navigate_to_url.go        # Navigate to a specific URL and wait for the page to fully load
+│   └── click_element.go          # Click on an element identified by selector, text, or other locator strategies
+│   └── fill_form.go              # Fill form fields with provided data, handling various input types
+│   └── extract_data.go           # Extract data from the page using selectors and return structured information
+│   └── take_screenshot.go        # Capture a screenshot of the current page or specific element
+│   └── execute_script.go         # Execute custom JavaScript code in the browser context
+│   └── handle_authentication.go  # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
+│   └── wait_for_condition.go     # Wait for specific conditions before proceeding with automation
+├── .well-known/                  # Agent configuration
+│   └── agent-card.json           # Agent metadata
+├── go.mod                        # Go module definition
+└── README.md                     # Project documentation
 ```
-
 
 ### Testing
 
@@ -309,7 +211,6 @@ go test ./...
 # Run with coverage
 task test:coverage
 ```
-
 
 ## Contributing
 

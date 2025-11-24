@@ -28,6 +28,14 @@ wait_for_xvfb() {
 if [ "$XVFB_ENABLED" = "true" ]; then
     echo "Starting Xvfb on display $XVFB_DISPLAY with screen resolution $XVFB_SCREEN"
 
+    # Clean up stale lock files from previous runs
+    DISPLAY_NUM=$(echo "$XVFB_DISPLAY" | sed 's/://g')
+    LOCK_FILE="/tmp/.X${DISPLAY_NUM}-lock"
+    if [ -f "$LOCK_FILE" ]; then
+        echo "Removing stale lock file: $LOCK_FILE"
+        rm -f "$LOCK_FILE"
+    fi
+
     # Start Xvfb without -ac flag for security
     # Use -nolisten tcp to prevent network access
     Xvfb "$XVFB_DISPLAY" -screen 0 "$XVFB_SCREEN" -nolisten tcp &
