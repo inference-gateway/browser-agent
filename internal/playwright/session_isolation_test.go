@@ -33,7 +33,6 @@ func TestMultiTenantSessionIsolation(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	// Create contexts with different task IDs to simulate multi-tenant isolation
 	ctx1 := context.WithValue(context.Background(), server.TaskContextKey, &types.Task{ID: "task-1"})
 	ctx2 := context.WithValue(context.Background(), server.TaskContextKey, &types.Task{ID: "task-2"})
 	ctx3 := context.WithValue(context.Background(), server.TaskContextKey, &types.Task{ID: "task-3"})
@@ -92,7 +91,6 @@ func TestSessionExpiration(t *testing.T) {
 		assert.NoError(t, err)
 	}()
 
-	// Create context with task ID
 	ctx := context.WithValue(context.Background(), server.TaskContextKey, &types.Task{ID: "task-expiration-test"})
 
 	session, err := service.GetOrCreateTaskSession(ctx)

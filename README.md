@@ -8,7 +8,7 @@
 
 **AI agent for browser automation and web testing using Playwright**
 
-A production-ready [Agent-to-Agent (A2A)](https://github.com/inference-gateway/adk) server that provides AI-powered capabilities through a standardized protocol.
+A enterprise-ready [Agent-to-Agent (A2A)](https://github.com/inference-gateway/adk) server that provides AI-powered capabilities through a standardized protocol.
 
 </div>
 
@@ -121,7 +121,7 @@ The following custom configuration variables are available:
 | **Artifacts** | `ARTIFACTS_STORAGE_BUCKET_NAME` | MinIO/S3 bucket name | `artifacts` |
 | **Artifacts** | `ARTIFACTS_STORAGE_USE_SSL` | Use SSL for MinIO/S3 connections | `true` |
 | **Artifacts** | `ARTIFACTS_RETENTION_MAX_ARTIFACTS` | Max artifacts per task (0 = unlimited) | `5` |
-| **Artifacts** | `ARTIFACTS_RETENTION_MAX_AGE` | Max artifact age (0 = no age limit) | `7d` |
+| **Artifacts** | `ARTIFACTS_RETENTION_MAX_AGE` | Max artifact age (0 = no age limit) | `168h` |
 | **Artifacts** | `ARTIFACTS_RETENTION_CLEANUP_INTERVAL` | Cleanup frequency (0 = manual only) | `24h` |
 | **Authentication** | `A2A_AUTH_ENABLE` | Enable OIDC authentication | `false` |
 
@@ -179,7 +179,7 @@ docker build \
 ```
 
 **Available Build Arguments:**
-- `VERSION` - Agent version (default: `0.4.2`)
+- `VERSION` - Agent version (default: `0.4.3`)
 - `AGENT_NAME` - Agent name (default: `browser-agent`)
 - `AGENT_DESCRIPTION` - Agent description (default: `AI agent for browser automation and web testing using Playwright`)
 
