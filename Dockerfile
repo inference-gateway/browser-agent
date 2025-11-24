@@ -69,6 +69,8 @@ COPY --from=builder /app/.well-known ./.well-known
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+ENV PLAYWRIGHT_BROWSERS_PATH=/home/agent/.cache/ms-playwright
+
 # Install browsers based on build argument
 # Supports: chromium, firefox, webkit, or "all" for multiple browsers
 RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
@@ -92,7 +94,6 @@ EXPOSE 8080
 
 # Set environment variables
 ENV A2A_SERVER_PORT=8080
-ENV PLAYWRIGHT_BROWSERS_PATH=/home/agent/.cache/ms-playwright
 
 # Browser configuration defaults (can be overridden at runtime)
 ENV BROWSER_ENGINE=chromium
