@@ -71,11 +71,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/agent/.cache/ms-playwright
 
-# Create and set ownership for cache directory before playwright installation
-RUN mkdir -p /home/agent/.cache/ms-playwright && \
-    chown -R agent:a2a /home/agent/.cache
-
-# Install browsers based on build argument
+# Install browsers and system dependencies as root based on build argument
 # Supports: chromium, firefox, webkit, or "all" for multiple browsers
 RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
         playwright install --with-deps chromium firefox webkit; \
@@ -87,11 +83,18 @@ RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
         playwright install --with-deps chromium; \
     fi
 
+# Create and set ownership for cache directory
+RUN mkdir -p /home/agent/.cache && \
+    chown -R agent:a2a /home/agent
+
 # Change ownership to agent user
 RUN chown -R agent:a2a /app
 
 # Switch to non-root user
 USER agent
+
+# Install playwright driver as agent user
+RUN playwright install
 
 # Expose port
 EXPOSE 8080
