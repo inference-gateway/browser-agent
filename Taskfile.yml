@@ -6,7 +6,7 @@ version: '3'
 
 vars:
   APP_NAME: browser-agent
-  VERSION: 0.4.4
+  VERSION: 0.4.5
 
 tasks:
   validate:

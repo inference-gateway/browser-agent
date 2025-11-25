@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.5](https://github.com/inference-gateway/browser-agent/compare/v0.4.4...v0.4.5) (2025-11-25)
+
+### 🐛 Bug Fixes
+
+* Move browser cache to user directory ([#44](https://github.com/inference-gateway/browser-agent/issues/44)) ([acb379b](https://github.com/inference-gateway/browser-agent/commit/acb379bac6cbba9be6bb31d0787e7765bb544d56))
+
+### 🔧 Miscellaneous
+
+* Add agents config for testing agents without docker-compose ([#45](https://github.com/inference-gateway/browser-agent/issues/45)) ([927cccc](https://github.com/inference-gateway/browser-agent/commit/927cccc5282282dd9f4b1f5eefaca82356fd5701))
+
 ## [0.4.4](https://github.com/inference-gateway/browser-agent/compare/v0.4.3...v0.4.4) (2025-11-24)
 
 ### 🔧 Miscellaneous
