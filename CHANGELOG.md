@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.6](https://github.com/inference-gateway/browser-agent/compare/v0.4.5...v0.4.6) (2025-11-25)
+
+### 🐛 Bug Fixes
+
+* Ensure proper cache directory ownership in Dockerfile ([#46](https://github.com/inference-gateway/browser-agent/issues/46)) ([976c15c](https://github.com/inference-gateway/browser-agent/commit/976c15c0273ea785546def99a75fe3e65ee251d9))
+
 ## [0.4.5](https://github.com/inference-gateway/browser-agent/compare/v0.4.4...v0.4.5) (2025-11-25)
 
 ### 🐛 Bug Fixes
