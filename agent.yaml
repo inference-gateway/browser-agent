@@ -3,7 +3,7 @@ kind: Agent
 metadata:
   name: browser-agent
   description: AI agent for browser automation and web testing using Playwright
-  version: 0.4.6
+  version: 0.4.7
 spec:
   capabilities:
     streaming: true

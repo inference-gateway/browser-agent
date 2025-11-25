@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.7](https://github.com/inference-gateway/browser-agent/compare/v0.4.6...v0.4.7) (2025-11-25)
+
+### 🐛 Bug Fixes
+
+* Improve Playwright installation order in Dockerfile ([#47](https://github.com/inference-gateway/browser-agent/issues/47)) ([088ac1e](https://github.com/inference-gateway/browser-agent/commit/088ac1e0a867ab4a32526477116653470c81b81e))
+
 ## [0.4.6](https://github.com/inference-gateway/browser-agent/compare/v0.4.5...v0.4.6) (2025-11-25)
 
 ### 🐛 Bug Fixes
