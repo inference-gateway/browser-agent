@@ -5,7 +5,7 @@ This file describes the agents available in this A2A (Agent-to-Agent) system.
 ## Agent Overview
 
 ### browser-agent
-**Version**: 0.4.7  
+**Version**: 0.4.8  
 **Description**: AI agent for browser automation and web testing using Playwright
 
 This agent is built using the Agent Definition Language (ADL) and provides A2A communication capabilities.
@@ -222,7 +222,7 @@ task test:coverage
 
 ## Agent Metadata
 
-This agent was generated using ADL CLI v0.4.7 with the following configuration:
+This agent was generated using ADL CLI v0.4.8 with the following configuration:
 
 - **Language**: Go
 - **Template**: Minimal A2A Agent

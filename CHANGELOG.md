@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.8](https://github.com/inference-gateway/browser-agent/compare/v0.4.7...v0.4.8) (2025-12-12)
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump adl-cli to v0.26.2 ([5817930](https://github.com/inference-gateway/browser-agent/commit/58179308feb7faedbded18ddc18a7d95a7d8ad38))
+* **deps:** Run flox activate ([5dd0ede](https://github.com/inference-gateway/browser-agent/commit/5dd0ede607bd03a62b4232339fb0fa9a4d7ff9ed))
+
 ## [0.4.7](https://github.com/inference-gateway/browser-agent/compare/v0.4.6...v0.4.7) (2025-11-25)
 
 ### 🐛 Bug Fixes
