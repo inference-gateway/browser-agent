@@ -240,13 +240,12 @@ func (s *ExecuteScriptSkill) validateScriptSecurity(script string) error {
 	return nil
 }
 
-// prepareScript prepares the script for execution, wrapping async scripts if needed
+// prepareScript prepares the script for execution, always wrapping in a function to avoid syntax errors
 func (s *ExecuteScriptSkill) prepareScript(script string, isAsync bool) (string, error) {
-	if !isAsync {
-		return script, nil
-	}
+	var wrappedScript string
 
-	wrappedScript := fmt.Sprintf(`
+	if isAsync {
+		wrappedScript = fmt.Sprintf(`
 (async function() {
 	try {
 		%s
@@ -254,6 +253,16 @@ func (s *ExecuteScriptSkill) prepareScript(script string, isAsync bool) (string,
 		throw error;
 	}
 })()`, script)
+	} else {
+		wrappedScript = fmt.Sprintf(`
+(function() {
+	try {
+		%s
+	} catch (error) {
+		throw error;
+	}
+})()`, script)
+	}
 
 	return wrappedScript, nil
 }
