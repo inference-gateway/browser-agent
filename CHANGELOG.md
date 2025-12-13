@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.9](https://github.com/inference-gateway/browser-agent/compare/v0.4.8...v0.4.9) (2025-12-13)
+
+### 🐛 Bug Fixes
+
+* Sync scripts should be wrapped ([0699131](https://github.com/inference-gateway/browser-agent/commit/0699131ddb535b2c24392140d4f4d25514aeffad))
+
 ## [0.4.8](https://github.com/inference-gateway/browser-agent/compare/v0.4.7...v0.4.8) (2025-12-12)
 
 ### 🔧 Miscellaneous
