@@ -69,8 +69,8 @@ github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/inference-gateway/adk v0.16.1 h1:GiF8xlRNwntH/VubTlmLbFkP0FgF5SSzO34PKwgNUYg=
-github.com/inference-gateway/adk v0.16.1/go.mod h1:RTs7J+uO0ZrT8Yac8CG3+LzWPQL3+UqAaSN5RzwEhTI=
+github.com/inference-gateway/adk v0.16.2 h1:p+JUjSEL+Tz6bD/EygHoHWX1/BLznLixmhtnnVMb7qg=
+github.com/inference-gateway/adk v0.16.2/go.mod h1:RTs7J+uO0ZrT8Yac8CG3+LzWPQL3+UqAaSN5RzwEhTI=
 github.com/inference-gateway/sdk v1.14.0 h1:7Lb/aWAOLBNEGjSRifOyt/G4eBsmWO8ffx+gf6e3tPQ=
 github.com/inference-gateway/sdk v1.14.0/go.mod h1:2r2k+E38WtScmJk6e0GYCaUAbm48pH0oXcmIrVu/xhs=
 github.com/jonfriesen/playwright-go-stealth v0.0.2 h1:xf/2ICKJRerk3po4XhxOYoDi/DvATjhsouG/ZekG2aE=
