@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.10](https://github.com/inference-gateway/browser-agent/compare/v0.4.9...v0.4.10) (2025-12-13)
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump ADK to 0.16.1 ([c9f6046](https://github.com/inference-gateway/browser-agent/commit/c9f6046a13f96a6c7df09b6f56f4ed31ab10d23f))
+
 ## [0.4.9](https://github.com/inference-gateway/browser-agent/compare/v0.4.8...v0.4.9) (2025-12-13)
 
 ### 🐛 Bug Fixes
