@@ -1,11 +1,11 @@
 module github.com/inference-gateway/browser-agent
 
-go 1.25
+go 1.25.2
 
 tool github.com/maxbrunsfeld/counterfeiter/v6
 
 require (
-	github.com/inference-gateway/adk v0.15.2
+	github.com/inference-gateway/adk v0.16.1
 	github.com/jonfriesen/playwright-go-stealth v0.0.2
 	github.com/playwright-community/playwright-go v0.5200.1
 	github.com/sethvargo/go-envconfig v1.3.0
@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.12.7 // indirect
 	github.com/bytedance/sonic/loader v0.2.3 // indirect
@@ -40,7 +41,7 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/inference-gateway/sdk v1.10.0 // indirect
+	github.com/inference-gateway/sdk v1.14.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
@@ -52,6 +53,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/oapi-codegen/runtime v1.1.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.22.0 // indirect
