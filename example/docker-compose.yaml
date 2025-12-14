@@ -6,10 +6,8 @@ services:
       dockerfile: Dockerfile
       args:
         BROWSER_ENGINE: chromium
-    container_name: agent
     volumes:
       - ./artifacts:/tmp/artifacts
-      - x11-socket:/tmp/.X11-unix
     environment:
       BROWSER_ENGINE: ${BROWSER_ENGINE}
       BROWSER_HEADLESS: ${BROWSER_HEADLESS}
@@ -40,6 +38,7 @@ services:
         --disable-renderer-backgrounding
         --disable-ipc-flooding-protection
       BROWSER_XVFB_ENABLED: ${BROWSER_XVFB_ENABLED}
+      BROWSER_XVFB_ALLOW_TCP: "true"
       BROWSER_XVFB_DISPLAY: ":99"
       BROWSER_XVFB_SCREEN_RESOLUTION: "1920x1080x24"
       A2A_PORT: 8080
@@ -84,7 +83,6 @@ services:
 
   inference-gateway:
     image: ghcr.io/inference-gateway/inference-gateway:latest
-    container_name: inference-gateway
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
@@ -98,10 +96,12 @@ services:
       - a2a-network
 
   cli:
+    profiles:
+      - manual
     image: ghcr.io/inference-gateway/cli:latest
     pull_policy: always
     volumes:
-      - ./downloads:/tmp/downloads
+      - ./downloads:/home/infer/.infer/tmp
     environment:
       INFER_LOGGING_DEBUG: true
       INFER_GATEWAY_URL: http://inference-gateway:8080
@@ -117,8 +117,6 @@ services:
       - chat
     networks:
       - a2a-network
-    profiles:
-      - manual
 
   a2a-debugger:
     image: ghcr.io/inference-gateway/a2a-debugger:latest
@@ -145,11 +143,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.vnc
-    container_name: browser-vnc
     environment:
-      DISPLAY: :99
-    volumes:
-      - x11-socket:/tmp/.X11-unix
+      X_HOST: agent
+      X_DISPLAY: 99
     ports:
       - "5900:5900"
     depends_on:
@@ -160,6 +156,3 @@ services:
 networks:
   a2a-network:
     driver: bridge
-
-volumes:
-  x11-socket:
