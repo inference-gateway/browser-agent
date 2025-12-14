@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.12](https://github.com/inference-gateway/browser-agent/compare/v0.4.11...v0.4.12) (2025-12-14)
+
+### ♻️ Improvements
+
+* Improve VNC container X11 connection logic ([ed106eb](https://github.com/inference-gateway/browser-agent/commit/ed106ebafc9bdc053b49b31fa4bc0ea0e5089e38))
+
+### 🐛 Bug Fixes
+
+* Xvfb not listening over tcp ([11b8827](https://github.com/inference-gateway/browser-agent/commit/11b882723dbaf6780d605abe66b1fe773798177d))
+
+### 🔧 Miscellaneous
+
+* Update config and add shortcut files ([57afcd1](https://github.com/inference-gateway/browser-agent/commit/57afcd1991d68e5d57037ca1e7da5c053c9063df))
+
 ## [0.4.11](https://github.com/inference-gateway/browser-agent/compare/v0.4.10...v0.4.11) (2025-12-13)
 
 ### 🔧 Miscellaneous
