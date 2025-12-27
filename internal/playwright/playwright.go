@@ -143,6 +143,7 @@ type BrowserAutomation interface {
 	ExecuteScript(ctx context.Context, sessionID, script string, args []any) (any, error)
 	WaitForCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error
 	HandleAuthentication(ctx context.Context, sessionID, authType, username, password, loginURL string, selectors map[string]string) error
+	Scroll(ctx context.Context, sessionID, target, selector, behavior, block, inline, direction string, amount, x, y int) error
 
 	// Service management
 	GetHealth(ctx context.Context) error
@@ -897,6 +898,129 @@ func (p *playwrightImpl) HandleAuthentication(ctx context.Context, sessionID, au
 	default:
 		return fmt.Errorf("unsupported authentication type: %s", authType)
 	}
+}
+
+// Scroll implements scrolling functionality for page, element, or coordinates
+func (p *playwrightImpl) Scroll(ctx context.Context, sessionID, target, selector, behavior, block, inline, direction string, amount, x, y int) error {
+	session, err := p.GetSession(sessionID)
+	if err != nil {
+		return err
+	}
+
+	p.logger.Info("executing scroll",
+		zap.String("sessionID", sessionID),
+		zap.String("target", target),
+		zap.String("selector", selector),
+		zap.String("behavior", behavior),
+		zap.String("direction", direction),
+		zap.Int("amount", amount),
+		zap.Int("x", x),
+		zap.Int("y", y))
+
+	switch target {
+	case "page":
+		return p.scrollPage(session, direction, amount, x, y, behavior)
+	case "element":
+		return p.scrollElement(session, selector, behavior, block, inline)
+	case "coordinates":
+		return p.scrollToCoordinates(session, x, y, behavior)
+	default:
+		return fmt.Errorf("unsupported scroll target: %s", target)
+	}
+}
+
+// scrollPage scrolls the page in various ways
+func (p *playwrightImpl) scrollPage(session *BrowserSession, direction string, amount, x, y int, behavior string) error {
+	var script string
+	var args []any
+
+	smoothStr := "true"
+	if behavior == "instant" {
+		smoothStr = "false"
+	}
+
+	switch direction {
+	case "top":
+		script = fmt.Sprintf("window.scrollTo({ top: 0, left: 0, behavior: '%s' })",
+			map[bool]string{true: "smooth", false: "auto"}[smoothStr == "true"])
+	case "bottom":
+		script = fmt.Sprintf("window.scrollTo({ top: document.body.scrollHeight, left: 0, behavior: '%s' })",
+			map[bool]string{true: "smooth", false: "auto"}[smoothStr == "true"])
+	case "up":
+		if amount == 0 {
+			amount = 500 // default scroll amount
+		}
+		script = fmt.Sprintf("window.scrollBy({ top: -%d, left: 0, behavior: '%s' })",
+			amount, map[bool]string{true: "smooth", false: "auto"}[smoothStr == "true"])
+	case "down":
+		if amount == 0 {
+			amount = 500 // default scroll amount
+		}
+		script = fmt.Sprintf("window.scrollBy({ top: %d, left: 0, behavior: '%s' })",
+			amount, map[bool]string{true: "smooth", false: "auto"}[smoothStr == "true"])
+	case "left":
+		if amount == 0 {
+			amount = 500 // default scroll amount
+		}
+		script = fmt.Sprintf("window.scrollBy({ top: 0, left: -%d, behavior: '%s' })",
+			amount, map[bool]string{true: "smooth", false: "auto"}[smoothStr == "true"])
+	case "right":
+		if amount == 0 {
+			amount = 500 // default scroll amount
+		}
+		script = fmt.Sprintf("window.scrollBy({ top: 0, left: %d, behavior: '%s' })",
+			amount, map[bool]string{true: "smooth", false: "auto"}[smoothStr == "true"])
+	default:
+		// If no direction specified, treat x/y as coordinates
+		script = fmt.Sprintf("window.scrollTo({ top: %d, left: %d, behavior: '%s' })",
+			y, x, map[bool]string{true: "smooth", false: "auto"}[smoothStr == "true"])
+	}
+
+	_, err := session.Page.Evaluate(script, args...)
+	return err
+}
+
+// scrollElement scrolls an element into view
+func (p *playwrightImpl) scrollElement(session *BrowserSession, selector, behavior, block, inline string) error {
+	locator := session.Page.Locator(selector)
+
+	// Wait for element to be attached first
+	timeoutMs := float64(30000)
+	err := locator.WaitFor(playwright.LocatorWaitForOptions{
+		State:   playwright.WaitForSelectorStateAttached,
+		Timeout: &timeoutMs,
+	})
+	if err != nil {
+		return fmt.Errorf("element not found or not attached: %w", err)
+	}
+
+	// Build scroll into view options
+	script := fmt.Sprintf(`
+		const element = document.querySelector('%s');
+		if (element) {
+			element.scrollIntoView({
+				behavior: '%s',
+				block: '%s',
+				inline: '%s'
+			});
+		} else {
+			throw new Error('Element not found: %s');
+		}
+	`, selector,
+		map[string]string{"smooth": "smooth", "instant": "auto"}[behavior],
+		block, inline, selector)
+
+	_, err = session.Page.Evaluate(script)
+	return err
+}
+
+// scrollToCoordinates scrolls to specific x,y coordinates
+func (p *playwrightImpl) scrollToCoordinates(session *BrowserSession, x, y int, behavior string) error {
+	script := fmt.Sprintf("window.scrollTo({ top: %d, left: %d, behavior: '%s' })",
+		y, x, map[string]string{"smooth": "smooth", "instant": "auto"}[behavior])
+
+	_, err := session.Page.Evaluate(script)
+	return err
 }
 
 // GetHealth checks the health of the service
