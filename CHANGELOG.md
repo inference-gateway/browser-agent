@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.13](https://github.com/inference-gateway/browser-agent/compare/v0.4.12...v0.4.13) (2026-01-27)
+
+### 🐛 Bug Fixes
+
+* Update artifact parts access for ADK 0.17.0 type changes ([cbf1b01](https://github.com/inference-gateway/browser-agent/commit/cbf1b01153d982f6bd25b615ca0c2d90bcd00a2b))
+
+### 🔧 Miscellaneous
+
+* **ci:** Update Claude Code workflow configuration ([b38f763](https://github.com/inference-gateway/browser-agent/commit/b38f7630635cf4e356510aae279e5f16a7f688e1))
+* **deps:** Update dependencies and regenerate with ADL CLI v0.27.1 ([6e308bb](https://github.com/inference-gateway/browser-agent/commit/6e308bb61a6dda8423ab53c36aa3a896b1330d0f))
+* Update Infer CLI configuration ([7561647](https://github.com/inference-gateway/browser-agent/commit/7561647255e03c92e3f215c3f12627114dda7bee))
+
 ## [0.4.12](https://github.com/inference-gateway/browser-agent/compare/v0.4.11...v0.4.12) (2025-12-14)
 
 ### ♻️ Improvements
