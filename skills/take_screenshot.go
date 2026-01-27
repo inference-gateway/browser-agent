@@ -266,10 +266,8 @@ func (s *TakeScreenshotSkill) createArtifactFromScreenshot(ctx context.Context, 
 	artifactService.AddArtifactToTask(task, artifact)
 
 	if len(artifact.Parts) > 0 {
-		if filePart, ok := artifact.Parts[0].(types.FilePart); ok {
-			if fileWithURI, ok := filePart.File.(types.FileWithUri); ok {
-				return fileWithURI.URI, artifact.ArtifactID, nil
-			}
+		if artifact.Parts[0].File != nil && artifact.Parts[0].File.FileWithURI != nil {
+			return *artifact.Parts[0].File.FileWithURI, artifact.ArtifactID, nil
 		}
 	}
 
