@@ -373,7 +373,7 @@ spec:
   language:
     go:
       module: github.com/inference-gateway/browser-agent
-      version: "1.25"
+      version: "1.25.5"
   acronyms:
     - DOM
     - CSS
