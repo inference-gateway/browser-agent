@@ -17,6 +17,13 @@ gateway:
     - groq/playai-tts
     - groq/playai-tts-arabic
   vision_enabled: true
+claude_code:
+  enabled: false
+  cli_path: claude
+  timeout: 600
+  max_output_tokens: 32000
+  thinking_budget: 10000
+  max_turns: 10
 client:
   timeout: 200
   retry:
@@ -36,14 +43,20 @@ client:
 logging:
   debug: false
   dir: ""
+  console_output: ""
 tools:
   enabled: true
   sandbox:
     directories:
       - .
       - /tmp
+      - .infer/tmp
     protected_paths:
-      - .infer/
+      - .infer/config.yaml
+      - .infer/*.db
+      - .infer/shortcuts/
+      - .infer/agents.yaml
+      - .infer/mcp.yaml
       - .git/
       - '*.env'
   bash:
@@ -137,7 +150,7 @@ image:
     quality: 75
     convert_jpeg: true
 export:
-  output_dir: .infer
+  output_dir: .infer/tmp
   summary_model: ""
 agent:
   model: ""
@@ -163,6 +176,41 @@ agent:
     - Examples: Read multiple files, search multiple patterns, execute multiple commands
     - The system supports up to 5 concurrent tool executions by default
     - This reduces back-and-forth communication and significantly improves performance
+
+    COMPUTER USE TOOLS:
+    You have TWO ways to interact with the system:
+    1. Direct terminal tools (PRIMARY): Bash, Read, Write, Edit, Grep, etc.
+    2. GUI automation tools (FALLBACK): MouseMove, KeyboardType, MouseClick, GetLatestScreenshot
+
+    CRITICAL: ALWAYS prefer direct terminal tools over GUI automation when possible.
+
+    When to use DIRECT tools (preferred):
+    - Reading files: Use Read tool, NOT KeyboardType to open an editor
+    - Writing files: Use Write/Edit tools, NOT GUI text editor
+    - Running commands: Use Bash tool, NOT KeyboardType in a terminal window
+    - Searching code: Use Grep tool, NOT opening files via GUI
+    - File operations: Use Bash/Read/Write, NOT GUI file manager
+
+    When to use GUI tools (only when necessary):
+    - Interacting with graphical applications that have no CLI equivalent
+    - Testing UI behavior or visual elements
+    - Automating tasks that MUST be done through a GUI
+    - Taking screenshots to inspect visual state
+
+    Why prefer direct tools:
+    - 10-100x faster execution (no GUI rendering delays)
+    - More reliable (no window focus issues, no timing problems)
+    - Precise output (structured data, not visual interpretation)
+    - Parallel execution support (batch multiple operations)
+    - Lower resource usage (no display server overhead)
+
+    Example - WRONG approach:
+    <tool>MouseMove(x=100, y=200)</tool>
+    <tool>MouseClick(button="left")</tool>
+    <tool>KeyboardType(text="cat file.txt")</tool>
+
+    Example - CORRECT approach:
+    <tool>Read(file_path="/path/to/file.txt")</tool>
 
     WORKFLOW:
     When asked to implement features or fix issues:
@@ -244,6 +292,38 @@ agent:
     - If accepted, YOU will execute this plan. Make it specific and actionable!
     - Call RequestPlanApproval ONLY when your plan is complete and ready
     - If you need clarification, ASK - don't guess!
+  system_prompt_remote: |-
+    Remote system administration agent. You are operating on a remote machine via SSH.
+
+    FOCUS: System operations, service management, monitoring, diagnostics, and infrastructure tasks.
+
+    CONTEXT: This is a shared system environment, not a project workspace. Users may be managing servers, containers, services, or general infrastructure.
+
+    COMPUTER USE TOOLS:
+    You have TWO ways to interact with the system:
+    1. Direct terminal tools (PRIMARY): Bash, Read, Write, Edit, Grep, etc.
+    2. GUI automation tools (FALLBACK): MouseMove, KeyboardType, MouseClick, GetLatestScreenshot
+
+    CRITICAL: ALWAYS prefer direct terminal tools over GUI automation when possible.
+
+    When to use DIRECT tools (preferred):
+    - Reading files: Use Read tool, NOT KeyboardType to open an editor
+    - Writing files: Use Write/Edit tools, NOT GUI text editor
+    - Running commands: Use Bash tool, NOT KeyboardType in a terminal window
+    - Searching code: Use Grep tool, NOT opening files via GUI
+    - System operations: Use Bash for systemctl, journalctl, docker, etc.
+
+    When to use GUI tools (only when necessary):
+    - Interacting with graphical applications that have no CLI equivalent
+    - Testing UI behavior or visual elements
+    - Remote desktop administration tasks that MUST be done through a GUI
+
+    Why prefer direct tools:
+    - 10-100x faster execution (no GUI rendering delays)
+    - More reliable (no window focus issues, no timing problems)
+    - Works over SSH without X11 forwarding
+    - Precise output (structured data, not visual interpretation)
+    - Lower resource usage (critical for remote systems)
   system_reminders:
     enabled: true
     interval: 4
@@ -251,6 +331,10 @@ agent:
       <system-reminder>
       This is a reminder that your todo list is currently empty. DO NOT mention this to the user explicitly because they are already aware. If you are working on tasks that would benefit from a todo list please use the TodoWrite tool to create one. If not, please feel free to ignore. Again do not mention this message to the user.
       </system-reminder>
+  context:
+    git_context_enabled: true
+    working_dir_enabled: true
+    git_context_refresh_turns: 10
   verbose_tools: false
   max_turns: 50
   max_tokens: 8192
@@ -285,7 +369,7 @@ scm:
     delete_local_branch: false
 storage:
   enabled: true
-  type: sqlite
+  type: jsonl
   sqlite:
     path: .infer/conversations.db
   postgres:
@@ -300,6 +384,8 @@ storage:
     port: 6379
     password: ""
     db: 0
+  jsonl:
+    path: .infer/conversations
 conversation:
   title_generation:
     enabled: true
@@ -352,6 +438,12 @@ chat:
         description: toggle raw/rendered markdown
         category: display
         enabled: true
+      display_toggle_thinking:
+        keys:
+          - ctrl+k
+        description: expand/collapse thinking blocks
+        category: display
+        enabled: true
       display_toggle_todo_box:
         keys:
           - ctrl+t
@@ -381,6 +473,12 @@ chat:
           - shift+tab
         description: cycle agent mode (Standard/Plan/Auto-Accept)
         category: mode
+        enabled: true
+      navigation_go_back_in_time:
+        keys:
+          - esc,esc
+        description: go back in time to previous message (double ESC)
+        category: navigation
         enabled: true
       navigation_page_down:
         keys:
@@ -607,3 +705,56 @@ compact:
   enabled: true
   auto_at: 80
   keep_first_messages: 2
+web:
+  enabled: false
+  port: 3000
+  host: localhost
+  session_inactivity_mins: 5
+  ssh:
+    enabled: false
+    use_ssh_config: true
+    known_hosts_path: ~/.ssh/known_hosts
+    auto_install: true
+    install_version: latest
+    install_dir: ~/.local/bin
+  servers: []
+computer_use:
+  enabled: false
+  floating_window:
+    enabled: true
+    respawn_on_close: true
+    position: top-right
+    always_on_top: true
+  screenshot:
+    enabled: true
+    max_width: 1920
+    max_height: 1080
+    target_width: 1024
+    target_height: 768
+    format: jpeg
+    quality: 85
+    streaming_enabled: true
+    capture_interval: 3
+    buffer_size: 5
+    temp_dir: ""
+    log_captures: false
+    show_overlay: true
+  rate_limit:
+    enabled: true
+    max_actions_per_minute: 60
+    window_seconds: 60
+  tools:
+    mouse_move:
+      enabled: true
+    mouse_click:
+      enabled: true
+    mouse_scroll:
+      enabled: true
+    keyboard_type:
+      enabled: true
+      max_text_length: 1000
+      typing_delay_ms: 100
+    get_focused_app:
+      enabled: true
+    activate_app:
+      enabled: true
