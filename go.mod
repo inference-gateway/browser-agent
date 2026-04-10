@@ -1,13 +1,13 @@
 module github.com/inference-gateway/browser-agent
 
-go 1.25.5
+go 1.26.1
 
 tool github.com/maxbrunsfeld/counterfeiter/v6
 
 require (
 	github.com/inference-gateway/adk v0.17.0
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
-	github.com/playwright-community/playwright-go v0.5200.1
+	github.com/playwright-community/playwright-go v0.5700.1
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.1
@@ -23,7 +23,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/coreos/go-oidc/v3 v3.14.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/deckarep/golang-set/v2 v2.7.0 // indirect
+	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
