@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.14](https://github.com/inference-gateway/browser-agent/compare/v0.4.13...v0.4.14) (2026-04-10)
+
+### 🔧 Miscellaneous
+
+* **deps:** Re-generate files - bump the versions ([1f37063](https://github.com/inference-gateway/browser-agent/commit/1f37063acb5a6bc2bc835c30502f8861d3703747))
+
 ## [0.4.13](https://github.com/inference-gateway/browser-agent/compare/v0.4.12...v0.4.13) (2026-01-27)
 
 ### 🐛 Bug Fixes
