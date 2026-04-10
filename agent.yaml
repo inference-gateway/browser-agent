@@ -317,6 +317,57 @@ spec:
       inject:
         - logger
         - playwright
+    - id: scroll
+      name: scroll
+      description: Scroll the page or element to a specific position or into view
+      tags:
+        - scroll
+        - navigation
+        - positioning
+        - playwright
+      schema:
+        type: object
+        properties:
+          target:
+            type: string
+            description: "What to scroll: 'page', 'element', or 'coordinates'"
+            enum: [page, element, coordinates]
+          selector:
+            type: string
+            description: "Element selector (required if target=element)"
+          behavior:
+            type: string
+            description: "Scroll behavior: 'smooth' or 'instant'"
+            enum: [smooth, instant]
+            default: smooth
+          block:
+            type: string
+            description: "Vertical alignment: 'start', 'center', 'end', 'nearest'"
+            enum: [start, center, end, nearest]
+            default: start
+          inline:
+            type: string
+            description: "Horizontal alignment: 'start', 'center', 'end', 'nearest'"
+            enum: [start, center, end, nearest]
+            default: nearest
+          x:
+            type: integer
+            description: "X coordinate for scrolling (if target=coordinates)"
+          y:
+            type: integer
+            description: "Y coordinate for scrolling (if target=coordinates)"
+          direction:
+            type: string
+            description: "Direction to scroll: 'up', 'down', 'left', 'right', 'top', 'bottom'"
+            enum: [up, down, left, right, top, bottom]
+          amount:
+            type: integer
+            description: "Amount to scroll in pixels (for directional scrolling)"
+        required:
+          - target
+      inject:
+        - logger
+        - playwright
   agent:
     provider: ""
     model: ""
