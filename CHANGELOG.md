@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.15](https://github.com/inference-gateway/browser-agent/compare/v0.4.14...v0.4.15) (2026-04-10)
+
+### ♻️ Improvements
+
+* Use fmt.Fprintf for strings.Builder writes ([054c42d](https://github.com/inference-gateway/browser-agent/commit/054c42d1b263e66583b1457a905f588102c96f13))
+
 ## [0.4.14](https://github.com/inference-gateway/browser-agent/compare/v0.4.13...v0.4.14) (2026-04-10)
 
 ### 🔧 Miscellaneous
