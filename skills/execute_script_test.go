@@ -234,13 +234,20 @@ func TestExecuteScriptSkill_prepareScript(t *testing.T) {
 		expectedResult string
 	}{
 		{
-			name:           "sync script should remain unchanged",
-			script:         "return 42;",
-			isAsync:        false,
-			expectedResult: "return 42;",
+			name:    "sync script should be wrapped in function",
+			script:  "return 42;",
+			isAsync: false,
+			expectedResult: `
+(function() {
+	try {
+		return 42;
+	} catch (error) {
+		throw error;
+	}
+})()`,
 		},
 		{
-			name:    "async script should be wrapped",
+			name:    "async script should be wrapped in async function",
 			script:  "const result = await Promise.resolve(42); return result;",
 			isAsync: true,
 			expectedResult: `

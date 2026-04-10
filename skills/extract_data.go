@@ -243,15 +243,15 @@ func (s *ExtractDataSkill) formatAsText(rawResult string, extractors []any) (str
 	textBuilder.WriteString("==============\n\n")
 
 	for key, value := range parsedData {
-		textBuilder.WriteString(fmt.Sprintf("%s: ", key))
+		fmt.Fprintf(&textBuilder, "%s: ", key)
 		switch v := value.(type) {
 		case []any:
 			textBuilder.WriteString("\n")
 			for i, item := range v {
-				textBuilder.WriteString(fmt.Sprintf("  [%d] %v\n", i+1, item))
+				fmt.Fprintf(&textBuilder, "  [%d] %v\n", i+1, item)
 			}
 		default:
-			textBuilder.WriteString(fmt.Sprintf("%v\n", v))
+			fmt.Fprintf(&textBuilder, "%v\n", v)
 		}
 		textBuilder.WriteString("\n")
 	}

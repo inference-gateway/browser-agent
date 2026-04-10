@@ -3,7 +3,7 @@ kind: Agent
 metadata:
   name: browser-agent
   description: AI agent for browser automation and web testing using Playwright
-  version: 0.4.3
+  version: 0.4.15
 spec:
   capabilities:
     streaming: true
@@ -424,7 +424,7 @@ spec:
   language:
     go:
       module: github.com/inference-gateway/browser-agent
-      version: "1.25"
+      version: "1.26.1"
   acronyms:
     - DOM
     - CSS

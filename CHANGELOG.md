@@ -2,6 +2,97 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.15](https://github.com/inference-gateway/browser-agent/compare/v0.4.14...v0.4.15) (2026-04-10)
+
+### ♻️ Improvements
+
+* Use fmt.Fprintf for strings.Builder writes ([054c42d](https://github.com/inference-gateway/browser-agent/commit/054c42d1b263e66583b1457a905f588102c96f13))
+
+## [0.4.14](https://github.com/inference-gateway/browser-agent/compare/v0.4.13...v0.4.14) (2026-04-10)
+
+### 🔧 Miscellaneous
+
+* **deps:** Re-generate files - bump the versions ([1f37063](https://github.com/inference-gateway/browser-agent/commit/1f37063acb5a6bc2bc835c30502f8861d3703747))
+
+## [0.4.13](https://github.com/inference-gateway/browser-agent/compare/v0.4.12...v0.4.13) (2026-01-27)
+
+### 🐛 Bug Fixes
+
+* Update artifact parts access for ADK 0.17.0 type changes ([cbf1b01](https://github.com/inference-gateway/browser-agent/commit/cbf1b01153d982f6bd25b615ca0c2d90bcd00a2b))
+
+### 🔧 Miscellaneous
+
+* **ci:** Update Claude Code workflow configuration ([b38f763](https://github.com/inference-gateway/browser-agent/commit/b38f7630635cf4e356510aae279e5f16a7f688e1))
+* **deps:** Update dependencies and regenerate with ADL CLI v0.27.1 ([6e308bb](https://github.com/inference-gateway/browser-agent/commit/6e308bb61a6dda8423ab53c36aa3a896b1330d0f))
+* Update Infer CLI configuration ([7561647](https://github.com/inference-gateway/browser-agent/commit/7561647255e03c92e3f215c3f12627114dda7bee))
+
+## [0.4.12](https://github.com/inference-gateway/browser-agent/compare/v0.4.11...v0.4.12) (2025-12-14)
+
+### ♻️ Improvements
+
+* Improve VNC container X11 connection logic ([ed106eb](https://github.com/inference-gateway/browser-agent/commit/ed106ebafc9bdc053b49b31fa4bc0ea0e5089e38))
+
+### 🐛 Bug Fixes
+
+* Xvfb not listening over tcp ([11b8827](https://github.com/inference-gateway/browser-agent/commit/11b882723dbaf6780d605abe66b1fe773798177d))
+
+### 🔧 Miscellaneous
+
+* Update config and add shortcut files ([57afcd1](https://github.com/inference-gateway/browser-agent/commit/57afcd1991d68e5d57037ca1e7da5c053c9063df))
+
+## [0.4.11](https://github.com/inference-gateway/browser-agent/compare/v0.4.10...v0.4.11) (2025-12-13)
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump ADK to version 0.16.2 ([4fe2d19](https://github.com/inference-gateway/browser-agent/commit/4fe2d19fb7089caa07a4e1d8e84dfdf0e694e6de))
+
+## [0.4.10](https://github.com/inference-gateway/browser-agent/compare/v0.4.9...v0.4.10) (2025-12-13)
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump ADK to 0.16.1 ([c9f6046](https://github.com/inference-gateway/browser-agent/commit/c9f6046a13f96a6c7df09b6f56f4ed31ab10d23f))
+
+## [0.4.9](https://github.com/inference-gateway/browser-agent/compare/v0.4.8...v0.4.9) (2025-12-13)
+
+### 🐛 Bug Fixes
+
+* Sync scripts should be wrapped ([0699131](https://github.com/inference-gateway/browser-agent/commit/0699131ddb535b2c24392140d4f4d25514aeffad))
+
+## [0.4.8](https://github.com/inference-gateway/browser-agent/compare/v0.4.7...v0.4.8) (2025-12-12)
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump adl-cli to v0.26.2 ([5817930](https://github.com/inference-gateway/browser-agent/commit/58179308feb7faedbded18ddc18a7d95a7d8ad38))
+* **deps:** Run flox activate ([5dd0ede](https://github.com/inference-gateway/browser-agent/commit/5dd0ede607bd03a62b4232339fb0fa9a4d7ff9ed))
+
+## [0.4.7](https://github.com/inference-gateway/browser-agent/compare/v0.4.6...v0.4.7) (2025-11-25)
+
+### 🐛 Bug Fixes
+
+* Improve Playwright installation order in Dockerfile ([#47](https://github.com/inference-gateway/browser-agent/issues/47)) ([088ac1e](https://github.com/inference-gateway/browser-agent/commit/088ac1e0a867ab4a32526477116653470c81b81e))
+
+## [0.4.6](https://github.com/inference-gateway/browser-agent/compare/v0.4.5...v0.4.6) (2025-11-25)
+
+### 🐛 Bug Fixes
+
+* Ensure proper cache directory ownership in Dockerfile ([#46](https://github.com/inference-gateway/browser-agent/issues/46)) ([976c15c](https://github.com/inference-gateway/browser-agent/commit/976c15c0273ea785546def99a75fe3e65ee251d9))
+
+## [0.4.5](https://github.com/inference-gateway/browser-agent/compare/v0.4.4...v0.4.5) (2025-11-25)
+
+### 🐛 Bug Fixes
+
+* Move browser cache to user directory ([#44](https://github.com/inference-gateway/browser-agent/issues/44)) ([acb379b](https://github.com/inference-gateway/browser-agent/commit/acb379bac6cbba9be6bb31d0787e7765bb544d56))
+
+### 🔧 Miscellaneous
+
+* Add agents config for testing agents without docker-compose ([#45](https://github.com/inference-gateway/browser-agent/issues/45)) ([927cccc](https://github.com/inference-gateway/browser-agent/commit/927cccc5282282dd9f4b1f5eefaca82356fd5701))
+
+## [0.4.4](https://github.com/inference-gateway/browser-agent/compare/v0.4.3...v0.4.4) (2025-11-24)
+
+### 🔧 Miscellaneous
+
+* **deps:** Update to ADL CLI v0.26.0 and dependency versions ([#43](https://github.com/inference-gateway/browser-agent/issues/43)) ([cfd9437](https://github.com/inference-gateway/browser-agent/commit/cfd943750b5e087b92b415b10d9e35373fe358fc))
+
 ## [0.4.3](https://github.com/inference-gateway/browser-agent/compare/v0.4.2...v0.4.3) (2025-10-20)
 
 ### ♻️ Improvements
