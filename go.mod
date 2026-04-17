@@ -5,7 +5,7 @@ go 1.26.1
 tool github.com/maxbrunsfeld/counterfeiter/v6
 
 require (
-	github.com/inference-gateway/adk v0.17.0
+	github.com/inference-gateway/adk v0.17.1
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
 	github.com/playwright-community/playwright-go v0.5700.1
 	github.com/sethvargo/go-envconfig v1.3.0
