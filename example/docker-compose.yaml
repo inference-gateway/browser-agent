@@ -109,7 +109,7 @@ services:
       INFER_GATEWAY_DOCKER: false
       INFER_A2A_ENABLED: true
       INFER_TOOLS_ENABLED: false
-      INFER_AGENT_MODEL: deepseek/deepseek-chat
+      INFER_AGENT_MODEL: deepseek/deepseek-v4-flash
       INFER_A2A_AGENTS: |
         http://agent:8080
       INFER_A2A_DOWNLOAD_ARTIFACTS_DOWNLOAD_DIR: /tmp/downloads
