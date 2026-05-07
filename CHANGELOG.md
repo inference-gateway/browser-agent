@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.17](https://github.com/inference-gateway/browser-agent/compare/v0.4.16...v0.4.17) (2026-05-07)
+
+### ♻️ Improvements
+
+* Rename all instances of deepseek-chat to deepseek-v4-flash ([71b223e](https://github.com/inference-gateway/browser-agent/commit/71b223e36ce53cc53adeb8caaf08162b792269f3))
+
+### 👷 CI
+
+* **deps:** Bump golangci-lint to latest ([5479089](https://github.com/inference-gateway/browser-agent/commit/5479089c4d959d95562ec567eb8bac9b814c27d2))
+* Update golangci-lint installation script and version in CI workflows ([dd4e1c0](https://github.com/inference-gateway/browser-agent/commit/dd4e1c099e5769dfd22f39486b9795df315d09a7))
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump claude code action ([3f3476c](https://github.com/inference-gateway/browser-agent/commit/3f3476c79c4c4dbc191bc252431d277e3c9723e1))
+* Update task installation method in CI and CD workflows ([494df52](https://github.com/inference-gateway/browser-agent/commit/494df52eeac218223fb68b29a6a32d3e83e57054))
+
 ## [0.4.16](https://github.com/inference-gateway/browser-agent/compare/v0.4.15...v0.4.16) (2026-04-17)
 
 ### 🔧 Miscellaneous
