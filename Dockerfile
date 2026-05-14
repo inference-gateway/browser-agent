@@ -2,7 +2,7 @@
 # This file was automatically generated from an ADL (Agent Definition Language) specification.
 # Manual changes to this file may be overwritten during regeneration.
 
-FROM golang:1.26.1-alpine AS builder
+FROM golang:1.26.3-alpine AS builder
 
 # Build arguments for version injection
 ARG VERSION="0.4.16"
@@ -39,7 +39,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -o main .
 
 # Stage 2: Final image with browser dependencies
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # Build arguments for browser selection
 ARG BROWSER_ENGINE=chromium
