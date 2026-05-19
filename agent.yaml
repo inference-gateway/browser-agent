@@ -1,4 +1,4 @@
-apiVersion: adl.dev/v1
+apiVersion: adl.inference-gateway.com/v1
 kind: Agent
 metadata:
   name: browser-agent
@@ -10,6 +10,14 @@ spec:
     pushNotifications: false
     stateTransitionHistory: false
   config:
+    tools:
+      read:
+        enabled: true
+        max_lines: 2000
+      write:
+        enabled: true
+      edit:
+        enabled: true
     browser:
       headless: true
       engine: "chromium"
@@ -44,7 +52,10 @@ spec:
         - "--disable-backgrounding-occluded-windows"
         - "--disable-renderer-backgrounding"
         - "--disable-ipc-flooding-protection"
-  skills:
+  tools:
+    - id: read
+    - id: write
+    - id: edit
     - id: navigate_to_url
       name: navigate_to_url
       description: Navigate to a specific URL and wait for the page to fully load
@@ -317,6 +328,32 @@ spec:
       inject:
         - logger
         - playwright
+  skills:
+    - id: webapp-testing
+      bare: true
+      name: webapp-testing
+      description: "Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot."
+      tags:
+        - testing
+        - qa
+        - e2e
+        - playwright
+    - id: web-scraping
+      bare: true
+      name: web-scraping
+      description: "Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool."
+      tags:
+        - scraping
+        - extraction
+        - data
+    - id: form-automation
+      bare: true
+      name: form-automation
+      description: "Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation."
+      tags:
+        - forms
+        - automation
+        - workflow
   agent:
     provider: ""
     model: ""
@@ -373,7 +410,7 @@ spec:
   language:
     go:
       module: github.com/inference-gateway/browser-agent
-      version: "1.26.1"
+      version: "1.26.2"
   acronyms:
     - DOM
     - CSS
@@ -386,7 +423,7 @@ spec:
     provider: github
     url: https://github.com/inference-gateway/browser-agent
     github_app: true
-    issue_templates: true
+    issue_templates: false
   sandbox:
     flox:
       enabled: true

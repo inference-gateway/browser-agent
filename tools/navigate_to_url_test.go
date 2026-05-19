@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
+func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
@@ -24,7 +24,7 @@ func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.NavigateToURLReturns(nil)
 
-	skill := &NavigateToURLSkill{
+	tool := &NavigateToURLTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -133,7 +133,7 @@ func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
 			}
 
 			ctx := context.Background()
-			result, err := skill.NavigateToURLHandler(ctx, tt.args)
+			result, err := tool.NavigateToURLHandler(ctx, tt.args)
 
 			if tt.expectError {
 				if err == nil {
@@ -153,9 +153,9 @@ func TestNavigateToURLSkill_NavigateToURLHandler(t *testing.T) {
 	}
 }
 
-func TestNavigateToURLSkill_validateAndNormalizeURL(t *testing.T) {
+func TestNavigateToURLTool_validateAndNormalizeURL(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	skill := &NavigateToURLSkill{logger: logger}
+	tool := &NavigateToURLTool{logger: logger}
 
 	tests := []struct {
 		name        string
@@ -207,7 +207,7 @@ func TestNavigateToURLSkill_validateAndNormalizeURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.validateAndNormalizeURL(tt.input)
+			result, err := tool.validateAndNormalizeURL(tt.input)
 
 			if tt.expectError {
 				if err == nil {
@@ -225,9 +225,9 @@ func TestNavigateToURLSkill_validateAndNormalizeURL(t *testing.T) {
 	}
 }
 
-func TestNavigateToURLSkill_isValidWaitCondition(t *testing.T) {
+func TestNavigateToURLTool_isValidWaitCondition(t *testing.T) {
 	logger := zaptest.NewLogger(t)
-	skill := &NavigateToURLSkill{logger: logger}
+	tool := &NavigateToURLTool{logger: logger}
 
 	tests := []struct {
 		condition string
@@ -243,7 +243,7 @@ func TestNavigateToURLSkill_isValidWaitCondition(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.condition, func(t *testing.T) {
-			result := skill.isValidWaitCondition(tt.condition)
+			result := tool.isValidWaitCondition(tt.condition)
 			if result != tt.expected {
 				t.Errorf("expected %v for condition %q, got %v", tt.expected, tt.condition, result)
 			}

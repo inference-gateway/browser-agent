@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	zap "go.uber.org/zap"
 )
 
-func createTestSkill() *TakeScreenshotSkill {
+func createTestTool() *TakeScreenshotTool {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
@@ -39,7 +39,7 @@ func createTestSkill() *TakeScreenshotSkill {
 		},
 	})
 
-	return &TakeScreenshotSkill{
+	return &TakeScreenshotTool{
 		logger:        logger,
 		playwright:    mockPlaywright,
 		screenshotDir: "test_screenshots",
@@ -47,13 +47,13 @@ func createTestSkill() *TakeScreenshotSkill {
 }
 
 func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	args := map[string]any{}
 
 	ctx := context.Background()
 
-	result, err := skill.TakeScreenshotHandler(ctx, args)
+	result, err := tool.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
@@ -94,7 +94,7 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 }
 
 func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	args := map[string]any{
 		"full_page": true,
@@ -102,7 +102,7 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 
 	ctx := context.Background()
 
-	result, err := skill.TakeScreenshotHandler(ctx, args)
+	result, err := tool.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
@@ -126,7 +126,7 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 }
 
 func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	args := map[string]any{
 		"type":    "jpeg",
@@ -135,7 +135,7 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 
 	ctx := context.Background()
 
-	result, err := skill.TakeScreenshotHandler(ctx, args)
+	result, err := tool.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
@@ -163,7 +163,7 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 }
 
 func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	args := map[string]any{
 		"selector": "#main-content",
@@ -171,7 +171,7 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 
 	ctx := context.Background()
 
-	result, err := skill.TakeScreenshotHandler(ctx, args)
+	result, err := tool.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
@@ -195,13 +195,13 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 }
 
 func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	args := map[string]any{}
 
 	ctx := context.Background()
 
-	result, err := skill.TakeScreenshotHandler(ctx, args)
+	result, err := tool.TakeScreenshotHandler(ctx, args)
 
 	if err != nil {
 		t.Fatalf("Expected no error for deterministic path generation, got: %v", err)
@@ -220,7 +220,7 @@ func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
 }
 
 func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	args := map[string]any{
 		"type": "gif",
@@ -228,7 +228,7 @@ func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, err := skill.TakeScreenshotHandler(ctx, args)
+	_, err := tool.TakeScreenshotHandler(ctx, args)
 
 	if err == nil {
 		t.Error("Expected error for invalid image type, got nil")
@@ -243,7 +243,7 @@ func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
 }
 
 func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	args := map[string]any{
 		"type":    "jpeg",
@@ -252,7 +252,7 @@ func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, err := skill.TakeScreenshotHandler(ctx, args)
+	_, err := tool.TakeScreenshotHandler(ctx, args)
 
 	if err == nil {
 		t.Error("Expected error for invalid quality, got nil")
@@ -267,7 +267,7 @@ func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
 }
 
 func TestGenerateDeterministicPath(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	tests := []struct {
 		name     string
@@ -298,7 +298,7 @@ func TestGenerateDeterministicPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.generateDeterministicPath(tt.args)
+			result, err := tool.generateDeterministicPath(tt.args)
 
 			if err != nil {
 				t.Errorf("Expected no error, got: %v", err)
@@ -324,7 +324,7 @@ func TestGenerateDeterministicPath(t *testing.T) {
 }
 
 func TestIsValidImageType(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	tests := []struct {
 		imageType string
@@ -340,7 +340,7 @@ func TestIsValidImageType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.imageType, func(t *testing.T) {
-			result := skill.isValidImageType(tt.imageType)
+			result := tool.isValidImageType(tt.imageType)
 			if result != tt.expected {
 				t.Errorf("Expected %v for %s, got %v", tt.expected, tt.imageType, result)
 			}
@@ -349,7 +349,7 @@ func TestIsValidImageType(t *testing.T) {
 }
 
 func TestGetMimeType(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
 	tests := []struct {
 		imageType string
@@ -363,7 +363,7 @@ func TestGetMimeType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.imageType, func(t *testing.T) {
-			result := skill.getMimeType(tt.imageType)
+			result := tool.getMimeType(tt.imageType)
 			if result != tt.expected {
 				t.Errorf("Expected %s for %s, got %s", tt.expected, tt.imageType, result)
 			}
@@ -372,9 +372,9 @@ func TestGetMimeType(t *testing.T) {
 }
 
 func TestGetCurrentTimestamp(t *testing.T) {
-	skill := createTestSkill()
+	tool := createTestTool()
 
-	timestamp := skill.getCurrentTimestamp()
+	timestamp := tool.getCurrentTimestamp()
 
 	_, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {

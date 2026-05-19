@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
+func TestExecuteScriptTool_ExecuteScriptHandler(t *testing.T) {
 	logger := zap.NewNop()
 
 	tests := []struct {
@@ -147,12 +147,12 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 			mockPlaywright.GetSessionReturns(session, nil)
 			mockPlaywright.ExecuteScriptReturns(tt.executeResult, tt.executeError)
 
-			skill := &ExecuteScriptSkill{
+			tool := &ExecuteScriptTool{
 				logger:     logger,
 				playwright: mockPlaywright,
 			}
 
-			result, err := skill.ExecuteScriptHandler(context.Background(), tt.args)
+			result, err := tool.ExecuteScriptHandler(context.Background(), tt.args)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -166,9 +166,9 @@ func TestExecuteScriptSkill_ExecuteScriptHandler(t *testing.T) {
 	}
 }
 
-func TestExecuteScriptSkill_validateScriptSecurity(t *testing.T) {
+func TestExecuteScriptTool_validateScriptSecurity(t *testing.T) {
 	logger := zap.NewNop()
-	skill := &ExecuteScriptSkill{
+	tool := &ExecuteScriptTool{
 		logger: logger,
 	}
 
@@ -211,7 +211,7 @@ func TestExecuteScriptSkill_validateScriptSecurity(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := skill.validateScriptSecurity(tt.script)
+			err := tool.validateScriptSecurity(tt.script)
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
@@ -221,9 +221,9 @@ func TestExecuteScriptSkill_validateScriptSecurity(t *testing.T) {
 	}
 }
 
-func TestExecuteScriptSkill_prepareScript(t *testing.T) {
+func TestExecuteScriptTool_prepareScript(t *testing.T) {
 	logger := zap.NewNop()
-	skill := &ExecuteScriptSkill{
+	tool := &ExecuteScriptTool{
 		logger: logger,
 	}
 
@@ -263,16 +263,16 @@ func TestExecuteScriptSkill_prepareScript(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.prepareScript(tt.script, tt.isAsync)
+			result, err := tool.prepareScript(tt.script, tt.isAsync)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedResult, result)
 		})
 	}
 }
 
-func TestExecuteScriptSkill_getResultType(t *testing.T) {
+func TestExecuteScriptTool_getResultType(t *testing.T) {
 	logger := zap.NewNop()
-	skill := &ExecuteScriptSkill{
+	tool := &ExecuteScriptTool{
 		logger: logger,
 	}
 
@@ -292,15 +292,15 @@ func TestExecuteScriptSkill_getResultType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := skill.getResultType(tt.result)
+			result := tool.getResultType(tt.result)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
-func TestExecuteScriptSkill_calculateScriptHash(t *testing.T) {
+func TestExecuteScriptTool_calculateScriptHash(t *testing.T) {
 	logger := zap.NewNop()
-	skill := &ExecuteScriptSkill{
+	tool := &ExecuteScriptTool{
 		logger: logger,
 	}
 
@@ -323,7 +323,7 @@ func TestExecuteScriptSkill_calculateScriptHash(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := skill.calculateScriptHash(tt.script)
+			result := tool.calculateScriptHash(tt.script)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

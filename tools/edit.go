@@ -1,0 +1,132 @@
+package tools
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	server "github.com/inference-gateway/adk/server"
+	envconfig "github.com/sethvargo/go-envconfig"
+	zap "go.uber.org/zap"
+)
+
+// EditConfig is the runtime config for the Edit built-in. Defaults are
+// baked from spec.config.tools.edit at generation time; the TOOLS_EDIT_*
+// env vars override them at startup.
+type EditConfig struct {
+	Enabled      bool     `env:"TOOLS_EDIT_ENABLED, default=true"`
+	AllowedRoots []string `env:"TOOLS_EDIT_ALLOWED_ROOTS"`
+}
+
+// EditTool exposes an Edit built-in. Disabled by default; flip
+// spec.config.tools.edit.enabled: true in your ADL to activate.
+type EditTool struct {
+	logger *zap.Logger
+	cfg    EditConfig
+}
+
+// NewEditTool builds an Edit tool, resolving config from TOOLS_EDIT_* env
+// vars (or the spec.config.tools.edit defaults baked in at generation).
+func NewEditTool(ctx context.Context, logger *zap.Logger) (server.Tool, error) {
+	var cfg EditConfig
+	if err := envconfig.Process(ctx, &cfg); err != nil {
+		return nil, fmt.Errorf("load Edit config: %w", err)
+	}
+	t := &EditTool{logger: logger, cfg: cfg}
+	return server.NewBasicTool(
+		"Edit",
+		"Replace a unique string in a file with a new value. Errors if old_string is not found or appears more than once.",
+		map[string]any{
+			"type":                 "object",
+			"additionalProperties": false,
+			"properties": map[string]any{
+				"file_path": map[string]any{
+					"type":        "string",
+					"description": "Path to the file to edit.",
+				},
+				"old_string": map[string]any{
+					"type":        "string",
+					"description": "Exact string in the file to replace. Must be unique.",
+				},
+				"new_string": map[string]any{
+					"type":        "string",
+					"description": "Replacement string.",
+				},
+			},
+			"required": []string{"file_path", "old_string", "new_string"},
+		},
+		t.Handler,
+	), nil
+}
+
+// Handler executes the Edit tool.
+func (t *EditTool) Handler(ctx context.Context, args map[string]any) (string, error) {
+	if !t.cfg.Enabled {
+		return "", errors.New("edit tool is disabled; set spec.config.tools.edit.enabled: true in the ADL and regenerate")
+	}
+
+	rawPath, _ := args["file_path"].(string)
+	if rawPath == "" {
+		return "", errors.New("file_path is required")
+	}
+	oldStr, ok := args["old_string"].(string)
+	if !ok || oldStr == "" {
+		return "", errors.New("old_string is required and must be non-empty")
+	}
+	newStr, ok := args["new_string"].(string)
+	if !ok {
+		return "", errors.New("new_string is required")
+	}
+
+	if err := t.validatePath(rawPath); err != nil {
+		return "", err
+	}
+
+	cleaned := filepath.Clean(rawPath)
+	data, err := os.ReadFile(cleaned)
+	if err != nil {
+		return "", fmt.Errorf("read %s: %w", cleaned, err)
+	}
+	body := string(data)
+	count := strings.Count(body, oldStr)
+	if count == 0 {
+		return "", fmt.Errorf("old_string not found in %s", cleaned)
+	}
+	if count > 1 {
+		return "", fmt.Errorf("old_string appears %d times in %s; refusing to edit (must be unique)", count, cleaned)
+	}
+
+	replaced := strings.Replace(body, oldStr, newStr, 1)
+	if err := os.WriteFile(cleaned, []byte(replaced), 0o644); err != nil {
+		return "", fmt.Errorf("write %s: %w", cleaned, err)
+	}
+
+	t.logger.Debug("edit executed", zap.String("path", cleaned))
+	result := map[string]any{
+		"file_path":    cleaned,
+		"replacements": 1,
+	}
+	payload, err := json.Marshal(result)
+	if err != nil {
+		return "", fmt.Errorf("encode Edit result: %w", err)
+	}
+	return string(payload), nil
+}
+
+func (t *EditTool) validatePath(p string) error {
+	if len(t.cfg.AllowedRoots) == 0 {
+		return nil
+	}
+	cleaned := filepath.Clean(p)
+	for _, root := range t.cfg.AllowedRoots {
+		rootClean := filepath.Clean(root)
+		if cleaned == rootClean || strings.HasPrefix(cleaned, rootClean+string(filepath.Separator)) {
+			return nil
+		}
+	}
+	return fmt.Errorf("path %q is outside the configured allowed_roots", p)
+}

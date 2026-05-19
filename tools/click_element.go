@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -12,15 +12,15 @@ import (
 	zap "go.uber.org/zap"
 )
 
-// ClickElementSkill struct holds the skill with dependencies
-type ClickElementSkill struct {
+// ClickElementTool struct holds the tool with dependencies
+type ClickElementTool struct {
 	logger     *zap.Logger
 	playwright playwright.BrowserAutomation
 }
 
-// NewClickElementSkill creates a new click_element skill
-func NewClickElementSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
-	skill := &ClickElementSkill{
+// NewClickElementTool creates a new click_element tool
+func NewClickElementTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	tool := &ClickElementTool{
 		logger:     logger,
 		playwright: playwright,
 	}
@@ -57,12 +57,12 @@ func NewClickElementSkill(logger *zap.Logger, playwright playwright.BrowserAutom
 			},
 			"required": []string{"selector"},
 		},
-		skill.ClickElementHandler,
+		tool.ClickElementHandler,
 	)
 }
 
-// ClickElementHandler handles the click_element skill execution
-func (s *ClickElementSkill) ClickElementHandler(ctx context.Context, args map[string]any) (string, error) {
+// ClickElementHandler handles the click_element tool execution
+func (s *ClickElementTool) ClickElementHandler(ctx context.Context, args map[string]any) (string, error) {
 	selector, ok := args["selector"].(string)
 	if !ok || selector == "" {
 		return "", fmt.Errorf("selector parameter is required and must be a non-empty string")
@@ -159,7 +159,7 @@ func (s *ClickElementSkill) ClickElementHandler(ctx context.Context, args map[st
 }
 
 // isValidButton validates the button parameter
-func (s *ClickElementSkill) isValidButton(button string) bool {
+func (s *ClickElementTool) isValidButton(button string) bool {
 	validButtons := []string{"left", "right", "middle"}
 	for _, valid := range validButtons {
 		if button == valid {
@@ -170,7 +170,7 @@ func (s *ClickElementSkill) isValidButton(button string) bool {
 }
 
 // normalizeSelector processes the selector to support CSS, XPath, and text-based strategies
-func (s *ClickElementSkill) normalizeSelector(selector string) (string, string) {
+func (s *ClickElementTool) normalizeSelector(selector string) (string, string) {
 	selector = strings.TrimSpace(selector)
 
 	if strings.HasPrefix(selector, "/") || strings.HasPrefix(selector, "//") || strings.HasPrefix(selector, "xpath=") {
@@ -208,7 +208,7 @@ func (s *ClickElementSkill) normalizeSelector(selector string) (string, string) 
 }
 
 // waitForElementActionable waits for the element to be actionable before clicking
-func (s *ClickElementSkill) waitForElementActionable(ctx context.Context, sessionID, selector string, timeoutMs int) error {
+func (s *ClickElementTool) waitForElementActionable(ctx context.Context, sessionID, selector string, timeoutMs int) error {
 	session, err := s.playwright.GetSession(sessionID)
 	if err != nil {
 		return fmt.Errorf("failed to get session: %w", err)
@@ -228,7 +228,7 @@ func (s *ClickElementSkill) waitForElementActionable(ctx context.Context, sessio
 }
 
 // checkElementInIframes checks if the element exists within any iframes
-func (s *ClickElementSkill) checkElementInIframes(ctx context.Context, session *playwright.BrowserSession, selector string) error {
+func (s *ClickElementTool) checkElementInIframes(ctx context.Context, session *playwright.BrowserSession, selector string) error {
 	if session.Page == nil {
 		return fmt.Errorf("element not found: %s (page not available)", selector)
 	}

@@ -9,16 +9,21 @@
 # - Directories: build/
 # - Comments: lines starting with #
 
-skills/navigate_to_url.go
-skills/click_element.go
-skills/fill_form.go
-skills/extract_data.go
-skills/take_screenshot.go
-skills/execute_script.go
-skills/handle_authentication.go
-skills/wait_for_condition.go
-skills/write_to_csv.go
+tools/navigate_to_url.go
+tools/click_element.go
+tools/fill_form.go
+tools/extract_data.go
+tools/take_screenshot.go
+tools/execute_script.go
+tools/handle_authentication.go
+tools/wait_for_condition.go
+tools/*_test.go
 internal/playwright/playwright.go
+
+# Bare skill playbooks - edited by hand after initial scaffold
+skills/webapp-testing/
+skills/web-scraping/
+skills/form-automation/
 
 go.mod
 .gitattributes

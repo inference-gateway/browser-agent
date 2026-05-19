@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 )
 
-func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
+func TestFillFormTool_FillFormHandler_ValidationTests(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-	skill := &FillFormSkill{
+	tool := &FillFormTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -104,7 +104,7 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.FillFormHandler(context.Background(), tt.args)
+			result, err := tool.FillFormHandler(context.Background(), tt.args)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -120,11 +120,11 @@ func TestFillFormSkill_FillFormHandler_ValidationTests(t *testing.T) {
 	}
 }
 
-func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
+func TestFillFormTool_FillFormHandler_SuccessTests(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-	skill := &FillFormSkill{
+	tool := &FillFormTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -192,7 +192,7 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.FillFormHandler(context.Background(), tt.args)
+			result, err := tool.FillFormHandler(context.Background(), tt.args)
 
 			assert.NoError(t, err)
 			assert.NotEmpty(t, result)
@@ -201,7 +201,7 @@ func TestFillFormSkill_FillFormHandler_SuccessTests(t *testing.T) {
 	}
 }
 
-func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
+func TestFillFormTool_ValidateFieldTypes(t *testing.T) {
 	validTypes := []string{"text", "textarea", "password", "select", "checkbox", "radio", "file"}
 
 	for _, fieldType := range validTypes {
@@ -209,7 +209,7 @@ func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
 			logger := zap.NewNop()
 			mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-			skill := &FillFormSkill{
+			tool := &FillFormTool{
 				logger:     logger,
 				playwright: mockPlaywright,
 			}
@@ -229,7 +229,7 @@ func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
 			mockPlaywright.GetSessionReturns(session, nil)
 			mockPlaywright.FillFormReturns(nil)
 
-			_, err := skill.FillFormHandler(context.Background(), args)
+			_, err := tool.FillFormHandler(context.Background(), args)
 
 			if err != nil {
 				assert.NotContains(t, err.Error(), "invalid type")
@@ -238,11 +238,11 @@ func TestFillFormSkill_ValidateFieldTypes(t *testing.T) {
 	}
 }
 
-func TestFillFormSkill_DefaultFieldType(t *testing.T) {
+func TestFillFormTool_DefaultFieldType(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-	skill := &FillFormSkill{
+	tool := &FillFormTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -261,7 +261,7 @@ func TestFillFormSkill_DefaultFieldType(t *testing.T) {
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.FillFormReturns(nil)
 
-	_, err := skill.FillFormHandler(context.Background(), args)
+	_, err := tool.FillFormHandler(context.Background(), args)
 
 	if err != nil {
 		assert.NotContains(t, err.Error(), "invalid type")

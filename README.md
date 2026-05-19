@@ -3,7 +3,7 @@
 # Browser-Agent
 
 [![CI](https://github.com/inference-gateway/browser-agent/workflows/CI/badge.svg)](https://github.com/inference-gateway/browser-agent/actions/workflows/ci.yml)
-[![Go Version](https://img.shields.io/badge/Go-1.26.1+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.26.2+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![A2A Protocol](https://img.shields.io/badge/A2A-Protocol-blue?style=flat)](https://github.com/inference-gateway/adk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -48,10 +48,13 @@ infer agents add browser-agent http://localhost:8080 \
 - `GET /health` - Health check endpoint
 - `POST /a2a` - A2A protocol endpoint
 
-## Available Skills
+## Available Tools
 
-| Skill | Description | Parameters |
-|-------|-------------|------------|
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `Read` | Read a file from disk. Returns its contents, optionally sliced by line offset/limit. Use this to load SKILL.md bodies on demand. | file_path, offset, limit |
+| `Write` | Write content to a file, creating intermediate directories as needed. Overwrites the file if it already exists. | file_path, content |
+| `Edit` | Replace a unique string in a file with a new value. Errors if old_string is not found or appears more than once. | file_path, old_string, new_string |
 | `navigate_to_url` | Navigate to a specific URL and wait for the page to fully load | timeout, url, wait_until |
 | `click_element` | Click on an element identified by selector, text, or other locator strategies | button, click_count, force, selector, timeout |
 | `fill_form` | Fill form fields with provided data, handling various input types | fields, submit, submit_selector |
@@ -61,34 +64,50 @@ infer agents add browser-agent http://localhost:8080 \
 | `handle_authentication` | Handle various authentication scenarios including basic auth, OAuth, and custom login forms | login_url, password, password_selector, submit_selector, type, username, username_selector |
 | `wait_for_condition` | Wait for specific conditions before proceeding with automation | condition, custom_function, selector, state, timeout |
 
+## Skills (loaded into the system prompt)
+
+| Skill | Description | Source |
+|-------|-------------|--------|
+| `webapp-testing` | Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot. | bare scaffold (`skills/webapp-testing.md`) |
+| `web-scraping` | Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool. | bare scaffold (`skills/web-scraping.md`) |
+| `form-automation` | Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation. | bare scaffold (`skills/form-automation.md`) |
+
 ## Configuration
 
 Configure the agent via environment variables:
 
 ### Custom Configuration
 
-The following custom configuration variables are available:
+The following custom configuration variables are available. Defaults are
+derived from `spec.config.*` in `agent.yaml`; the env vars below override
+them at runtime.
 
-| Category | Variable | Description | Default |
-|----------|----------|-------------|---------|
-| **Browser** | `BROWSER_ARGS` | Args configuration | `[--disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor --no-first-run --disable-default-apps --disable-extensions --disable-plugins --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-zygote --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-ipc-flooding-protection]` |
-| **Browser** | `BROWSER_DATA_DIR` | Data_dir configuration | `/tmp/playwright/artifacts` |
-| **Browser** | `BROWSER_ENGINE` | Engine configuration | `chromium` |
-| **Browser** | `BROWSER_HEADER_ACCEPT` | Header_accept configuration | `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7` |
-| **Browser** | `BROWSER_HEADER_ACCEPT_ENCODING` | Header_accept_encoding configuration | `gzip, deflate, br` |
-| **Browser** | `BROWSER_HEADER_ACCEPT_LANGUAGE` | Header_accept_language configuration | `en-US,en;q=0.9` |
-| **Browser** | `BROWSER_HEADER_CONNECTION` | Header_connection configuration | `keep-alive` |
-| **Browser** | `BROWSER_HEADER_DNT` | Header_dnt configuration | `1` |
-| **Browser** | `BROWSER_HEADER_UPGRADE_INSECURE_REQUESTS` | Header_upgrade_insecure_requests configuration | `1` |
-| **Browser** | `BROWSER_HEADLESS` | Headless configuration | `true` |
-| **Browser** | `BROWSER_SESSION_TIMEOUT` | Session_timeout configuration | `2m` |
-| **Browser** | `BROWSER_STEALTH_MODE` | Stealth_mode configuration | `false` |
-| **Browser** | `BROWSER_USER_AGENT` | User_agent configuration | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36` |
-| **Browser** | `BROWSER_VIEWPORT_HEIGHT` | Viewport_height configuration | `1080` |
-| **Browser** | `BROWSER_VIEWPORT_WIDTH` | Viewport_width configuration | `1920` |
-| **Browser** | `BROWSER_XVFB_DISPLAY` | Xvfb_display configuration | `:99` |
-| **Browser** | `BROWSER_XVFB_ENABLED` | Xvfb_enabled configuration | `false` |
-| **Browser** | `BROWSER_XVFB_SCREEN_RESOLUTION` | Xvfb_screen_resolution configuration | `1920x1080x24` |
+| Category | Variable | Default |
+|----------|----------|---------|
+| **Browser** | `BROWSER_ARGS` | `[--disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor --no-first-run --disable-default-apps --disable-extensions --disable-plugins --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-zygote --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-ipc-flooding-protection]` |
+| **Browser** | `BROWSER_DATA_DIR` | `/tmp/playwright/artifacts` |
+| **Browser** | `BROWSER_ENGINE` | `chromium` |
+| **Browser** | `BROWSER_HEADER_ACCEPT` | `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7` |
+| **Browser** | `BROWSER_HEADER_ACCEPT_ENCODING` | `gzip, deflate, br` |
+| **Browser** | `BROWSER_HEADER_ACCEPT_LANGUAGE` | `en-US,en;q=0.9` |
+| **Browser** | `BROWSER_HEADER_CONNECTION` | `keep-alive` |
+| **Browser** | `BROWSER_HEADER_DNT` | `1` |
+| **Browser** | `BROWSER_HEADER_UPGRADE_INSECURE_REQUESTS` | `1` |
+| **Browser** | `BROWSER_HEADLESS` | `true` |
+| **Browser** | `BROWSER_SESSION_TIMEOUT` | `2m` |
+| **Browser** | `BROWSER_STEALTH_MODE` | `false` |
+| **Browser** | `BROWSER_USER_AGENT` | `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36` |
+| **Browser** | `BROWSER_VIEWPORT_HEIGHT` | `1080` |
+| **Browser** | `BROWSER_VIEWPORT_WIDTH` | `1920` |
+| **Browser** | `BROWSER_XVFB_DISPLAY` | `:99` |
+| **Browser** | `BROWSER_XVFB_ENABLED` | `false` |
+| **Browser** | `BROWSER_XVFB_SCREEN_RESOLUTION` | `1920x1080x24` |
+| **Tools** | `TOOLS_EDIT_ENABLED` | `true` |
+| **Tools** | `TOOLS_READ_ENABLED` | `true` |
+| **Tools** | `TOOLS_READ_MAX_LINES` | `2000` |
+| **Tools** | `TOOLS_WRITE_ENABLED` | `true` |
+
+### Environment Variables
 
 | Category | Variable | Description | Default |
 |----------|----------|-------------|---------|

@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -11,15 +11,15 @@ import (
 	zap "go.uber.org/zap"
 )
 
-// NavigateToURLSkill struct holds the skill with dependencies
-type NavigateToURLSkill struct {
+// NavigateToURLTool struct holds the tool with dependencies
+type NavigateToURLTool struct {
 	logger     *zap.Logger
 	playwright playwright.BrowserAutomation
 }
 
-// NewNavigateToURLSkill creates a new navigate_to_url skill
-func NewNavigateToURLSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
-	skill := &NavigateToURLSkill{
+// NewNavigateToURLTool creates a new navigate_to_url tool
+func NewNavigateToURLTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	tool := &NavigateToURLTool{
 		logger:     logger,
 		playwright: playwright,
 	}
@@ -46,12 +46,12 @@ func NewNavigateToURLSkill(logger *zap.Logger, playwright playwright.BrowserAuto
 			},
 			"required": []string{"url"},
 		},
-		skill.NavigateToURLHandler,
+		tool.NavigateToURLHandler,
 	)
 }
 
-// NavigateToURLHandler handles the navigate_to_url skill execution
-func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[string]any) (string, error) {
+// NavigateToURLHandler handles the navigate_to_url tool execution
+func (s *NavigateToURLTool) NavigateToURLHandler(ctx context.Context, args map[string]any) (string, error) {
 	url, ok := args["url"].(string)
 	if !ok || url == "" {
 		return "", fmt.Errorf("url parameter is required and must be a non-empty string")
@@ -117,7 +117,7 @@ func (s *NavigateToURLSkill) NavigateToURLHandler(ctx context.Context, args map[
 }
 
 // validateAndNormalizeURL validates that the provided URL is well-formed and supported, returning the normalized URL
-func (s *NavigateToURLSkill) validateAndNormalizeURL(urlStr string) (string, error) {
+func (s *NavigateToURLTool) validateAndNormalizeURL(urlStr string) (string, error) {
 	if urlStr == "" {
 		return "", fmt.Errorf("URL cannot be empty")
 	}
@@ -147,7 +147,7 @@ func (s *NavigateToURLSkill) validateAndNormalizeURL(urlStr string) (string, err
 }
 
 // isValidWaitCondition validates the wait_until parameter
-func (s *NavigateToURLSkill) isValidWaitCondition(condition string) bool {
+func (s *NavigateToURLTool) isValidWaitCondition(condition string) bool {
 	validConditions := []string{"domcontentloaded", "load", "networkidle"}
 	for _, valid := range validConditions {
 		if condition == valid {

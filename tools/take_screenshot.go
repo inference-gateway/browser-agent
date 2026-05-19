@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -14,17 +14,17 @@ import (
 	zap "go.uber.org/zap"
 )
 
-// TakeScreenshotSkill struct holds the skill with dependencies
-type TakeScreenshotSkill struct {
+// TakeScreenshotTool struct holds the tool with dependencies
+type TakeScreenshotTool struct {
 	logger        *zap.Logger
 	playwright    playwright.BrowserAutomation
 	screenshotDir string
 }
 
-// NewTakeScreenshotSkill creates a new take_screenshot skill
-func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+// NewTakeScreenshotTool creates a new take_screenshot tool
+func NewTakeScreenshotTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
 	cfg := playwright.GetConfig()
-	skill := &TakeScreenshotSkill{
+	tool := &TakeScreenshotTool{
 		logger:        logger,
 		playwright:    playwright,
 		screenshotDir: cfg.Browser.DataDir,
@@ -57,12 +57,12 @@ func NewTakeScreenshotSkill(logger *zap.Logger, playwright playwright.BrowserAut
 			},
 			"required": []string{},
 		},
-		skill.TakeScreenshotHandler,
+		tool.TakeScreenshotHandler,
 	)
 }
 
-// TakeScreenshotHandler handles the take_screenshot skill execution
-func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
+// TakeScreenshotHandler handles the take_screenshot tool execution
+func (s *TakeScreenshotTool) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
 
 	generatedPath, err := s.generateDeterministicPath(args)
 	if err != nil {
@@ -175,7 +175,7 @@ func (s *TakeScreenshotSkill) TakeScreenshotHandler(ctx context.Context, args ma
 }
 
 // generateDeterministicPath generates a deterministic file path for the screenshot
-func (s *TakeScreenshotSkill) generateDeterministicPath(args map[string]any) (string, error) {
+func (s *TakeScreenshotTool) generateDeterministicPath(args map[string]any) (string, error) {
 	if err := os.MkdirAll(s.screenshotDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create screenshots directory: %w", err)
 	}
@@ -205,7 +205,7 @@ func (s *TakeScreenshotSkill) generateDeterministicPath(args map[string]any) (st
 }
 
 // isValidImageType validates the image format
-func (s *TakeScreenshotSkill) isValidImageType(imageType string) bool {
+func (s *TakeScreenshotTool) isValidImageType(imageType string) bool {
 	validTypes := []string{"png", "jpeg"}
 	for _, valid := range validTypes {
 		if imageType == valid {
@@ -216,7 +216,7 @@ func (s *TakeScreenshotSkill) isValidImageType(imageType string) bool {
 }
 
 // getMimeType returns the MIME type for the given image format
-func (s *TakeScreenshotSkill) getMimeType(imageType string) string {
+func (s *TakeScreenshotTool) getMimeType(imageType string) string {
 	switch imageType {
 	case "jpeg":
 		return "image/jpeg"
@@ -228,12 +228,12 @@ func (s *TakeScreenshotSkill) getMimeType(imageType string) string {
 }
 
 // getCurrentTimestamp returns the current timestamp in RFC3339 format
-func (s *TakeScreenshotSkill) getCurrentTimestamp() string {
+func (s *TakeScreenshotTool) getCurrentTimestamp() string {
 	return time.Now().Format(time.RFC3339)
 }
 
 // createArtifactFromScreenshot creates an artifact from the screenshot file
-func (s *TakeScreenshotSkill) createArtifactFromScreenshot(ctx context.Context, filePath, imageType string) (url string, artifactID string, err error) {
+func (s *TakeScreenshotTool) createArtifactFromScreenshot(ctx context.Context, filePath, imageType string) (url string, artifactID string, err error) {
 	task, ok := ctx.Value(server.TaskContextKey).(*types.Task)
 	if !ok {
 		return "", "", fmt.Errorf("task not found in context")

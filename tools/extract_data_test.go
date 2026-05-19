@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 func TestExtractDataHandler(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &ExtractDataSkill{
+	tool := &ExtractDataTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -171,11 +171,11 @@ func TestExtractDataHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockPlaywright = &mocks.FakeBrowserAutomation{}
-			skill.playwright = mockPlaywright
+			tool.playwright = mockPlaywright
 
 			tt.mockSetup()
 
-			result, err := skill.ExtractDataHandler(context.Background(), tt.args)
+			result, err := tool.ExtractDataHandler(context.Background(), tt.args)
 
 			if tt.expectedErr {
 				assert.Error(t, err)
@@ -189,7 +189,7 @@ func TestExtractDataHandler(t *testing.T) {
 }
 
 func TestConvertExtractors(t *testing.T) {
-	skill := &ExtractDataSkill{}
+	tool := &ExtractDataTool{}
 
 	tests := []struct {
 		name        string
@@ -247,7 +247,7 @@ func TestConvertExtractors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.convertExtractors(tt.extractors)
+			result, err := tool.convertExtractors(tt.extractors)
 
 			if tt.expectedErr {
 				assert.Error(t, err)
@@ -260,7 +260,7 @@ func TestConvertExtractors(t *testing.T) {
 }
 
 func TestParseGoMapFormat(t *testing.T) {
-	skill := &ExtractDataSkill{}
+	tool := &ExtractDataTool{}
 
 	tests := []struct {
 		name     string
@@ -299,7 +299,7 @@ func TestParseGoMapFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := skill.parseGoMapFormat(tt.input)
+			result, err := tool.parseGoMapFormat(tt.input)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -307,7 +307,7 @@ func TestParseGoMapFormat(t *testing.T) {
 }
 
 func TestCleanString(t *testing.T) {
-	skill := &ExtractDataSkill{}
+	tool := &ExtractDataTool{}
 
 	tests := []struct {
 		name     string
@@ -338,14 +338,14 @@ func TestCleanString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := skill.cleanString(tt.input)
+			result := tool.cleanString(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func TestIsValidFormat(t *testing.T) {
-	skill := &ExtractDataSkill{}
+	tool := &ExtractDataTool{}
 
 	tests := []struct {
 		format   string
@@ -361,7 +361,7 @@ func TestIsValidFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {
-			result := skill.isValidFormat(tt.format)
+			result := tool.isValidFormat(tt.format)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
