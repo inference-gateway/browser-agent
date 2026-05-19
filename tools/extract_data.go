@@ -87,6 +87,9 @@ func (s *ExtractDataTool) ExtractDataHandler(ctx context.Context, args map[strin
 		s.logger.Error("data extraction failed",
 			zap.String("sessionID", session.ID),
 			zap.Error(err))
+		if strings.Contains(err.Error(), "strict mode violation") {
+			return "", fmt.Errorf("data extraction failed: %w; the selector matched multiple elements - pass \"multiple\": true to extract all of them, or use a more specific selector to target a single element", err)
+		}
 		return "", fmt.Errorf("data extraction failed: %w", err)
 	}
 
