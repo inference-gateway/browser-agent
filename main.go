@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	Version          = "0.4.17"
+	Version          = "0.4.18"
 	AgentName        = "browser-agent"
 	AgentDescription = "AI agent for browser automation and web testing using Playwright"
 )

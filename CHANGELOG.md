@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.18](https://github.com/inference-gateway/browser-agent/compare/v0.4.17...v0.4.18) (2026-05-19)
+
+### ♻️ Improvements
+
+* Separate function-call tools from markdown skill playbooks ([#51](https://github.com/inference-gateway/browser-agent/issues/51)) ([775ce5c](https://github.com/inference-gateway/browser-agent/commit/775ce5cfda6d3b47ea91cc6573d69cd68230b18d))
+
+### 👷 CI
+
+* **dependabot:** Add dependabot to help with dependecies upgrades ([88a5a3f](https://github.com/inference-gateway/browser-agent/commit/88a5a3f0a58f9ef785c898e1bcbebcfe4de4f6ed))
+* **deps:** Bump the github-actions group with 5 updates ([#49](https://github.com/inference-gateway/browser-agent/issues/49)) ([e4ca5c8](https://github.com/inference-gateway/browser-agent/commit/e4ca5c8715b88f4a409be6467a24644967fd336e))
+* Enable display report for Claude Code action ([40650b2](https://github.com/inference-gateway/browser-agent/commit/40650b22d68cfc43bfeca8d7db179fe29f28d767))
+* Update create-github-app-token action to v3.2.0 ([a9a450a](https://github.com/inference-gateway/browser-agent/commit/a9a450a4d5a9d89f121752bdefd782b95f225448))
+
+### 🔧 Miscellaneous
+
+* Add CODEOWNERS file for repository ownership ([95d1a0c](https://github.com/inference-gateway/browser-agent/commit/95d1a0cfb7e0679e4bc33d974cf4de00683a76e9))
+* **deps:** Bump the docker group with 2 updates ([#48](https://github.com/inference-gateway/browser-agent/issues/48)) ([d67c8c9](https://github.com/inference-gateway/browser-agent/commit/d67c8c9437769a8438ddab7982f73ca71bf7f22e))
+* **deps:** Bump the gomod group with 3 updates ([#50](https://github.com/inference-gateway/browser-agent/issues/50)) ([c8e1d04](https://github.com/inference-gateway/browser-agent/commit/c8e1d04cd0018cb39a27e4864ef6475d60b85bcf))
+* Remove outdated issue templates for bug reports, feature requests, and refactor requests ([3cc7fc7](https://github.com/inference-gateway/browser-agent/commit/3cc7fc77c865fde1bd476f1b4807e9b001d59d94))
+
 ## [0.4.17](https://github.com/inference-gateway/browser-agent/compare/v0.4.16...v0.4.17) (2026-05-07)
 
 ### ♻️ Improvements
