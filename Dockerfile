@@ -39,7 +39,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -o main .
 
 # Stage 2: Final image with browser dependencies
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 # Build arguments for browser selection
 ARG BROWSER_ENGINE=chromium
