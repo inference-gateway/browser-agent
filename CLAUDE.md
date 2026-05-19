@@ -10,7 +10,7 @@ browser-agent is an A2A (Agent-to-Agent) server implementing the [A2A Protocol](
 
 ### ADL-Generated Structure
 
-The codebase is generated using ADL CLI 0.27.8 and follows a strict generation pattern:
+The codebase is generated using ADL CLI 0.30.6 and follows a strict generation pattern:
 - **Generated Files**: Marked with `DO NOT EDIT` headers - manual changes will be overwritten
 - **Configuration Source**: `agent.yaml` - defines agent capabilities, skills, and metadata
 - **Server Implementation**: Built on the ADK (Agent Development Kit) framework from `github.com/inference-gateway/adk`
@@ -72,8 +72,11 @@ The agent uses OpenAI-compatible LLM client. Configure with:
 
 ## Adding New Functionality
 
-### Skills Implementation
-The following skills are currently defined:
+### Tools (function-call)
+The following tools are currently defined:
+- **Read** (built-in): Read a file from disk. Returns its contents, optionally sliced by line offset/limit. Use this to load SKILL.md bodies on demand.
+- **Write** (built-in): Write content to a file, creating intermediate directories as needed. Overwrites the file if it already exists.
+- **Edit** (built-in): Replace a unique string in a file with a new value. Errors if old_string is not found or appears more than once.
 - **navigate_to_url**: Navigate to a specific URL and wait for the page to fully load
 - **click_element**: Click on an element identified by selector, text, or other locator strategies
 - **fill_form**: Fill form fields with provided data, handling various input types
@@ -83,11 +86,29 @@ The following skills are currently defined:
 - **handle_authentication**: Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 - **wait_for_condition**: Wait for specific conditions before proceeding with automation
 
-To modify skills:
-1. Update `agent.yaml` with skill definitions
+To modify tools:
+1. Update `agent.yaml` `spec.tools` with tool definitions
 2. Run `task generate` to regenerate the codebase
-3. Implement skill logic in generated skill files (look for TODO placeholders)
-4. Write tests for each skill
+3. Implement tool logic in the generated `tools/` files (look for TODO placeholders)
+4. Write tests for each tool
+
+### Skills (markdown system-prompt playbooks)
+The following skills are currently shipped with the agent:
+- **webapp-testing** (bare scaffold): Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
+- **web-scraping** (bare scaffold): Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool.
+- **form-automation** (bare scaffold): Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
+
+Each skill lives in its own directory at `skills/<id>/SKILL.md` and is
+loaded into the system prompt at startup. Bare skills can ship arbitrary
+bundled assets (scripts, templates, resources) alongside `SKILL.md` -
+the whole `skills/<id>/` directory is protected by `.adl-ignore` against
+regeneration overwrites. To modify skills:
+1. Update `agent.yaml` `spec.skills` with skill definitions
+2. Run `task generate` (registry skills are re-fetched; bare skill
+   directories are preserved when listed in `.adl-ignore`)
+3. For bare skills, edit `skills/<id>/SKILL.md` directly - frontmatter
+   (`name`/`description`/`tags`) shows up on the agent card. Drop helper
+   scripts or templates next to it (e.g. `skills/<id>/scripts/foo.py`).
 
 ### Modifying Agent Behavior
 
@@ -105,7 +126,7 @@ When implementing tests:
 
 ## Environment Management
 The project includes Flox environment configuration (`.flox/env/manifest.toml`) providing:
-- Go 1.26.1
+- Go 1.26.2
 - golangci-lint (linter)
 - go-task (Task runner)
 - Docker
@@ -117,7 +138,7 @@ Activate with: `flox activate` (if Flox is installed)
 
 - **Generated Files**: Never manually edit files with "DO NOT EDIT" headers
 - **Configuration Changes**: Always modify `agent.yaml` and regenerate
-- **ADL Version**: Ensure ADL CLI 0.27.8 or compatible version for regeneration
+- **ADL Version**: Ensure ADL CLI 0.30.6 or compatible version for regeneration
 - **Port Configuration**: Default 8080, configurable via `A2A_PORT` or `A2A_SERVER_PORT`
 
 ## Debugging Tips

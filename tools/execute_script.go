@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 	zap "go.uber.org/zap"
 )
 
-// ExecuteScriptSkill struct holds the skill with dependencies
-type ExecuteScriptSkill struct {
+// ExecuteScriptTool struct holds the tool with dependencies
+type ExecuteScriptTool struct {
 	logger     *zap.Logger
 	playwright playwright.BrowserAutomation
 }
@@ -33,9 +33,9 @@ type ScriptExecutionResult struct {
 	Metadata    map[string]any `json:"metadata,omitempty"`
 }
 
-// NewExecuteScriptSkill creates a new execute_script skill
-func NewExecuteScriptSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
-	skill := &ExecuteScriptSkill{
+// NewExecuteScriptTool creates a new execute_script tool
+func NewExecuteScriptTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	tool := &ExecuteScriptTool{
 		logger:     logger,
 		playwright: playwright,
 	}
@@ -73,12 +73,12 @@ func NewExecuteScriptSkill(logger *zap.Logger, playwright playwright.BrowserAuto
 			},
 			"required": []string{"script"},
 		},
-		skill.ExecuteScriptHandler,
+		tool.ExecuteScriptHandler,
 	)
 }
 
-// ExecuteScriptHandler handles the execute_script skill execution
-func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[string]any) (string, error) {
+// ExecuteScriptHandler handles the execute_script tool execution
+func (s *ExecuteScriptTool) ExecuteScriptHandler(ctx context.Context, args map[string]any) (string, error) {
 	startTime := time.Now()
 
 	script, ok := args["script"].(string)
@@ -189,7 +189,7 @@ func (s *ExecuteScriptSkill) ExecuteScriptHandler(ctx context.Context, args map[
 }
 
 // validateScriptSecurity performs basic security validation on the script
-func (s *ExecuteScriptSkill) validateScriptSecurity(script string) error {
+func (s *ExecuteScriptTool) validateScriptSecurity(script string) error {
 	dangerousPatterns := []string{
 		// File system access
 		"require\\s*\\(\\s*['\"]fs['\"]",
@@ -241,7 +241,7 @@ func (s *ExecuteScriptSkill) validateScriptSecurity(script string) error {
 }
 
 // prepareScript prepares the script for execution, always wrapping in a function to avoid syntax errors
-func (s *ExecuteScriptSkill) prepareScript(script string, isAsync bool) (string, error) {
+func (s *ExecuteScriptTool) prepareScript(script string, isAsync bool) (string, error) {
 	var wrappedScript string
 
 	if isAsync {
@@ -268,7 +268,7 @@ func (s *ExecuteScriptSkill) prepareScript(script string, isAsync bool) (string,
 }
 
 // calculateScriptHash creates a simple hash of the script for logging/tracking
-func (s *ExecuteScriptSkill) calculateScriptHash(script string) string {
+func (s *ExecuteScriptTool) calculateScriptHash(script string) string {
 	if len(script) <= 32 {
 		return fmt.Sprintf("script_%d_chars", len(script))
 	}
@@ -276,7 +276,7 @@ func (s *ExecuteScriptSkill) calculateScriptHash(script string) string {
 }
 
 // getResultType determines the type of the result for metadata
-func (s *ExecuteScriptSkill) getResultType(result any) string {
+func (s *ExecuteScriptTool) getResultType(result any) string {
 	if result == nil {
 		return "null"
 	}

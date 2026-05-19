@@ -56,14 +56,29 @@ When users request screenshots, the take_screenshot tool automatically creates d
 
 For data extraction, you can use the create_artifact tool to save extracted data as downloadable files (JSON/CSV/TXT).
 
+**IMPORTANT - Answering capability questions**:
+When the user asks about your skills, tools, capabilities, or what you can do (e.g. "what skills do you have?", "list your tools", "what can you do?"), answer directly from this system prompt and the AVAILABLE SKILLS list below. Do NOT call any tools, do NOT navigate to a URL, and do NOT Read SKILL.md files. Only load a SKILL.md (via the Read tool) once the user has given you a concrete task that matches one of those skills.
+
 Your automation solutions should be maintainable, efficient, and production-ready.
 
 
 **Configuration:**
 
-## Skills
+## Tools
 
-This agent provides 8 skills:
+This agent exposes 11 function-call tools:
+
+### Read (built-in)
+- **Description**: Read a file from disk. Returns its contents, optionally sliced by line offset/limit. Use this to load SKILL.md bodies on demand.
+- **Parameters**: file_path, offset, limit
+
+### Write (built-in)
+- **Description**: Write content to a file, creating intermediate directories as needed. Overwrites the file if it already exists.
+- **Parameters**: file_path, content
+
+### Edit (built-in)
+- **Description**: Replace a unique string in a file with a new value. Errors if old_string is not found or appears more than once.
+- **Parameters**: file_path, old_string, new_string
 
 ### navigate_to_url
 - **Description**: Navigate to a specific URL and wait for the page to fully load
@@ -112,6 +127,25 @@ This agent provides 8 skills:
 - **Tags**: wait, synchronization, timing, playwright
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
+
+## Skills
+
+This agent ships 3 markdown skills that are loaded into the system prompt at startup:
+
+### webapp-testing
+- **Description**: Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
+- **Tags**: testing, qa, e2e, playwright
+- **Source**: scaffolded locally (`skills/webapp-testing/SKILL.md`)
+
+### web-scraping
+- **Description**: Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool.
+- **Tags**: scraping, extraction, data
+- **Source**: scaffolded locally (`skills/web-scraping/SKILL.md`)
+
+### form-automation
+- **Description**: Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
+- **Tags**: forms, automation, workflow
+- **Source**: scaffolded locally (`skills/form-automation/SKILL.md`)
 
 ## Server Configuration
 
@@ -186,7 +220,10 @@ docker run -p 8080:8080 browser-agent
 ```
 .
 ├── main.go                       # Server entry point
-├── skills/                       # Business logic skills
+├── tools/                        # Function-call tools
+│   └── read.go                   # Read a file from disk. Returns its contents, optionally sliced by line offset/limit. Use this to load SKILL.md bodies on demand.
+│   └── write.go                  # Write content to a file, creating intermediate directories as needed. Overwrites the file if it already exists.
+│   └── edit.go                   # Replace a unique string in a file with a new value. Errors if old_string is not found or appears more than once.
 │   └── navigate_to_url.go        # Navigate to a specific URL and wait for the page to fully load
 │   └── click_element.go          # Click on an element identified by selector, text, or other locator strategies
 │   └── fill_form.go              # Fill form fields with provided data, handling various input types
@@ -195,6 +232,13 @@ docker run -p 8080:8080 browser-agent
 │   └── execute_script.go         # Execute custom JavaScript code in the browser context
 │   └── handle_authentication.go  # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 │   └── wait_for_condition.go     # Wait for specific conditions before proceeding with automation
+├── skills/                       # Skill directories (SKILL.md + optional assets)
+│   └── webapp-testing/           # Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
+│       └── SKILL.md              # Playbook prepended to the system prompt
+│   └── web-scraping/             # Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool.
+│       └── SKILL.md              # Playbook prepended to the system prompt
+│   └── form-automation/          # Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
+│       └── SKILL.md              # Playbook prepended to the system prompt
 ├── .well-known/                  # Agent configuration
 │   └── agent-card.json           # Agent metadata
 ├── go.mod                        # Go module definition
@@ -226,7 +270,7 @@ This agent was generated using ADL CLI v0.4.17 with the following configuration:
 
 - **Language**: Go
 - **Template**: Minimal A2A Agent
-- **ADL Version**: adl.dev/v1
+- **ADL Version**: adl.inference-gateway.com/v1
 
 ---
 

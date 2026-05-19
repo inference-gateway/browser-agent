@@ -706,7 +706,7 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 			}
 			results[name] = values
 		} else {
-			locator := session.Page.Locator(selector)
+			locator := session.Page.Locator(selector).First()
 			var value any
 			if attribute == "text" {
 				value, err = locator.InnerText()

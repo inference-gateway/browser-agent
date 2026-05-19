@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	zap "go.uber.org/zap"
 )
 
-// FillFormSkill struct holds the skill with dependencies
-type FillFormSkill struct {
+// FillFormTool struct holds the tool with dependencies
+type FillFormTool struct {
 	logger     *zap.Logger
 	playwright playwright.BrowserAutomation
 }
 
-// NewFillFormSkill creates a new fill_form skill
-func NewFillFormSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
-	skill := &FillFormSkill{
+// NewFillFormTool creates a new fill_form tool
+func NewFillFormTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	tool := &FillFormTool{
 		logger:     logger,
 		playwright: playwright,
 	}
@@ -67,12 +67,12 @@ func NewFillFormSkill(logger *zap.Logger, playwright playwright.BrowserAutomatio
 			},
 			"required": []string{"fields"},
 		},
-		skill.FillFormHandler,
+		tool.FillFormHandler,
 	)
 }
 
-// FillFormHandler handles the fill_form skill execution
-func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any) (string, error) {
+// FillFormHandler handles the fill_form tool execution
+func (s *FillFormTool) FillFormHandler(ctx context.Context, args map[string]any) (string, error) {
 	fieldsRaw, ok := args["fields"]
 	if !ok {
 		return "", fmt.Errorf("fields parameter is required")
@@ -244,7 +244,7 @@ func (s *FillFormSkill) FillFormHandler(ctx context.Context, args map[string]any
 }
 
 // fillSingleField handles filling a single form field with enhanced type support
-func (s *FillFormSkill) fillSingleField(ctx context.Context, sessionID string, field map[string]any) error {
+func (s *FillFormTool) fillSingleField(ctx context.Context, sessionID string, field map[string]any) error {
 	fields := []map[string]any{field}
 
 	selector := field["selector"].(string)

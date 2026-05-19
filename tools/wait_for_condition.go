@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -10,15 +10,15 @@ import (
 	zap "go.uber.org/zap"
 )
 
-// WaitForConditionSkill struct holds the skill with dependencies
-type WaitForConditionSkill struct {
+// WaitForConditionTool struct holds the tool with dependencies
+type WaitForConditionTool struct {
 	logger     *zap.Logger
 	playwright playwright.BrowserAutomation
 }
 
-// NewWaitForConditionSkill creates a new wait_for_condition skill
-func NewWaitForConditionSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
-	skill := &WaitForConditionSkill{
+// NewWaitForConditionTool creates a new wait_for_condition tool
+func NewWaitForConditionTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: playwright,
 	}
@@ -53,12 +53,12 @@ func NewWaitForConditionSkill(logger *zap.Logger, playwright playwright.BrowserA
 			},
 			"required": []string{"condition"},
 		},
-		skill.WaitForConditionHandler,
+		tool.WaitForConditionHandler,
 	)
 }
 
-// WaitForConditionHandler handles the wait_for_condition skill execution
-func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, args map[string]any) (string, error) {
+// WaitForConditionHandler handles the wait_for_condition tool execution
+func (s *WaitForConditionTool) WaitForConditionHandler(ctx context.Context, args map[string]any) (string, error) {
 	condition, ok := args["condition"].(string)
 	if !ok || condition == "" {
 		return "", fmt.Errorf("condition parameter is required and must be a non-empty string")
@@ -147,7 +147,7 @@ func (s *WaitForConditionSkill) WaitForConditionHandler(ctx context.Context, arg
 }
 
 // isValidCondition validates the condition type
-func (s *WaitForConditionSkill) isValidCondition(condition string) bool {
+func (s *WaitForConditionTool) isValidCondition(condition string) bool {
 	validConditions := []string{"selector", "navigation", "function", "timeout", "networkidle"}
 	for _, valid := range validConditions {
 		if condition == valid {
@@ -158,7 +158,7 @@ func (s *WaitForConditionSkill) isValidCondition(condition string) bool {
 }
 
 // isValidState validates the selector state
-func (s *WaitForConditionSkill) isValidState(state string) bool {
+func (s *WaitForConditionTool) isValidState(state string) bool {
 	validStates := []string{"visible", "hidden", "attached", "detached"}
 	for _, valid := range validStates {
 		if state == valid {
@@ -169,7 +169,7 @@ func (s *WaitForConditionSkill) isValidState(state string) bool {
 }
 
 // validateConditionRequirements validates condition-specific requirements
-func (s *WaitForConditionSkill) validateConditionRequirements(condition, selector, customFunction string) error {
+func (s *WaitForConditionTool) validateConditionRequirements(condition, selector, customFunction string) error {
 	switch condition {
 	case "selector":
 		if selector == "" {
@@ -185,7 +185,7 @@ func (s *WaitForConditionSkill) validateConditionRequirements(condition, selecto
 }
 
 // executeWaitCondition executes the appropriate wait operation based on condition type
-func (s *WaitForConditionSkill) executeWaitCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error {
+func (s *WaitForConditionTool) executeWaitCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error {
 	switch condition {
 	case "selector":
 		return s.playwright.WaitForCondition(ctx, sessionID, condition, selector, state, timeout, "")

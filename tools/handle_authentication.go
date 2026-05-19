@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	zap "go.uber.org/zap"
 )
 
-// HandleAuthenticationSkill struct holds the skill with dependencies
-type HandleAuthenticationSkill struct {
+// HandleAuthenticationTool struct holds the tool with dependencies
+type HandleAuthenticationTool struct {
 	logger     *zap.Logger
 	playwright playwright.BrowserAutomation
 }
 
-// NewHandleAuthenticationSkill creates a new handle_authentication skill
-func NewHandleAuthenticationSkill(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
-	skill := &HandleAuthenticationSkill{
+// NewHandleAuthenticationTool creates a new handle_authentication tool
+func NewHandleAuthenticationTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
+	tool := &HandleAuthenticationTool{
 		logger:     logger,
 		playwright: playwright,
 	}
@@ -58,12 +58,12 @@ func NewHandleAuthenticationSkill(logger *zap.Logger, playwright playwright.Brow
 			},
 			"required": []string{"type"},
 		},
-		skill.HandleAuthenticationHandler,
+		tool.HandleAuthenticationHandler,
 	)
 }
 
-// HandleAuthenticationHandler handles the handle_authentication skill execution
-func (s *HandleAuthenticationSkill) HandleAuthenticationHandler(ctx context.Context, args map[string]any) (string, error) {
+// HandleAuthenticationHandler handles the handle_authentication tool execution
+func (s *HandleAuthenticationTool) HandleAuthenticationHandler(ctx context.Context, args map[string]any) (string, error) {
 	// TODO: Implement handle_authentication logic
 	// Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 

@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -11,19 +11,19 @@ import (
 	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 )
 
-func TestWaitForConditionSkill_NewWaitForConditionSkill(t *testing.T) {
+func TestWaitForConditionTool_NewWaitForConditionTool(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-	tool := NewWaitForConditionSkill(logger, mockPlaywright)
+	tool := NewWaitForConditionTool(logger, mockPlaywright)
 
 	assert.NotNil(t, tool)
 }
 
-func TestWaitForConditionSkill_ValidateCondition(t *testing.T) {
+func TestWaitForConditionTool_ValidateCondition(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -44,16 +44,16 @@ func TestWaitForConditionSkill_ValidateCondition(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := skill.isValidCondition(tt.condition)
+			result := tool.isValidCondition(tt.condition)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
-func TestWaitForConditionSkill_ValidateState(t *testing.T) {
+func TestWaitForConditionTool_ValidateState(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -73,16 +73,16 @@ func TestWaitForConditionSkill_ValidateState(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := skill.isValidState(tt.state)
+			result := tool.isValidState(tt.state)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
-func TestWaitForConditionSkill_ValidateConditionRequirements(t *testing.T) {
+func TestWaitForConditionTool_ValidateConditionRequirements(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -105,7 +105,7 @@ func TestWaitForConditionSkill_ValidateConditionRequirements(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := skill.validateConditionRequirements(tt.condition, tt.selector, tt.customFunction)
+			err := tool.validateConditionRequirements(tt.condition, tt.selector, tt.customFunction)
 			if tt.shouldError {
 				assert.Error(t, err)
 			} else {
@@ -115,10 +115,10 @@ func TestWaitForConditionSkill_ValidateConditionRequirements(t *testing.T) {
 	}
 }
 
-func TestWaitForConditionSkill_WaitForConditionHandler_Success(t *testing.T) {
+func TestWaitForConditionTool_WaitForConditionHandler_Success(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -137,7 +137,7 @@ func TestWaitForConditionSkill_WaitForConditionHandler_Success(t *testing.T) {
 		"timeout":   5000,
 	}
 
-	result, err := skill.WaitForConditionHandler(context.Background(), args)
+	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.NoError(t, err)
 	assert.Contains(t, result, "success:true")
@@ -145,10 +145,10 @@ func TestWaitForConditionSkill_WaitForConditionHandler_Success(t *testing.T) {
 	assert.Contains(t, result, "selector:.button")
 }
 
-func TestWaitForConditionSkill_WaitForConditionHandler_MissingCondition(t *testing.T) {
+func TestWaitForConditionTool_WaitForConditionHandler_MissingCondition(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -158,17 +158,17 @@ func TestWaitForConditionSkill_WaitForConditionHandler_MissingCondition(t *testi
 		"state":    "visible",
 	}
 
-	result, err := skill.WaitForConditionHandler(context.Background(), args)
+	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
 	assert.Contains(t, err.Error(), "condition parameter is required")
 }
 
-func TestWaitForConditionSkill_WaitForConditionHandler_InvalidCondition(t *testing.T) {
+func TestWaitForConditionTool_WaitForConditionHandler_InvalidCondition(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -178,17 +178,17 @@ func TestWaitForConditionSkill_WaitForConditionHandler_InvalidCondition(t *testi
 		"selector":  ".button",
 	}
 
-	result, err := skill.WaitForConditionHandler(context.Background(), args)
+	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
 	assert.Contains(t, err.Error(), "invalid condition type")
 }
 
-func TestWaitForConditionSkill_WaitForConditionHandler_InvalidState(t *testing.T) {
+func TestWaitForConditionTool_WaitForConditionHandler_InvalidState(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -199,17 +199,17 @@ func TestWaitForConditionSkill_WaitForConditionHandler_InvalidState(t *testing.T
 		"state":     "invalid",
 	}
 
-	result, err := skill.WaitForConditionHandler(context.Background(), args)
+	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
 	assert.Contains(t, err.Error(), "invalid state")
 }
 
-func TestWaitForConditionSkill_WaitForConditionHandler_SelectorWithoutSelector(t *testing.T) {
+func TestWaitForConditionTool_WaitForConditionHandler_SelectorWithoutSelector(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -219,17 +219,17 @@ func TestWaitForConditionSkill_WaitForConditionHandler_SelectorWithoutSelector(t
 		"state":     "visible",
 	}
 
-	result, err := skill.WaitForConditionHandler(context.Background(), args)
+	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
 	assert.Contains(t, err.Error(), "selector parameter is required")
 }
 
-func TestWaitForConditionSkill_WaitForConditionHandler_FunctionWithoutFunction(t *testing.T) {
+func TestWaitForConditionTool_WaitForConditionHandler_FunctionWithoutFunction(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -238,17 +238,17 @@ func TestWaitForConditionSkill_WaitForConditionHandler_FunctionWithoutFunction(t
 		"condition": "function",
 	}
 
-	result, err := skill.WaitForConditionHandler(context.Background(), args)
+	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
 	assert.Contains(t, err.Error(), "custom_function parameter is required")
 }
 
-func TestWaitForConditionSkill_WaitForConditionHandler_DefaultValues(t *testing.T) {
+func TestWaitForConditionTool_WaitForConditionHandler_DefaultValues(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	skill := &WaitForConditionSkill{
+	tool := &WaitForConditionTool{
 		logger:     logger,
 		playwright: mockPlaywright,
 	}
@@ -265,7 +265,7 @@ func TestWaitForConditionSkill_WaitForConditionHandler_DefaultValues(t *testing.
 		"selector":  ".button",
 	}
 
-	result, err := skill.WaitForConditionHandler(context.Background(), args)
+	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.NoError(t, err)
 	assert.Contains(t, result, "success:true")

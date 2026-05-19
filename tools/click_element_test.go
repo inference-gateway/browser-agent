@@ -1,4 +1,4 @@
-package skills
+package tools
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestClickElementSkill_ClickElementHandler(t *testing.T) {
+func TestClickElementTool_ClickElementHandler(t *testing.T) {
 	logger := zap.NewNop()
 
 	tests := []struct {
@@ -162,12 +162,12 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 			mockPlaywright := &mocks.FakeBrowserAutomation{}
 			tt.setupMock(mockPlaywright)
 
-			skill := &ClickElementSkill{
+			tool := &ClickElementTool{
 				logger:     logger,
 				playwright: mockPlaywright,
 			}
 
-			result, err := skill.ClickElementHandler(context.Background(), tt.args)
+			result, err := tool.ClickElementHandler(context.Background(), tt.args)
 
 			if tt.expectedError {
 				assert.Error(t, err)
@@ -180,8 +180,8 @@ func TestClickElementSkill_ClickElementHandler(t *testing.T) {
 	}
 }
 
-func TestClickElementSkill_isValidButton(t *testing.T) {
-	skill := &ClickElementSkill{}
+func TestClickElementTool_isValidButton(t *testing.T) {
+	tool := &ClickElementTool{}
 
 	tests := []struct {
 		button   string
@@ -197,14 +197,14 @@ func TestClickElementSkill_isValidButton(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.button, func(t *testing.T) {
-			result := skill.isValidButton(tt.button)
+			result := tool.isValidButton(tt.button)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
-func TestClickElementSkill_normalizeSelector(t *testing.T) {
-	skill := &ClickElementSkill{}
+func TestClickElementTool_normalizeSelector(t *testing.T) {
+	tool := &ClickElementTool{}
 
 	tests := []struct {
 		name             string
@@ -282,18 +282,18 @@ func TestClickElementSkill_normalizeSelector(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			selector, selectorType := skill.normalizeSelector(tt.selector)
+			selector, selectorType := tool.normalizeSelector(tt.selector)
 			assert.Equal(t, tt.expectedSelector, selector)
 			assert.Equal(t, tt.expectedType, selectorType)
 		})
 	}
 }
 
-func TestClickElementSkill_NewClickElementSkill(t *testing.T) {
+func TestClickElementTool_NewClickElementTool(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-	tool := NewClickElementSkill(logger, mockPlaywright)
+	tool := NewClickElementTool(logger, mockPlaywright)
 
 	assert.NotNil(t, tool)
 }
