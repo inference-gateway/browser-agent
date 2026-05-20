@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.19](https://github.com/inference-gateway/browser-agent/compare/v0.4.18...v0.4.19) (2026-05-20)
+
+### 👷 CI
+
+* **deps:** Update installation methods for golangci-lint and task in workflows ([9e2eb7a](https://github.com/inference-gateway/browser-agent/commit/9e2eb7a3d9c4ca60318154830de2daa3613d690f))
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump ADL CLI to version 0.30.10 ([58a9164](https://github.com/inference-gateway/browser-agent/commit/58a916463d1983730d62c6a18d90cc6af51f9209))
+* **deps:** Bump ADL CLI to version 0.30.9 ([9aa5eb2](https://github.com/inference-gateway/browser-agent/commit/9aa5eb2b9019d32867546b678fa884913c3f72ed))
+* Run task generate ([9e34f0d](https://github.com/inference-gateway/browser-agent/commit/9e34f0d492618dc4e5aa09cd733f2c3c857d93fd))
+
 ## [0.4.18](https://github.com/inference-gateway/browser-agent/compare/v0.4.17...v0.4.18) (2026-05-19)
 
 ### ♻️ Improvements
