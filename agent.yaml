@@ -354,6 +354,15 @@ spec:
         - forms
         - automation
         - workflow
+    - id: deep-research
+      bare: true
+      name: deep-research
+      description: "Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write."
+      tags:
+        - research
+        - synthesis
+        - citations
+        - investigation
   agent:
     provider: ""
     model: ""
