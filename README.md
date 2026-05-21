@@ -71,6 +71,7 @@ infer agents add browser-agent http://localhost:8080 \
 | `webapp-testing` | Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot. | bare scaffold (`skills/webapp-testing.md`) |
 | `web-scraping` | Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool. | bare scaffold (`skills/web-scraping.md`) |
 | `form-automation` | Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation. | bare scaffold (`skills/form-automation.md`) |
+| `deep-research` | Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write. | bare scaffold (`skills/deep-research.md`) |
 
 ## Configuration
 
@@ -210,7 +211,7 @@ docker build \
 
 **Available Build Arguments:**
 
-- `VERSION` - Agent version (default: `0.4.19`)
+- `VERSION` - Agent version (default: `0.5.0`)
 - `AGENT_NAME` - Agent name (default: `browser-agent`)
 - `AGENT_DESCRIPTION` - Agent description (default: `AI agent for browser automation and web testing using Playwright`)
 

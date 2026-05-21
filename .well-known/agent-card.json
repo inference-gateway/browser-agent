@@ -1,6 +1,6 @@
 {
 	"name": "browser-agent",
-	"version": "0.4.19",
+	"version": "0.5.0",
 	"description": "AI agent for browser automation and web testing using Playwright",
 	"protocolVersion": "0.3.0",
 	"url": "",
@@ -30,6 +30,12 @@
 			"name": "form-automation",
 			"description": "Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.",
 			"tags": ["forms","automation","workflow"]
+		},
+		{
+			"id": "deep-research",
+			"name": "deep-research",
+			"description": "Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write.",
+			"tags": ["research","synthesis","citations","investigation"]
 		}
 	]
 }
