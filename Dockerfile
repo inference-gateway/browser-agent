@@ -96,8 +96,21 @@ RUN chown -R agent:a2a /app
 # Switch to non-root user
 USER agent
 
-# Install playwright driver as agent user
-RUN playwright install
+# Install playwright driver as agent user.
+# Match BROWSER_ENGINE to the root install above so we don't pull in extra
+# browsers (firefox/webkit) whose apt dependencies weren't installed via
+# --with-deps, which would otherwise emit a Playwright host-validation
+# warning about missing libgtk-3-t64, libxcursor1, libpangocairo-1.0-0,
+# libcairo-gobject2, and libgdk-pixbuf-2.0-0.
+RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
+        playwright install chromium firefox webkit; \
+    elif [ "$BROWSER_ENGINE" = "firefox" ]; then \
+        playwright install firefox; \
+    elif [ "$BROWSER_ENGINE" = "webkit" ]; then \
+        playwright install webkit; \
+    else \
+        playwright install chromium; \
+    fi
 
 # Expose port
 EXPOSE 8080
