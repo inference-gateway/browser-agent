@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/inference-gateway/browser-agent/compare/v0.4.19...v0.5.0) (2026-05-21)
+
+### ✨ Features
+
+* **skills:** Add deep-research bare skill for multi-source investigative research ([#53](https://github.com/inference-gateway/browser-agent/issues/53)) ([f8a9750](https://github.com/inference-gateway/browser-agent/commit/f8a9750f8e60b7ca6e4baa83c336e10c9916c9bc)), closes [#52](https://github.com/inference-gateway/browser-agent/issues/52)
+
+### 👷 CI
+
+* **deps:** Bump anthropics/claude-code-action from 1.0.122 to 1.0.128 in the github-actions group ([#56](https://github.com/inference-gateway/browser-agent/issues/56)) ([308683f](https://github.com/inference-gateway/browser-agent/commit/308683f194ad1e2fc32445654cd5b4cf5e82a729))
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump github.com/inference-gateway/adk from 0.18.2 to 0.18.3 in the gomod group ([#55](https://github.com/inference-gateway/browser-agent/issues/55)) ([383b078](https://github.com/inference-gateway/browser-agent/commit/383b0783763b0006154429da21b9ff215415e2f6))
+
 ## [0.4.19](https://github.com/inference-gateway/browser-agent/compare/v0.4.18...v0.4.19) (2026-05-20)
 
 ### 👷 CI

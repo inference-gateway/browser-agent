@@ -5,7 +5,7 @@ This file describes the agents available in this A2A (Agent-to-Agent) system.
 ## Agent Overview
 
 ### browser-agent
-**Version**: 0.4.19  
+**Version**: 0.5.0  
 **Description**: AI agent for browser automation and web testing using Playwright
 
 This agent is built using the Agent Definition Language (ADL) and provides A2A communication capabilities.
@@ -130,7 +130,7 @@ This agent exposes 11 function-call tools:
 
 ## Skills
 
-This agent ships 3 markdown skills that are loaded into the system prompt at startup:
+This agent ships 4 markdown skills that are loaded into the system prompt at startup:
 
 ### webapp-testing
 - **Description**: Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
@@ -146,6 +146,11 @@ This agent ships 3 markdown skills that are loaded into the system prompt at sta
 - **Description**: Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
 - **Tags**: forms, automation, workflow
 - **Source**: scaffolded locally (`skills/form-automation/SKILL.md`)
+
+### deep-research
+- **Description**: Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write.
+- **Tags**: research, synthesis, citations, investigation
+- **Source**: scaffolded locally (`skills/deep-research/SKILL.md`)
 
 ## Server Configuration
 
@@ -239,6 +244,8 @@ docker run -p 8080:8080 browser-agent
 │       └── SKILL.md              # Playbook prepended to the system prompt
 │   └── form-automation/          # Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
 │       └── SKILL.md              # Playbook prepended to the system prompt
+│   └── deep-research/            # Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write.
+│       └── SKILL.md              # Playbook prepended to the system prompt
 ├── .well-known/                  # Agent configuration
 │   └── agent-card.json           # Agent metadata
 ├── go.mod                        # Go module definition
@@ -266,7 +273,7 @@ task test:coverage
 
 ## Agent Metadata
 
-This agent was generated using ADL CLI v0.4.19 with the following configuration:
+This agent was generated using ADL CLI v0.5.0 with the following configuration:
 
 - **Language**: Go
 - **Template**: Minimal A2A Agent
