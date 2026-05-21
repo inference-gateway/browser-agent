@@ -24,6 +24,7 @@ internal/playwright/playwright.go
 skills/webapp-testing/
 skills/web-scraping/
 skills/form-automation/
+skills/deep-research/
 
 go.mod
 .gitattributes

@@ -97,6 +97,7 @@ The following skills are currently shipped with the agent:
 - **webapp-testing** (bare scaffold): Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
 - **web-scraping** (bare scaffold): Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool.
 - **form-automation** (bare scaffold): Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
+- **deep-research** (bare scaffold): Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write.
 
 Each skill lives in its own directory at `skills/<id>/SKILL.md` and is
 loaded into the system prompt at startup. Bare skills can ship arbitrary
