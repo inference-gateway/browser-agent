@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/inference-gateway/browser-agent/compare/v0.5.0...v0.5.1) (2026-05-21)
+
+### 🐛 Bug Fixes
+
+* **container:** Match BROWSER_ENGINE in second playwright install ([#61](https://github.com/inference-gateway/browser-agent/issues/61)) ([5681879](https://github.com/inference-gateway/browser-agent/commit/56818793e7bc563aa9613334662de7beb124f58d)), closes [#58](https://github.com/inference-gateway/browser-agent/issues/58)
+
+### 👷 CI
+
+* **deps:** Bump anthropics/claude-code-action from 1.0.128 to 1.0.129 in the github-actions group ([#60](https://github.com/inference-gateway/browser-agent/issues/60)) ([8e58890](https://github.com/inference-gateway/browser-agent/commit/8e588905472bff860512f901d3096c8c65c84324))
+* **deps:** Bump github.com/inference-gateway/adk from 0.18.3 to 0.18.4 in the gomod group ([#57](https://github.com/inference-gateway/browser-agent/issues/57)) ([d344637](https://github.com/inference-gateway/browser-agent/commit/d344637d8f6c659401a8387e5d7f83631f766bc9))
+
+### 🔧 Miscellaneous
+
+* **deps:** Add ignore rule for golang dependency versions >=1.26.3 in dependabot configuration ([ddc20db](https://github.com/inference-gateway/browser-agent/commit/ddc20dbfbc35806590d53d7ebb5b4dbc471516c8))
+
 ## [0.5.0](https://github.com/inference-gateway/browser-agent/compare/v0.4.19...v0.5.0) (2026-05-21)
 
 ### ✨ Features
