@@ -175,6 +175,7 @@ Key environment variables you'll need to configure:
 
 ### Development Environment
 **Flox Environment**: ✅ Configured for reproducible development setup
+**DevContainer**: ✅ VS Code DevContainer configuration available
 
 ## Usage
 
