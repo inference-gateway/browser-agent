@@ -3,6 +3,7 @@
 # Browser-Agent
 
 [![CI](https://github.com/inference-gateway/browser-agent/workflows/CI/badge.svg)](https://github.com/inference-gateway/browser-agent/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/inference-gateway/browser-agent?label=coverage&logo=codecov)](https://codecov.io/gh/inference-gateway/browser-agent)
 [![Go Version](https://img.shields.io/badge/Go-1.26.2+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![A2A Protocol](https://img.shields.io/badge/A2A-Protocol-blue?style=flat)](https://github.com/inference-gateway/adk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,14 +16,31 @@ A enterprise-ready [Agent-to-Agent (A2A)](https://github.com/inference-gateway/a
 
 ## Quick Start
 
+The generated binary is a CLI. `start` boots the A2A server; `--help` and
+`--version` work as you'd expect.
+
 ```bash
 # Run the agent
-go run .
+go run . start
+
+# Or build and invoke the CLI directly
+task build
+./bin/browser-agent --help
+./bin/browser-agent --version
+./bin/browser-agent start
 
 # Or with Docker
 docker build -t browser-agent .
 docker run -p 8080:8080 browser-agent
 ```
+
+### CLI
+
+| Command | Description |
+|---------|-------------|
+| `browser-agent start` | Start the A2A server (blocks until SIGINT/SIGTERM) |
+| `browser-agent --help` | Show top-level help (and per-subcommand with `<cmd> --help`) |
+| `browser-agent --version` | Print the embedded version and exit |
 
 ## Quick Install
 
