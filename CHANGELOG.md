@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.3](https://github.com/inference-gateway/browser-agent/compare/v0.6.2...v0.6.3) (2026-05-24)
+
+### ♻️ Improvements
+
+* **tools:** Correctness and quality hardening pass ([#83](https://github.com/inference-gateway/browser-agent/issues/83)) ([43c2e95](https://github.com/inference-gateway/browser-agent/commit/43c2e954e71e1397078677376635e987de7423d8))
+
 ## [0.6.2](https://github.com/inference-gateway/browser-agent/compare/v0.6.1...v0.6.2) (2026-05-24)
 
 ### 🐛 Bug Fixes
