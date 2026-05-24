@@ -38,6 +38,9 @@ services:
       A2A_AGENT_CLIENT_PROVIDER: "${A2A_AGENT_CLIENT_PROVIDER:-}"
       A2A_AGENT_CLIENT_MODEL: "${A2A_AGENT_CLIENT_MODEL:-}"
       A2A_AGENT_CLIENT_BASE_URL: "${A2A_AGENT_CLIENT_BASE_URL:-http://gateway:8080/v1}"
+      A2A_ARTIFACTS_ENABLE: true
+      A2A_ARTIFACTS_SERVER_HOST: browser-agent
+      A2A_ARTIFACTS_SERVER_PORT: 8081
     depends_on:
       gateway:
         condition: service_started
@@ -54,7 +57,7 @@ services:
         required: false
     environment:
       INFER_GATEWAY_URL: "http://gateway:8080"
-      INFER_A2A_ENABLED: "true"
+      INFER_A2A_ENABLED: true
       INFER_TOOLS_ENABLED: true
       INFER_A2A_TOOLS_QUERY_AGENT_ENABLED: true
       INFER_A2A_TOOLS_SUBMIT_TASK_ENABLED: true
@@ -67,11 +70,15 @@ services:
       INFER_TOOLS_GREP_ENABLED: false
       INFER_TOOLS_TREE_ENABLED: false
       INFER_TOOLS_WEB_FETCH_ENABLED: false
+      INFER_TOOLS_WEB_FETCH_WHITELISTED_DOMAINS: |
+        - browser-agent
       INFER_TOOLS_WEB_SEARCH_ENABLED: false
       INFER_TOOLS_GITHUB_ENABLED: false
       INFER_AGENT_MODEL: ${CLI_PROVIDER:-}/${CLI_MODEL:-}
       INFER_A2A_AGENTS: |
         http://browser-agent:8080
+    volumes:
+      - ./tmp:/home/infer/.infer/tmp
     depends_on:
       gateway:
         condition: service_started
