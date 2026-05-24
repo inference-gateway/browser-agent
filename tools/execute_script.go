@@ -58,7 +58,7 @@ func NewExecuteScriptTool(logger *zap.Logger, playwright playwright.BrowserAutom
 			"type": "object",
 			"properties": map[string]any{
 				"script": map[string]any{
-					"description": "JavaScript code to execute in the browser (Playwright page.evaluate context). Use DOM/Web APIs only — Node.js built-ins are unavailable.",
+					"description": "JavaScript code to execute in the browser (Playwright page.evaluate context). Use DOM/Web APIs only - Node.js built-ins are unavailable.",
 					"type":        "string",
 				},
 				"args": map[string]any{
@@ -221,12 +221,12 @@ type dangerousScriptPattern struct {
 // Note: the legacy `function\s*\(` pattern was removed because it matched any
 // JavaScript function expression (including the IIFE this tool itself emits
 // in prepareScript and any user `(function () { ... })()`). The dynamic-code
-// hazard it tried to cover — the `Function` constructor — is now handled by
+// hazard it tried to cover - the `Function` constructor - is now handled by
 // the case-sensitive `\bFunction\s*\(` pattern below.
 var dangerousScriptPatterns = []*dangerousScriptPattern{
 	{
 		pattern: `require\s*\(\s*['"]fs['"]`,
-		reason:  "uses Node.js `require('fs')` for filesystem access; the browser sandbox has no filesystem — there is no equivalent from page.evaluate()",
+		reason:  "uses Node.js `require('fs')` for filesystem access; the browser sandbox has no filesystem - there is no equivalent from page.evaluate()",
 	},
 	{
 		pattern: `require\s*\(\s*['"]path['"]`,
@@ -234,7 +234,7 @@ var dangerousScriptPatterns = []*dangerousScriptPattern{
 	},
 	{
 		pattern: `require\s*\(\s*['"]os['"]`,
-		reason:  "uses Node.js `require('os')`; OS metadata is not exposed to the browser context — inspect `navigator.userAgent` / `navigator.platform` instead",
+		reason:  "uses Node.js `require('os')`; OS metadata is not exposed to the browser context - inspect `navigator.userAgent` / `navigator.platform` instead",
 	},
 	{
 		pattern: `require\s*\(\s*['"]http['"]`,
@@ -265,9 +265,6 @@ var dangerousScriptPatterns = []*dangerousScriptPattern{
 		reason:  "calls `eval(...)`; dynamic code evaluation is blocked. Inline the logic directly instead",
 	},
 	{
-		// Case-sensitive: matches the `Function` constructor (`new Function(...)`
-		// or `Function(...)`) without flagging ordinary `function (...) { ... }`
-		// expressions or IIFEs like `(function () { ... })()`.
 		pattern:       `\bFunction\s*\(`,
 		reason:        "uses the `Function` constructor for dynamic code generation; this is blocked for the same reason as eval. Inline the logic directly instead. (Regular `function () { ... }` expressions and IIFEs are fine.)",
 		caseSensitive: true,
