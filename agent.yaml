@@ -237,7 +237,15 @@ spec:
         - playwright
     - id: execute_script
       name: execute_script
-      description: Execute custom JavaScript code in the browser context
+      description: >-
+        Execute custom JavaScript inside the current page via Playwright's
+        page.evaluate(). The script runs in the browser context, NOT in Node.js:
+        globals like window, document, navigator, fetch and localStorage are
+        available; Node.js built-ins (require, process, __dirname, __filename,
+        fs, path, os, http, https, child_process, etc.) are NOT available and
+        calls to them will be rejected. Use browser/DOM APIs only. The script
+        body is automatically wrapped in an IIFE, so a top-level `return` is
+        valid. Set async=true if the body uses `await`.
       tags:
         - javascript
         - execution
@@ -248,7 +256,10 @@ spec:
         properties:
           script:
             type: string
-            description: JavaScript code to execute
+            description: >-
+              JavaScript code to execute in the browser (Playwright
+              page.evaluate context). Use DOM/Web APIs only - Node.js
+              built-ins are unavailable.
           args:
             type: array
             items:

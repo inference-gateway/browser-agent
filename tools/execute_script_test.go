@@ -173,9 +173,10 @@ func TestExecuteScriptTool_validateScriptSecurity(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		script      string
-		expectError bool
+		name          string
+		script        string
+		expectError   bool
+		errorContains string
 	}{
 		{
 			name:        "safe script should pass",
@@ -183,29 +184,78 @@ func TestExecuteScriptTool_validateScriptSecurity(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "script with file system access should fail",
-			script:      "require('fs').readFileSync('/etc/passwd');",
-			expectError: true,
+			name:        "function expression should pass (not a Function constructor)",
+			script:      "const add = function (a, b) { return a + b; }; return add(1, 2);",
+			expectError: false,
 		},
 		{
-			name:        "script with eval should fail",
-			script:      "eval('malicious code');",
-			expectError: true,
+			name:        "IIFE should pass (regression: legacy function\\s*\\( pattern)",
+			script:      "return (function () { return 42; })();",
+			expectError: false,
 		},
 		{
-			name:        "script with setTimeout should fail",
-			script:      "settimeout(() => { /* malicious */ }, 1000);",
-			expectError: true,
+			name:        "async IIFE should pass",
+			script:      "return (async function () { return await Promise.resolve(1); })();",
+			expectError: false,
 		},
 		{
-			name:        "script with global access should fail",
-			script:      "global.process.exit(1);",
-			expectError: true,
+			name:        "arrow function with setTimeout-like identifier in string should pass",
+			script:      "return 'documented setTimeout usage';",
+			expectError: false,
 		},
 		{
-			name:        "very long script should fail",
-			script:      string(make([]byte, 60000)),
-			expectError: true,
+			name:          "script with file system access should fail with actionable reason",
+			script:        "require('fs').readFileSync('/etc/passwd');",
+			expectError:   true,
+			errorContains: "browser sandbox has no filesystem",
+		},
+		{
+			name:          "script with eval should fail with actionable reason",
+			script:        "eval('malicious code');",
+			expectError:   true,
+			errorContains: "eval",
+		},
+		{
+			name:          "script with Function constructor should fail with actionable reason",
+			script:        "new Function('return 1')();",
+			expectError:   true,
+			errorContains: "Function` constructor",
+		},
+		{
+			name:          "script with setTimeout should fail with actionable reason",
+			script:        "settimeout(() => { /* malicious */ }, 1000);",
+			expectError:   true,
+			errorContains: "wait_for_condition",
+		},
+		{
+			name:          "script with global access should fail with actionable reason",
+			script:        "global.process.exit(1);",
+			expectError:   true,
+			errorContains: "Node.js `global`",
+		},
+		{
+			name:          "script with process.cwd should fail with actionable reason",
+			script:        "return process.cwd();",
+			expectError:   true,
+			errorContains: "`process`",
+		},
+		{
+			name:          "script with __dirname should fail with actionable reason",
+			script:        "return __dirname;",
+			expectError:   true,
+			errorContains: "__dirname",
+		},
+		{
+			name:          "script with window.location assignment should suggest navigate_to_url",
+			script:        "window.location = 'https://example.com';",
+			expectError:   true,
+			errorContains: "navigate_to_url",
+		},
+		{
+			name:          "very long script should fail",
+			script:        string(make([]byte, 60000)),
+			expectError:   true,
+			errorContains: "too large",
 		},
 	}
 
@@ -214,6 +264,11 @@ func TestExecuteScriptTool_validateScriptSecurity(t *testing.T) {
 			err := tool.validateScriptSecurity(tt.script)
 			if tt.expectError {
 				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+					assert.NotContains(t, err.Error(), `\s*\(`,
+						"error message must not leak raw regex syntax to the LLM")
+				}
 			} else {
 				assert.NoError(t, err)
 			}
