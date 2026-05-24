@@ -8,9 +8,11 @@ import (
 	"strings"
 	"time"
 
-	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
+
+	server "github.com/inference-gateway/adk/server"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 // ExecuteScriptTool struct holds the tool with dependencies
@@ -93,38 +95,40 @@ func NewExecuteScriptTool(logger *zap.Logger, playwright playwright.BrowserAutom
 func (s *ExecuteScriptTool) ExecuteScriptHandler(ctx context.Context, args map[string]any) (string, error) {
 	startTime := time.Now()
 
-	script, ok := args["script"].(string)
-	if !ok || script == "" {
-		return "", fmt.Errorf("script parameter is required and must be a non-empty string")
+	script, err := requiredString(args, "script")
+	if err != nil {
+		return "", err
 	}
 
 	if err := s.validateScriptSecurity(script); err != nil {
-		s.logger.Error("script security validation failed", zap.String("script", script), zap.Error(err))
+		s.logger.Error("script security validation failed",
+			zap.String("script_hash", s.calculateScriptHash(script)),
+			zap.Int("script_length", len(script)),
+			zap.Error(err))
 		return "", fmt.Errorf("execute_script rejected the script: %w. execute_script runs inside the browser via Playwright page.evaluate(); Node.js built-ins (require, process, fs, path, os, http, https, child_process, __dirname, __filename, etc.) are unavailable by design. Use browser/DOM APIs only (window, document, fetch, localStorage, ...)", err)
 	}
 
-	scriptArgs := []any{}
-	if argsVal, ok := args["args"]; ok {
-		if argsSlice, ok := argsVal.([]any); ok {
-			scriptArgs = argsSlice
-		}
+	scriptArgs, _, err := sliceArg(args, "args")
+	if err != nil {
+		return "", err
+	}
+	if scriptArgs == nil {
+		scriptArgs = []any{}
 	}
 
-	returnValue := true
-	if rv, ok := args["return_value"].(bool); ok {
-		returnValue = rv
+	returnValue, err := boolArg(args, "return_value", true)
+	if err != nil {
+		return "", err
 	}
 
-	timeout := 30000
-	if t, ok := args["timeout"].(int); ok && t > 0 {
-		timeout = t
-	} else if tf, ok := args["timeout"].(float64); ok && tf > 0 {
-		timeout = int(tf)
+	timeout, err := boundedIntArg(args, "timeout", defaultTimeoutMs, minTimeoutMs, maxTimeoutMs)
+	if err != nil {
+		return "", err
 	}
 
-	isAsync := false
-	if async, ok := args["async"].(bool); ok {
-		isAsync = async
+	isAsync, err := boolArg(args, "async", false)
+	if err != nil {
+		return "", err
 	}
 
 	processedScript, err := s.prepareScript(script, isAsync)
@@ -218,11 +222,18 @@ type dangerousScriptPattern struct {
 // explain why it cannot work in the browser execution context, and (where
 // useful) point at the correct browser/DOM alternative.
 //
-// Note: the legacy `function\s*\(` pattern was removed because it matched any
-// JavaScript function expression (including the IIFE this tool itself emits
-// in prepareScript and any user `(function () { ... })()`). The dynamic-code
-// hazard it tried to cover - the `Function` constructor - is now handled by
-// the case-sensitive `\bFunction\s*\(` pattern below.
+// Notes on regex shape:
+//   - The legacy `function\s*\(` pattern was removed because it matched any
+//     JavaScript function expression (including the IIFE this tool itself
+//     emits in prepareScript and any user `(function () { ... })()`). The
+//     dynamic-code hazard it tried to cover - the `Function` constructor -
+//     is now handled by the case-sensitive `(?:^|[^.\w])Function\s*\(`
+//     pattern below.
+//   - Identifier-prefixed patterns use `(?:^|[^.\w])` instead of `\b` so
+//     they don't match dotted property access (e.g. `myObj.process.env` or
+//     `arr.exec(re)`). RE2 has no lookbehind, so this prefix consumes one
+//     non-dot/non-word character before the identifier - that's fine for
+//     MatchString since we only care about presence, not position.
 var dangerousScriptPatterns = []*dangerousScriptPattern{
 	{
 		pattern: `require\s*\(\s*['"]fs['"]`,
@@ -253,52 +264,52 @@ var dangerousScriptPatterns = []*dangerousScriptPattern{
 		reason:  "uses Node.js `require('child_process')`; the browser context cannot spawn subprocesses",
 	},
 	{
-		pattern: `\bexec\s*\(`,
+		pattern: `(?:^|[^.\w])exec\s*\(`,
 		reason:  "calls `exec(...)` (child_process); subprocess execution is not available in the browser context",
 	},
 	{
-		pattern: `\bspawn\s*\(`,
+		pattern: `(?:^|[^.\w])spawn\s*\(`,
 		reason:  "calls `spawn(...)` (child_process); subprocess execution is not available in the browser context",
 	},
 	{
-		pattern: `\beval\s*\(`,
+		pattern: `(?:^|[^.\w])eval\s*\(`,
 		reason:  "calls `eval(...)`; dynamic code evaluation is blocked. Inline the logic directly instead",
 	},
 	{
-		pattern:       `\bFunction\s*\(`,
+		pattern:       `(?:^|[^.\w])Function\s*\(`,
 		reason:        "uses the `Function` constructor for dynamic code generation; this is blocked for the same reason as eval. Inline the logic directly instead. (Regular `function () { ... }` expressions and IIFEs are fine.)",
 		caseSensitive: true,
 	},
 	{
-		pattern: `\bsettimeout\s*\(`,
+		pattern: `(?:^|[^.\w])settimeout\s*\(`,
 		reason:  "schedules work with `setTimeout`; long-lived timers cannot outlive a single page.evaluate() call. If you need to wait, use the dedicated `wait_for_condition` tool",
 	},
 	{
-		pattern: `\bsetinterval\s*\(`,
+		pattern: `(?:^|[^.\w])setinterval\s*\(`,
 		reason:  "schedules work with `setInterval`; recurring timers cannot outlive a single page.evaluate() call. Use the dedicated `wait_for_condition` tool instead",
 	},
 	{
-		pattern: `\bglobal\.`,
+		pattern: `(?:^|[^.\w])global\.`,
 		reason:  "accesses the Node.js `global` object, which does not exist in the browser. Use `window` (or `globalThis`) for the page's global scope",
 	},
 	{
-		pattern: `\bprocess\.`,
+		pattern: `(?:^|[^.\w])process\.`,
 		reason:  "accesses Node.js `process.*` (cwd, env, argv, ...). The browser has no `process` global. For environment-like info use `navigator`, `location`, or ask the user to expose it via a dedicated tool",
 	},
 	{
-		pattern: `__dirname`,
+		pattern: `(?:^|[^.\w])__dirname`,
 		reason:  "references the Node.js `__dirname` global; it does not exist in the browser. Use `location.href` / `document.baseURI` for the current page URL",
 	},
 	{
-		pattern: `__filename`,
+		pattern: `(?:^|[^.\w])__filename`,
 		reason:  "references the Node.js `__filename` global; it does not exist in the browser. Use `location.href` for the current page URL",
 	},
 	{
-		pattern: `localstorage\.clear`,
+		pattern: `(?:^|[^.\w])localstorage\.clear`,
 		reason:  "calls `localStorage.clear()`; wiping the page's localStorage is blocked because it destroys session state. Remove individual keys with `localStorage.removeItem(key)` if needed",
 	},
 	{
-		pattern: `sessionstorage\.clear`,
+		pattern: `(?:^|[^.\w])sessionstorage\.clear`,
 		reason:  "calls `sessionStorage.clear()`; wiping sessionStorage is blocked because it destroys session state. Remove individual keys with `sessionStorage.removeItem(key)` if needed",
 	},
 	{
@@ -333,8 +344,8 @@ func (s *ExecuteScriptTool) validateScriptSecurity(script string) error {
 		}
 	}
 
-	if len(script) > 50000 {
-		return fmt.Errorf("script is too large: %d characters (max 50000). Split the work into smaller execute_script calls", len(script))
+	if len(script) > maxScriptSize {
+		return fmt.Errorf("script is too large: %d characters (max %d). Split the work into smaller execute_script calls", len(script), maxScriptSize)
 	}
 
 	return nil
@@ -384,7 +395,9 @@ func (s *ExecuteScriptTool) getResultType(result any) string {
 	switch result.(type) {
 	case bool:
 		return "boolean"
-	case int, int8, int16, int32, int64, float32, float64:
+	case int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64,
+		float32, float64:
 		return "number"
 	case string:
 		return "string"

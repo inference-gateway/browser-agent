@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
+
+	server "github.com/inference-gateway/adk/server"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
+
+var validFieldTypes = []string{"text", "textarea", "password", "select", "checkbox", "radio", "file"}
 
 // FillFormTool struct holds the tool with dependencies
 type FillFormTool struct {
@@ -71,75 +75,38 @@ func NewFillFormTool(logger *zap.Logger, playwright playwright.BrowserAutomation
 	)
 }
 
-// FillFormHandler handles the fill_form tool execution
+// FillFormHandler handles the fill_form tool execution.
+//
+// Unlike the previous implementation, the underlying playwright service is
+// called ONCE with the full field batch (and the submit flag), rather than
+// per-field. The per-field loop was N round-trips and a separate submit
+// click with a mismatched timeout type.
 func (s *FillFormTool) FillFormHandler(ctx context.Context, args map[string]any) (string, error) {
-	fieldsRaw, ok := args["fields"]
-	if !ok {
+	rawFields, present, err := sliceArg(args, "fields")
+	if err != nil {
+		return "", err
+	}
+	if !present {
 		return "", fmt.Errorf("fields parameter is required")
 	}
-
-	fieldsSlice, ok := fieldsRaw.([]any)
-	if !ok {
-		return "", fmt.Errorf("fields must be an array")
-	}
-
-	if len(fieldsSlice) == 0 {
+	if len(rawFields) == 0 {
 		return "", fmt.Errorf("at least one field is required")
 	}
 
-	fields := make([]map[string]any, 0, len(fieldsSlice))
-	for i, fieldRaw := range fieldsSlice {
-		fieldMap, ok := fieldRaw.(map[string]any)
-		if !ok {
-			return "", fmt.Errorf("field %d must be an object", i)
-		}
-
-		selector, hasSelector := fieldMap["selector"].(string)
-		if !hasSelector || selector == "" {
-			return "", fmt.Errorf("field %d: selector is required and must be a non-empty string", i)
-		}
-
-		_, hasValue := fieldMap["value"].(string)
-		if !hasValue {
-			return "", fmt.Errorf("field %d: value is required", i)
-		}
-
-		if _, hasType := fieldMap["type"]; !hasType {
-			fieldMap["type"] = "text"
-		}
-
-		fieldType := fieldMap["type"].(string)
-		validTypes := []string{"text", "textarea", "password", "select", "checkbox", "radio", "file"}
-		isValidType := false
-		for _, vt := range validTypes {
-			if fieldType == vt {
-				isValidType = true
-				break
-			}
-		}
-		if !isValidType {
-			return "", fmt.Errorf("field %d: invalid type '%s'. Must be one of: %v", i, fieldType, validTypes)
-		}
-
-		fields = append(fields, fieldMap)
+	fields, err := s.validateAndNormalizeFields(rawFields)
+	if err != nil {
+		return "", err
 	}
 
-	submit := false
-	if submitRaw, ok := args["submit"]; ok {
-		if submitBool, ok := submitRaw.(bool); ok {
-			submit = submitBool
-		}
+	submit, err := boolArg(args, "submit", false)
+	if err != nil {
+		return "", err
 	}
 
 	submitSelector := ""
 	if submit {
-		if submitSelectorRaw, ok := args["submit_selector"]; ok {
-			if ss, ok := submitSelectorRaw.(string); ok && ss != "" {
-				submitSelector = ss
-			} else {
-				return "", fmt.Errorf("submit_selector is required when submit is true")
-			}
-		} else {
+		submitSelector, err = requiredString(args, "submit_selector")
+		if err != nil {
 			return "", fmt.Errorf("submit_selector is required when submit is true")
 		}
 	}
@@ -155,106 +122,59 @@ func (s *FillFormTool) FillFormHandler(ctx context.Context, args map[string]any)
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	fieldResults := make([]map[string]any, 0, len(fields))
-
-	for i, field := range fields {
-		fieldResult := map[string]any{
-			"field_index": i,
-			"selector":    field["selector"],
-			"type":        field["type"],
-			"success":     false,
-		}
-
-		selector := field["selector"].(string)
-		fieldType := field["type"].(string)
-
-		s.logger.Info("processing field",
-			zap.Int("index", i),
-			zap.String("selector", selector),
-			zap.String("type", fieldType))
-
-		err := s.fillSingleField(ctx, session.ID, field)
-		if err != nil {
-			s.logger.Error("failed to fill field",
-				zap.Int("index", i),
-				zap.String("selector", selector),
-				zap.Error(err))
-			fieldResult["error"] = err.Error()
-			fieldResults = append(fieldResults, fieldResult)
-
-			errorResponse := map[string]any{
-				"success":      false,
-				"session_id":   session.ID,
-				"fields_count": len(fields),
-				"fields":       fieldResults,
-				"error":        fmt.Sprintf("Failed to fill field %d (%s): %v", i, selector, err),
-			}
-
-			return fmt.Sprintf(`%+v`, errorResponse), fmt.Errorf("failed to fill field %d (%s): %w", i, selector, err)
-		}
-
-		fieldResult["success"] = true
-		fieldResult["message"] = "Field filled successfully"
-		fieldResults = append(fieldResults, fieldResult)
-
-		s.logger.Info("field filled successfully",
-			zap.Int("index", i),
-			zap.String("selector", selector))
+	if err := s.playwright.FillForm(ctx, session.ID, fields, submit, submitSelector); err != nil {
+		s.logger.Error("fill_form failed",
+			zap.String("sessionID", session.ID),
+			zap.Error(err))
+		return "", fmt.Errorf("fill_form failed: %w", err)
 	}
 
-	var submitResult map[string]any
+	message := fmt.Sprintf("Successfully filled %d fields", len(fields))
 	if submit {
-		s.logger.Info("submitting form", zap.String("submit_selector", submitSelector))
-
-		err = s.playwright.ClickElement(ctx, session.ID, submitSelector, map[string]any{
-			"timeout": 30000,
-		})
-
-		submitResult = map[string]any{
-			"submit_selector": submitSelector,
-			"success":         err == nil,
-		}
-
-		if err != nil {
-			s.logger.Error("failed to submit form", zap.String("submit_selector", submitSelector), zap.Error(err))
-			submitResult["error"] = err.Error()
-			return "", fmt.Errorf("failed to submit form: %w", err)
-		} else {
-			s.logger.Info("form submitted successfully", zap.String("submit_selector", submitSelector))
-			submitResult["message"] = "Form submitted successfully"
-		}
+		message = fmt.Sprintf("Successfully filled %d fields and submitted form", len(fields))
 	}
 
-	response := map[string]any{
-		"success":      true,
-		"session_id":   session.ID,
-		"fields_count": len(fields),
-		"fields":       fieldResults,
-		"message":      fmt.Sprintf("Successfully filled %d fields", len(fields)),
-	}
+	s.logger.Info("fill_form completed", zap.String("sessionID", session.ID))
 
-	if submit {
-		response["submit"] = submitResult
-		if submitResult["success"].(bool) {
-			response["message"] = fmt.Sprintf("Successfully filled %d fields and submitted form", len(fields))
-		}
-	}
-
-	return fmt.Sprintf(`%+v`, response), nil
+	return marshalResponse(map[string]any{
+		"success":         true,
+		"session_id":      session.ID,
+		"fields_count":    len(fields),
+		"submit":          submit,
+		"submit_selector": submitSelector,
+		"message":         message,
+	})
 }
 
-// fillSingleField handles filling a single form field with enhanced type support
-func (s *FillFormTool) fillSingleField(ctx context.Context, sessionID string, field map[string]any) error {
-	fields := []map[string]any{field}
+// validateAndNormalizeFields converts the raw []any into validated
+// []map[string]any, defaulting field type to "text" if absent.
+func (s *FillFormTool) validateAndNormalizeFields(rawFields []any) ([]map[string]any, error) {
+	fields := make([]map[string]any, 0, len(rawFields))
+	for i, raw := range rawFields {
+		field, ok := raw.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("field %d must be an object", i)
+		}
 
-	selector := field["selector"].(string)
-	value := field["value"].(string)
-	fieldType := field["type"].(string)
+		selector, hasSelector := field["selector"].(string)
+		if !hasSelector || selector == "" {
+			return nil, fmt.Errorf("field %d: selector is required and must be a non-empty string", i)
+		}
 
-	s.logger.Debug("delegating field filling to playwright service",
-		zap.String("selector", selector),
-		zap.String("type", fieldType),
-		zap.String("value", value))
+		if _, hasValue := field["value"].(string); !hasValue {
+			return nil, fmt.Errorf("field %d: value is required and must be a string", i)
+		}
 
-	return s.playwright.FillForm(ctx, sessionID, fields, false, "")
+		fieldType, _ := field["type"].(string)
+		if fieldType == "" {
+			fieldType = "text"
+			field["type"] = fieldType
+		}
+		if !oneOf(fieldType, validFieldTypes...) {
+			return nil, fmt.Errorf("field %d: invalid type '%s'. Must be one of: %v", i, fieldType, validFieldTypes)
+		}
+
+		fields = append(fields, field)
+	}
+	return fields, nil
 }

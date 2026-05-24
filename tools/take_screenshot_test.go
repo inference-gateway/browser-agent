@@ -9,14 +9,23 @@ import (
 	"testing"
 	"time"
 
+	zap "go.uber.org/zap"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+
 	config "github.com/inference-gateway/browser-agent/config"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
-	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
-	zap "go.uber.org/zap"
 )
 
-func createTestTool() *TakeScreenshotTool {
-	logger := zap.NewNop()
+// newTestTool returns a TakeScreenshotTool wired with a mock playwright
+// service that writes a stub file to a per-test temporary directory.
+// Using t.TempDir() instead of a hardcoded "test_screenshots" directory
+// avoids parallel-test collisions and removes the need for explicit
+// cleanup at the end of each test (the harness deletes the dir).
+func newTestTool(t *testing.T) *TakeScreenshotTool {
+	t.Helper()
+	dir := t.TempDir()
+
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
 	session := &playwright.BrowserSession{
@@ -27,34 +36,28 @@ func createTestTool() *TakeScreenshotTool {
 	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
 	mockPlaywright.GetSessionReturns(session, nil)
 	mockPlaywright.TakeScreenshotCalls(func(ctx context.Context, sessionID, path string, fullPage bool, selector string, format string, quality int) error {
-		dir := filepath.Dir(path)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			return err
 		}
 		return os.WriteFile(path, []byte("mock screenshot data"), 0644)
 	})
 	mockPlaywright.GetConfigReturns(&config.Config{
 		Browser: config.BrowserConfig{
-			DataDir: "test_screenshots",
+			DataDir: dir,
 		},
 	})
 
 	return &TakeScreenshotTool{
-		logger:        logger,
+		logger:        zap.NewNop(),
 		playwright:    mockPlaywright,
-		screenshotDir: "test_screenshots",
+		screenshotDir: dir,
 	}
 }
 
 func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
-	tool := createTestTool()
+	tool := newTestTool(t)
 
-	args := map[string]any{}
-
-	ctx := context.Background()
-
-	result, err := tool.TakeScreenshotHandler(ctx, args)
-
+	result, err := tool.TakeScreenshotHandler(context.Background(), map[string]any{})
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -68,42 +71,21 @@ func TestTakeScreenshotHandler_BasicFunctionality(t *testing.T) {
 		t.Errorf("Expected success to be true, got: %v", response["success"])
 	}
 
-	resultPath, ok := response["path"].(string)
-	if !ok {
-		t.Errorf("Expected path in response, got: %v", response["path"])
-	}
-
+	resultPath, _ := response["path"].(string)
 	if !strings.Contains(resultPath, "viewport_") {
 		t.Errorf("Expected viewport screenshot path, got: %s", resultPath)
 	}
 
-	resultFilename, ok := response["filename"].(string)
-	if !ok {
-		t.Errorf("Expected filename in response, got: %v", response["filename"])
-	}
-
-	if !strings.Contains(resultFilename, "viewport_") {
-		t.Errorf("Expected viewport screenshot filename, got: %s", resultFilename)
-	}
-
+	resultFilename, _ := response["filename"].(string)
 	if !strings.HasSuffix(resultFilename, ".png") {
 		t.Errorf("Expected .png extension in filename, got: %s", resultFilename)
 	}
-
-	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
-	tool := createTestTool()
+	tool := newTestTool(t)
 
-	args := map[string]any{
-		"full_page": true,
-	}
-
-	ctx := context.Background()
-
-	result, err := tool.TakeScreenshotHandler(ctx, args)
-
+	result, err := tool.TakeScreenshotHandler(context.Background(), map[string]any{"full_page": true})
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -113,30 +95,22 @@ func TestTakeScreenshotHandler_FullPageScreenshot(t *testing.T) {
 		t.Fatalf("Failed to parse response JSON: %v", err)
 	}
 
-	if fullPage, ok := response["full_page"].(bool); !ok || !fullPage {
+	if fullPage, _ := response["full_page"].(bool); !fullPage {
 		t.Errorf("Expected full_page to be true, got: %v", response["full_page"])
 	}
 
-	resultFilename, ok := response["filename"].(string)
-	if !ok || !strings.Contains(resultFilename, "fullpage_") {
+	if resultFilename, _ := response["filename"].(string); !strings.Contains(resultFilename, "fullpage_") {
 		t.Errorf("Expected fullpage screenshot filename, got: %s", resultFilename)
 	}
-
-	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
-	tool := createTestTool()
+	tool := newTestTool(t)
 
-	args := map[string]any{
+	result, err := tool.TakeScreenshotHandler(context.Background(), map[string]any{
 		"type":    "jpeg",
 		"quality": 95,
-	}
-
-	ctx := context.Background()
-
-	result, err := tool.TakeScreenshotHandler(ctx, args)
-
+	})
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -146,33 +120,25 @@ func TestTakeScreenshotHandler_JPEGWithQuality(t *testing.T) {
 		t.Fatalf("Failed to parse response JSON: %v", err)
 	}
 
-	if imageType, ok := response["type"].(string); !ok || imageType != "jpeg" {
+	if imageType, _ := response["type"].(string); imageType != "jpeg" {
 		t.Errorf("Expected type to be jpeg, got: %v", response["type"])
 	}
 
-	if quality, ok := response["quality"].(float64); !ok || int(quality) != 95 {
+	if quality, _ := response["quality"].(float64); int(quality) != 95 {
 		t.Errorf("Expected quality to be 95, got: %v", response["quality"])
 	}
 
-	resultFilename, ok := response["filename"].(string)
-	if !ok || !strings.HasSuffix(resultFilename, ".jpeg") {
+	if resultFilename, _ := response["filename"].(string); !strings.HasSuffix(resultFilename, ".jpeg") {
 		t.Errorf("Expected .jpeg extension in filename, got: %s", resultFilename)
 	}
-
-	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
-	tool := createTestTool()
+	tool := newTestTool(t)
 
-	args := map[string]any{
+	result, err := tool.TakeScreenshotHandler(context.Background(), map[string]any{
 		"selector": "#main-content",
-	}
-
-	ctx := context.Background()
-
-	result, err := tool.TakeScreenshotHandler(ctx, args)
-
+	})
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -182,29 +148,21 @@ func TestTakeScreenshotHandler_ElementSelector(t *testing.T) {
 		t.Fatalf("Failed to parse response JSON: %v", err)
 	}
 
-	if selector, ok := response["selector"].(string); !ok || selector != "#main-content" {
+	if selector, _ := response["selector"].(string); selector != "#main-content" {
 		t.Errorf("Expected selector to be #main-content, got: %v", response["selector"])
 	}
 
-	resultFilename, ok := response["filename"].(string)
-	if !ok || !strings.Contains(resultFilename, "element_") {
+	if resultFilename, _ := response["filename"].(string); !strings.Contains(resultFilename, "element_") {
 		t.Errorf("Expected element screenshot filename, got: %s", resultFilename)
 	}
-
-	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
-	tool := createTestTool()
+	tool := newTestTool(t)
 
-	args := map[string]any{}
-
-	ctx := context.Background()
-
-	result, err := tool.TakeScreenshotHandler(ctx, args)
-
+	result, err := tool.TakeScreenshotHandler(context.Background(), map[string]any{})
 	if err != nil {
-		t.Fatalf("Expected no error for deterministic path generation, got: %v", err)
+		t.Fatalf("Expected no error, got: %v", err)
 	}
 
 	var response map[string]any
@@ -215,141 +173,83 @@ func TestTakeScreenshotHandler_DeterministicPath(t *testing.T) {
 	if _, ok := response["filename"]; !ok {
 		t.Error("Expected filename to be generated in response")
 	}
-
-	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidImageType(t *testing.T) {
-	tool := createTestTool()
-
-	args := map[string]any{
-		"type": "gif",
-	}
-
-	ctx := context.Background()
-
-	_, err := tool.TakeScreenshotHandler(ctx, args)
-
+	tool := newTestTool(t)
+	_, err := tool.TakeScreenshotHandler(context.Background(), map[string]any{"type": "gif"})
 	if err == nil {
-		t.Error("Expected error for invalid image type, got nil")
+		t.Fatal("Expected error for invalid image type, got nil")
 	}
-
-	expectedMsg := "invalid image type: gif. Must be 'png' or 'jpeg'"
-	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message '%s', got: %v", expectedMsg, err)
+	if !strings.Contains(err.Error(), "invalid image type") {
+		t.Errorf("Expected invalid image type error, got: %v", err)
 	}
-
-	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestTakeScreenshotHandler_InvalidQuality(t *testing.T) {
-	tool := createTestTool()
-
-	args := map[string]any{
+	tool := newTestTool(t)
+	_, err := tool.TakeScreenshotHandler(context.Background(), map[string]any{
 		"type":    "jpeg",
 		"quality": 150,
-	}
-
-	ctx := context.Background()
-
-	_, err := tool.TakeScreenshotHandler(ctx, args)
-
+	})
 	if err == nil {
-		t.Error("Expected error for invalid quality, got nil")
+		t.Fatal("Expected error for invalid quality, got nil")
 	}
-
-	expectedMsg := "quality must be between 0 and 100 for JPEG images, got 150"
-	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message '%s', got: %v", expectedMsg, err)
+	if !strings.Contains(err.Error(), "quality must be between") {
+		t.Errorf("Expected quality bound error, got: %v", err)
 	}
-
-	_ = os.RemoveAll("test_screenshots")
 }
 
 func TestGenerateDeterministicPath(t *testing.T) {
-	tool := createTestTool()
+	tool := newTestTool(t)
 
 	tests := []struct {
-		name     string
-		args     map[string]any
-		expected string
+		name      string
+		fullPage  bool
+		selector  string
+		imageType string
+		expected  string
 	}{
-		{
-			name:     "viewport screenshot",
-			args:     map[string]any{},
-			expected: "viewport_",
-		},
-		{
-			name:     "fullpage screenshot",
-			args:     map[string]any{"full_page": true},
-			expected: "fullpage_",
-		},
-		{
-			name:     "element screenshot",
-			args:     map[string]any{"selector": "#main"},
-			expected: "element_",
-		},
-		{
-			name:     "jpeg format",
-			args:     map[string]any{"type": "jpeg"},
-			expected: ".jpeg",
-		},
+		{name: "viewport screenshot", imageType: "png", expected: "viewport_"},
+		{name: "fullpage screenshot", fullPage: true, imageType: "png", expected: "fullpage_"},
+		{name: "element screenshot", selector: "#main", imageType: "png", expected: "element_"},
+		{name: "jpeg format", imageType: "jpeg", expected: ".jpeg"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := tool.generateDeterministicPath(tt.args)
-
+			result, err := tool.generateDeterministicPath(tt.fullPage, tt.selector, tt.imageType)
 			if err != nil {
-				t.Errorf("Expected no error, got: %v", err)
-				return
+				t.Fatalf("Expected no error, got: %v", err)
 			}
-
-			if result == "" {
-				t.Error("Expected non-empty result")
-				return
-			}
-
 			if !strings.Contains(result, tt.expected) {
-				t.Errorf("Expected path to contain '%s', got: %s", tt.expected, result)
+				t.Errorf("Expected path to contain %q, got: %s", tt.expected, result)
 			}
-
-			if !strings.HasPrefix(result, "test_screenshots/") {
-				t.Errorf("Expected path to start with test_screenshots/, got: %s", result)
-			}
-
-			_ = os.RemoveAll("test_screenshots")
 		})
 	}
 }
 
-func TestIsValidImageType(t *testing.T) {
-	tool := createTestTool()
-
-	tests := []struct {
-		imageType string
-		expected  bool
-	}{
-		{"png", true},
-		{"jpeg", true},
-		{"jpg", false},
-		{"gif", false},
-		{"webp", false},
-		{"", false},
+// TestTruncateRunes_MultibyteSafe confirms that the truncation helper
+// does not split multibyte UTF-8 sequences. Slicing the raw byte string
+// would produce invalid UTF-8 in the filename.
+func TestTruncateRunes_MultibyteSafe(t *testing.T) {
+	in := "日本語テスト文字列abcdef" // 13 runes, > 20 bytes
+	out := truncateRunes(in, 8)
+	if len([]rune(out)) != 8 {
+		t.Fatalf("expected 8 runes, got %d (output=%q)", len([]rune(out)), out)
+	}
+	if out != "日本語テスト文字" {
+		t.Errorf("unexpected truncation result: %q", out)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.imageType, func(t *testing.T) {
-			result := tool.isValidImageType(tt.imageType)
-			if result != tt.expected {
-				t.Errorf("Expected %v for %s, got %v", tt.expected, tt.imageType, result)
-			}
-		})
+	// Short string should be returned unchanged.
+	if got := truncateRunes("abc", 10); got != "abc" {
+		t.Errorf("expected pass-through, got %q", got)
 	}
 }
 
 func TestGetMimeType(t *testing.T) {
-	tool := createTestTool()
+	tool := newTestTool(t)
 
 	tests := []struct {
 		imageType string
@@ -363,8 +263,7 @@ func TestGetMimeType(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.imageType, func(t *testing.T) {
-			result := tool.getMimeType(tt.imageType)
-			if result != tt.expected {
+			if result := tool.getMimeType(tt.imageType); result != tt.expected {
 				t.Errorf("Expected %s for %s, got %s", tt.expected, tt.imageType, result)
 			}
 		})
@@ -372,12 +271,9 @@ func TestGetMimeType(t *testing.T) {
 }
 
 func TestGetCurrentTimestamp(t *testing.T) {
-	tool := createTestTool()
-
+	tool := newTestTool(t)
 	timestamp := tool.getCurrentTimestamp()
-
-	_, err := time.Parse(time.RFC3339, timestamp)
-	if err != nil {
+	if _, err := time.Parse(time.RFC3339, timestamp); err != nil {
 		t.Errorf("Expected valid RFC3339 timestamp, got: %s (error: %v)", timestamp, err)
 	}
 }

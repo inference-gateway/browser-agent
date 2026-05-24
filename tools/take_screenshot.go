@@ -2,16 +2,17 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
+	zap "go.uber.org/zap"
+
 	server "github.com/inference-gateway/adk/server"
 	types "github.com/inference-gateway/adk/types"
+
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
-	zap "go.uber.org/zap"
 )
 
 // TakeScreenshotTool struct holds the tool with dependencies
@@ -63,40 +64,33 @@ func NewTakeScreenshotTool(logger *zap.Logger, playwright playwright.BrowserAuto
 
 // TakeScreenshotHandler handles the take_screenshot tool execution
 func (s *TakeScreenshotTool) TakeScreenshotHandler(ctx context.Context, args map[string]any) (string, error) {
+	fullPage, err := boolArg(args, "full_page", false)
+	if err != nil {
+		return "", err
+	}
 
-	generatedPath, err := s.generateDeterministicPath(args)
+	imageType, err := stringArg(args, "type", "png")
+	if err != nil {
+		return "", err
+	}
+	if !oneOf(imageType, "png", "jpeg") {
+		return "", fmt.Errorf("invalid image type: %s. Must be 'png' or 'jpeg'", imageType)
+	}
+
+	quality, err := boundedIntArg(args, "quality", defaultJPEGQuality, minJPEGQuality, maxJPEGQuality)
+	if err != nil {
+		return "", err
+	}
+
+	selector, err := stringArg(args, "selector", "")
+	if err != nil {
+		return "", err
+	}
+
+	generatedPath, err := s.generateDeterministicPath(fullPage, selector, imageType)
 	if err != nil {
 		s.logger.Error("failed to generate screenshot path", zap.Error(err))
 		return "", fmt.Errorf("failed to generate screenshot path: %w", err)
-	}
-
-	fullPage := false
-	if fp, ok := args["full_page"].(bool); ok {
-		fullPage = fp
-	}
-
-	quality := 80
-	if q, ok := args["quality"].(int); ok {
-		quality = q
-	} else if qf, ok := args["quality"].(float64); ok {
-		quality = int(qf)
-	}
-
-	imageType := "png"
-	if t, ok := args["type"].(string); ok && t != "" {
-		if !s.isValidImageType(t) {
-			return "", fmt.Errorf("invalid image type: %s. Must be 'png' or 'jpeg'", t)
-		}
-		imageType = t
-	}
-
-	if imageType == "jpeg" && (quality < 0 || quality > 100) {
-		return "", fmt.Errorf("quality must be between 0 and 100 for JPEG images, got %d", quality)
-	}
-
-	selector := ""
-	if s, ok := args["selector"].(string); ok {
-		selector = s
 	}
 
 	s.logger.Info("taking screenshot",
@@ -125,94 +119,66 @@ func (s *TakeScreenshotTool) TakeScreenshotHandler(ctx context.Context, args map
 		zap.String("sessionID", session.ID),
 		zap.String("path", generatedPath))
 
+	response := map[string]any{
+		"success":    true,
+		"path":       generatedPath,
+		"filename":   filepath.Base(generatedPath),
+		"full_page":  fullPage,
+		"type":       imageType,
+		"quality":    quality,
+		"selector":   selector,
+		"session_id": session.ID,
+		"timestamp":  s.getCurrentTimestamp(),
+	}
+
 	artifactURL, artifactID, err := s.createArtifactFromScreenshot(ctx, generatedPath, imageType)
 	if err != nil {
 		s.logger.Debug("artifact creation skipped or failed, returning file path only",
 			zap.Error(err),
 			zap.String("path", generatedPath))
-
-		response := map[string]any{
-			"success":    true,
-			"path":       generatedPath,
-			"filename":   filepath.Base(generatedPath),
-			"full_page":  fullPage,
-			"type":       imageType,
-			"quality":    quality,
-			"selector":   selector,
-			"session_id": session.ID,
-			"timestamp":  s.getCurrentTimestamp(),
-			"message":    fmt.Sprintf("Screenshot captured successfully and saved to %s", generatedPath),
-		}
-
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			return "", fmt.Errorf("failed to marshal response: %w", err)
-		}
-		return string(responseJSON), nil
+		response["message"] = fmt.Sprintf("Screenshot captured successfully and saved to %s", generatedPath)
+		return marshalResponse(response)
 	}
 
-	response := map[string]any{
-		"success":     true,
-		"path":        generatedPath,
-		"filename":    filepath.Base(generatedPath),
-		"full_page":   fullPage,
-		"type":        imageType,
-		"quality":     quality,
-		"selector":    selector,
-		"session_id":  session.ID,
-		"timestamp":   s.getCurrentTimestamp(),
-		"artifact_id": artifactID,
-		"url":         artifactURL,
-		"message":     fmt.Sprintf("Screenshot captured successfully. Download URL: %s", artifactURL),
-	}
-
-	responseJSON, err := json.Marshal(response)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal response: %w", err)
-	}
-
-	return string(responseJSON), nil
+	response["artifact_id"] = artifactID
+	response["url"] = artifactURL
+	response["message"] = fmt.Sprintf("Screenshot captured successfully. Download URL: %s", artifactURL)
+	return marshalResponse(response)
 }
 
-// generateDeterministicPath generates a deterministic file path for the screenshot
-func (s *TakeScreenshotTool) generateDeterministicPath(args map[string]any) (string, error) {
+// generateDeterministicPath generates a deterministic file path for the screenshot.
+// safeSelector is sliced by runes (not bytes) so multibyte selectors don't
+// produce invalid-UTF-8 filenames.
+func (s *TakeScreenshotTool) generateDeterministicPath(fullPage bool, selector, imageType string) (string, error) {
 	if err := os.MkdirAll(s.screenshotDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create screenshots directory: %w", err)
-	}
-
-	imageType := "png"
-	if t, ok := args["type"].(string); ok && t != "" {
-		imageType = t
 	}
 
 	timestamp := time.Now().Format("2006-01-02_15-04-05.000")
 
 	var filename string
-	if fullPage, ok := args["full_page"].(bool); ok && fullPage {
+	switch {
+	case fullPage:
 		filename = fmt.Sprintf("fullpage_%s.%s", timestamp, imageType)
-	} else if selector, ok := args["selector"].(string); ok && selector != "" {
-		safeSelector := filepath.Base(selector)
-		if len(safeSelector) > 20 {
-			safeSelector = safeSelector[:20]
-		}
+	case selector != "":
+		safeSelector := truncateRunes(filepath.Base(selector), screenshotSelectorMaxRunes)
 		filename = fmt.Sprintf("element_%s_%s.%s", safeSelector, timestamp, imageType)
-	} else {
+	default:
 		filename = fmt.Sprintf("viewport_%s.%s", timestamp, imageType)
 	}
 
-	fullPath := filepath.Join(s.screenshotDir, filename)
-	return fullPath, nil
+	return filepath.Join(s.screenshotDir, filename), nil
 }
 
-// isValidImageType validates the image format
-func (s *TakeScreenshotTool) isValidImageType(imageType string) bool {
-	validTypes := []string{"png", "jpeg"}
-	for _, valid := range validTypes {
-		if imageType == valid {
-			return true
-		}
+// truncateRunes returns s truncated to at most maxRunes runes (not bytes).
+// Slicing a byte string at an arbitrary index can split a multibyte rune
+// and produce invalid UTF-8; this helper does it safely.
+func truncateRunes(s string, maxRunes int) string {
+	runes := []rune(s)
+	if len(runes) > maxRunes {
+		return string(runes[:maxRunes])
 	}
-	return false
+	return s
 }
 
 // getMimeType returns the MIME type for the given image format

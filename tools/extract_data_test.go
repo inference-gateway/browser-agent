@@ -2,26 +2,25 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
-	"github.com/inference-gateway/browser-agent/internal/playwright"
-	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	zap "go.uber.org/zap"
+
+	assert "github.com/stretchr/testify/assert"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 func TestExtractDataHandler(t *testing.T) {
 	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	tool := &ExtractDataTool{
-		logger:     logger,
-		playwright: mockPlaywright,
-	}
 
 	tests := []struct {
 		name        string
 		args        map[string]any
-		mockSetup   func()
+		mockSetup   func(*mocks.FakeBrowserAutomation)
 		expectedErr bool
 		contains    string
 	}{
@@ -36,9 +35,9 @@ func TestExtractDataHandler(t *testing.T) {
 				},
 				"format": "json",
 			},
-			mockSetup: func() {
-				mockPlaywright.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
-				mockPlaywright.ExtractDataReturns(`map[title:Test Title]`, nil)
+			mockSetup: func(m *mocks.FakeBrowserAutomation) {
+				m.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				m.ExtractDataReturns(`{"title":"Test Title"}`, nil)
 			},
 			expectedErr: false,
 			contains:    "Test Title",
@@ -61,9 +60,9 @@ func TestExtractDataHandler(t *testing.T) {
 				},
 				"format": "json",
 			},
-			mockSetup: func() {
-				mockPlaywright.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
-				mockPlaywright.ExtractDataReturns(`map[title:Test Title links:[/page1 /page2]]`, nil)
+			mockSetup: func(m *mocks.FakeBrowserAutomation) {
+				m.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				m.ExtractDataReturns(`{"title":"Test Title","links":["/page1","/page2"]}`, nil)
 			},
 			expectedErr: false,
 			contains:    "Test Title",
@@ -79,9 +78,9 @@ func TestExtractDataHandler(t *testing.T) {
 				},
 				"format": "csv",
 			},
-			mockSetup: func() {
-				mockPlaywright.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
-				mockPlaywright.ExtractDataReturns(`map[title:Test Title]`, nil)
+			mockSetup: func(m *mocks.FakeBrowserAutomation) {
+				m.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				m.ExtractDataReturns(`{"title":"Test Title"}`, nil)
 			},
 			expectedErr: false,
 			contains:    "title",
@@ -97,9 +96,9 @@ func TestExtractDataHandler(t *testing.T) {
 				},
 				"format": "text",
 			},
-			mockSetup: func() {
-				mockPlaywright.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
-				mockPlaywright.ExtractDataReturns(`map[title:Test Title]`, nil)
+			mockSetup: func(m *mocks.FakeBrowserAutomation) {
+				m.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+				m.ExtractDataReturns(`{"title":"Test Title"}`, nil)
 			},
 			expectedErr: false,
 			contains:    "Extracted Data",
@@ -109,7 +108,7 @@ func TestExtractDataHandler(t *testing.T) {
 			args: map[string]any{
 				"format": "json",
 			},
-			mockSetup:   func() {},
+			mockSetup:   func(m *mocks.FakeBrowserAutomation) {},
 			expectedErr: true,
 			contains:    "extractors parameter is required",
 		},
@@ -119,7 +118,7 @@ func TestExtractDataHandler(t *testing.T) {
 				"extractors": []any{},
 				"format":     "json",
 			},
-			mockSetup:   func() {},
+			mockSetup:   func(m *mocks.FakeBrowserAutomation) {},
 			expectedErr: true,
 			contains:    "extractors parameter is required",
 		},
@@ -134,7 +133,7 @@ func TestExtractDataHandler(t *testing.T) {
 				},
 				"format": "xml",
 			},
-			mockSetup:   func() {},
+			mockSetup:   func(m *mocks.FakeBrowserAutomation) {},
 			expectedErr: true,
 			contains:    "invalid format",
 		},
@@ -148,7 +147,7 @@ func TestExtractDataHandler(t *testing.T) {
 				},
 				"format": "json",
 			},
-			mockSetup:   func() {},
+			mockSetup:   func(m *mocks.FakeBrowserAutomation) {},
 			expectedErr: true,
 			contains:    "must have a non-empty 'name' field",
 		},
@@ -162,7 +161,7 @@ func TestExtractDataHandler(t *testing.T) {
 				},
 				"format": "json",
 			},
-			mockSetup:   func() {},
+			mockSetup:   func(m *mocks.FakeBrowserAutomation) {},
 			expectedErr: true,
 			contains:    "must have a non-empty 'selector' field",
 		},
@@ -170,22 +169,47 @@ func TestExtractDataHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockPlaywright = &mocks.FakeBrowserAutomation{}
-			tool.playwright = mockPlaywright
+			mockPlaywright := &mocks.FakeBrowserAutomation{}
+			tt.mockSetup(mockPlaywright)
 
-			tt.mockSetup()
-
+			tool := &ExtractDataTool{logger: logger, playwright: mockPlaywright}
 			result, err := tool.ExtractDataHandler(context.Background(), tt.args)
 
 			if tt.expectedErr {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.contains)
-			} else {
-				assert.NoError(t, err)
-				assert.Contains(t, result, tt.contains)
+				return
 			}
+
+			assert.NoError(t, err)
+			assert.Contains(t, result, tt.contains)
 		})
 	}
+}
+
+// TestExtractDataHandler_JSONFormat_ProducesValidJSON checks that the
+// json output is itself parseable — guards against future regressions
+// to the broken `%+v` envelope.
+func TestExtractDataHandler_JSONFormat_ProducesValidJSON(t *testing.T) {
+	mockPlaywright := &mocks.FakeBrowserAutomation{}
+	mockPlaywright.GetOrCreateTaskSessionReturns(&playwright.BrowserSession{ID: "test-session"}, nil)
+	mockPlaywright.ExtractDataReturns(`{"title":"  Spaced  Out  ","count":42}`, nil)
+
+	tool := &ExtractDataTool{logger: zap.NewNop(), playwright: mockPlaywright}
+	result, err := tool.ExtractDataHandler(context.Background(), map[string]any{
+		"extractors": []any{map[string]any{"name": "title", "selector": "h1"}},
+		"format":     "json",
+	})
+	assert.NoError(t, err)
+
+	var parsed map[string]any
+	assert.NoError(t, json.Unmarshal([]byte(result), &parsed))
+	assert.Equal(t, true, parsed["success"])
+	assert.Equal(t, "json", parsed["format"])
+
+	data, _ := parsed["data"].(map[string]any)
+	assert.Equal(t, "Spaced Out", data["title"], "whitespace runs should collapse via cleanString")
+	assert.Equal(t, float64(42), data["count"])
 }
 
 func TestConvertExtractors(t *testing.T) {
@@ -259,56 +283,7 @@ func TestConvertExtractors(t *testing.T) {
 	}
 }
 
-func TestParseGoMapFormat(t *testing.T) {
-	tool := &ExtractDataTool{}
-
-	tests := []struct {
-		name     string
-		input    string
-		expected map[string]any
-	}{
-		{
-			name:  "simple map",
-			input: "map[title:Test Title count:42]",
-			expected: map[string]any{
-				"title": "Test Title",
-				"count": 42,
-			},
-		},
-		{
-			name:  "map with array",
-			input: "map[links:[/page1 /page2 /page3]]",
-			expected: map[string]any{
-				"links": []any{"/page1", "/page2", "/page3"},
-			},
-		},
-		{
-			name:     "empty map",
-			input:    "map[]",
-			expected: map[string]any{},
-		},
-		{
-			name:  "map with boolean and nil",
-			input: "map[active:true missing:<nil>]",
-			expected: map[string]any{
-				"active":  true,
-				"missing": nil,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := tool.parseGoMapFormat(tt.input)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestCleanString(t *testing.T) {
-	tool := &ExtractDataTool{}
-
 	tests := []struct {
 		name     string
 		input    string
@@ -338,31 +313,7 @@ func TestCleanString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tool.cleanString(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestIsValidFormat(t *testing.T) {
-	tool := &ExtractDataTool{}
-
-	tests := []struct {
-		format   string
-		expected bool
-	}{
-		{"json", true},
-		{"csv", true},
-		{"text", true},
-		{"xml", false},
-		{"", false},
-		{"JSON", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.format, func(t *testing.T) {
-			result := tool.isValidFormat(tt.format)
-			assert.Equal(t, tt.expected, result)
+			assert.Equal(t, tt.expected, cleanString(tt.input))
 		})
 	}
 }

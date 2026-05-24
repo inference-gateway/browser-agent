@@ -7,10 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inference-gateway/browser-agent/internal/playwright"
-	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	zap "go.uber.org/zap"
+
+	assert "github.com/stretchr/testify/assert"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 func TestExecuteScriptTool_ExecuteScriptHandler(t *testing.T) {
@@ -201,6 +204,51 @@ func TestExecuteScriptTool_validateScriptSecurity(t *testing.T) {
 		{
 			name:        "arrow function with setTimeout-like identifier in string should pass",
 			script:      "return 'documented setTimeout usage';",
+			expectError: false,
+		},
+		{
+			name:        "dotted property access process should pass",
+			script:      "return obj.process.value;",
+			expectError: false,
+		},
+		{
+			name:        "regex .exec on a user array should pass",
+			script:      "return /foo/.exec(text);",
+			expectError: false,
+		},
+		{
+			name:        "user array .exec should pass",
+			script:      "return arr.exec(/re/);",
+			expectError: false,
+		},
+		{
+			name:        "user object .global should pass",
+			script:      "return el.global.foo;",
+			expectError: false,
+		},
+		{
+			name:        "user object .spawn should pass",
+			script:      "return queue.spawn(worker);",
+			expectError: false,
+		},
+		{
+			name:        "user object .eval method should pass",
+			script:      "return calculator.eval(expression);",
+			expectError: false,
+		},
+		{
+			name:        "user object .setTimeout should pass",
+			script:      "return ticker.setTimeout(cb);",
+			expectError: false,
+		},
+		{
+			name:        "user identifier ending in __dirname should pass",
+			script:      "return obj.__dirname;",
+			expectError: false,
+		},
+		{
+			name:        "user property localStorage.clear on a non-global should pass",
+			script:      "return cache.localStorage.clear();",
 			expectError: false,
 		},
 		{

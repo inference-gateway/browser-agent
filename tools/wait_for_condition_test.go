@@ -2,13 +2,16 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	zap "go.uber.org/zap"
 
-	"github.com/inference-gateway/browser-agent/internal/playwright"
-	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+	assert "github.com/stretchr/testify/assert"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 func TestWaitForConditionTool_NewWaitForConditionTool(t *testing.T) {
@@ -20,73 +23,7 @@ func TestWaitForConditionTool_NewWaitForConditionTool(t *testing.T) {
 	assert.NotNil(t, tool)
 }
 
-func TestWaitForConditionTool_ValidateCondition(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
-	}
-
-	tests := []struct {
-		name      string
-		condition string
-		expected  bool
-	}{
-		{"valid selector", "selector", true},
-		{"valid navigation", "navigation", true},
-		{"valid function", "function", true},
-		{"valid timeout", "timeout", true},
-		{"valid networkidle", "networkidle", true},
-		{"invalid condition", "invalid", false},
-		{"empty condition", "", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tool.isValidCondition(tt.condition)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestWaitForConditionTool_ValidateState(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
-	}
-
-	tests := []struct {
-		name     string
-		state    string
-		expected bool
-	}{
-		{"valid visible", "visible", true},
-		{"valid hidden", "hidden", true},
-		{"valid attached", "attached", true},
-		{"valid detached", "detached", true},
-		{"invalid state", "invalid", false},
-		{"empty state", "", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tool.isValidState(tt.state)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestWaitForConditionTool_ValidateConditionRequirements(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
-	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
-	}
-
 	tests := []struct {
 		name           string
 		condition      string
@@ -105,7 +42,7 @@ func TestWaitForConditionTool_ValidateConditionRequirements(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tool.validateConditionRequirements(tt.condition, tt.selector, tt.customFunction)
+			err := validateConditionRequirements(tt.condition, tt.selector, tt.customFunction)
 			if tt.shouldError {
 				assert.Error(t, err)
 			} else {
@@ -123,10 +60,7 @@ func TestWaitForConditionTool_WaitForConditionHandler_Success(t *testing.T) {
 		playwright: mockPlaywright,
 	}
 
-	session := &playwright.BrowserSession{
-		ID: "test-session",
-	}
-
+	session := &playwright.BrowserSession{ID: "test-session"}
 	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
 	mockPlaywright.WaitForConditionReturns(nil)
 
@@ -140,25 +74,22 @@ func TestWaitForConditionTool_WaitForConditionHandler_Success(t *testing.T) {
 	result, err := tool.WaitForConditionHandler(context.Background(), args)
 
 	assert.NoError(t, err)
-	assert.Contains(t, result, "success:true")
-	assert.Contains(t, result, "condition:selector")
-	assert.Contains(t, result, "selector:.button")
+	var parsed map[string]any
+	assert.NoError(t, json.Unmarshal([]byte(result), &parsed), "response should be valid JSON")
+	assert.Equal(t, true, parsed["success"])
+	assert.Equal(t, "selector", parsed["condition"])
+	assert.Equal(t, ".button", parsed["selector"])
 }
 
 func TestWaitForConditionTool_WaitForConditionHandler_MissingCondition(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
 	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
+		logger:     zap.NewNop(),
+		playwright: &mocks.FakeBrowserAutomation{},
 	}
-
-	args := map[string]any{
+	result, err := tool.WaitForConditionHandler(context.Background(), map[string]any{
 		"selector": ".button",
 		"state":    "visible",
-	}
-
-	result, err := tool.WaitForConditionHandler(context.Background(), args)
+	})
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -166,19 +97,14 @@ func TestWaitForConditionTool_WaitForConditionHandler_MissingCondition(t *testin
 }
 
 func TestWaitForConditionTool_WaitForConditionHandler_InvalidCondition(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
 	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
+		logger:     zap.NewNop(),
+		playwright: &mocks.FakeBrowserAutomation{},
 	}
-
-	args := map[string]any{
+	result, err := tool.WaitForConditionHandler(context.Background(), map[string]any{
 		"condition": "invalid",
 		"selector":  ".button",
-	}
-
-	result, err := tool.WaitForConditionHandler(context.Background(), args)
+	})
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -186,20 +112,15 @@ func TestWaitForConditionTool_WaitForConditionHandler_InvalidCondition(t *testin
 }
 
 func TestWaitForConditionTool_WaitForConditionHandler_InvalidState(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
 	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
+		logger:     zap.NewNop(),
+		playwright: &mocks.FakeBrowserAutomation{},
 	}
-
-	args := map[string]any{
+	result, err := tool.WaitForConditionHandler(context.Background(), map[string]any{
 		"condition": "selector",
 		"selector":  ".button",
 		"state":     "invalid",
-	}
-
-	result, err := tool.WaitForConditionHandler(context.Background(), args)
+	})
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -207,19 +128,14 @@ func TestWaitForConditionTool_WaitForConditionHandler_InvalidState(t *testing.T)
 }
 
 func TestWaitForConditionTool_WaitForConditionHandler_SelectorWithoutSelector(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
 	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
+		logger:     zap.NewNop(),
+		playwright: &mocks.FakeBrowserAutomation{},
 	}
-
-	args := map[string]any{
+	result, err := tool.WaitForConditionHandler(context.Background(), map[string]any{
 		"condition": "selector",
 		"state":     "visible",
-	}
-
-	result, err := tool.WaitForConditionHandler(context.Background(), args)
+	})
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -227,18 +143,13 @@ func TestWaitForConditionTool_WaitForConditionHandler_SelectorWithoutSelector(t 
 }
 
 func TestWaitForConditionTool_WaitForConditionHandler_FunctionWithoutFunction(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
 	tool := &WaitForConditionTool{
-		logger:     logger,
-		playwright: mockPlaywright,
+		logger:     zap.NewNop(),
+		playwright: &mocks.FakeBrowserAutomation{},
 	}
-
-	args := map[string]any{
+	result, err := tool.WaitForConditionHandler(context.Background(), map[string]any{
 		"condition": "function",
-	}
-
-	result, err := tool.WaitForConditionHandler(context.Background(), args)
+	})
 
 	assert.Error(t, err)
 	assert.Empty(t, result)
@@ -253,22 +164,46 @@ func TestWaitForConditionTool_WaitForConditionHandler_DefaultValues(t *testing.T
 		playwright: mockPlaywright,
 	}
 
-	session := &playwright.BrowserSession{
-		ID: "test-session",
-	}
-
+	session := &playwright.BrowserSession{ID: "test-session"}
 	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
 	mockPlaywright.WaitForConditionReturns(nil)
 
-	args := map[string]any{
+	result, err := tool.WaitForConditionHandler(context.Background(), map[string]any{
 		"condition": "selector",
 		"selector":  ".button",
-	}
-
-	result, err := tool.WaitForConditionHandler(context.Background(), args)
+	})
 
 	assert.NoError(t, err)
-	assert.Contains(t, result, "success:true")
-	assert.Contains(t, result, "state:visible")
-	assert.Contains(t, result, "timeout_ms:30000")
+	var parsed map[string]any
+	assert.NoError(t, json.Unmarshal([]byte(result), &parsed))
+	assert.Equal(t, true, parsed["success"])
+	assert.Equal(t, "visible", parsed["state"])
+	assert.Equal(t, float64(defaultTimeoutMs), parsed["timeout_ms"])
+}
+
+// TestWaitForConditionTool_NetworkidleDoesNotInjectJS confirms that the
+// networkidle branch is delegated to the playwright service as-is, with
+// an empty customFunction. Previously the tool emitted a hand-rolled JS
+// blob that monkey-patched window.fetch / window.XMLHttpRequest and never
+// restored them.
+func TestWaitForConditionTool_NetworkidleDoesNotInjectJS(t *testing.T) {
+	logger := zap.NewNop()
+	mockPlaywright := &mocks.FakeBrowserAutomation{}
+	session := &playwright.BrowserSession{ID: "test-session"}
+	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
+	mockPlaywright.WaitForConditionReturns(nil)
+
+	tool := &WaitForConditionTool{logger: logger, playwright: mockPlaywright}
+	_, err := tool.WaitForConditionHandler(context.Background(), map[string]any{
+		"condition": "networkidle",
+		"timeout":   1000,
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, 1, mockPlaywright.WaitForConditionCallCount())
+
+	_, _, gotCondition, _, _, _, gotCustomFn := mockPlaywright.WaitForConditionArgsForCall(0)
+	assert.Equal(t, "networkidle", gotCondition,
+		"networkidle should pass through as the condition name, not be rewritten to 'function'")
+	assert.Empty(t, gotCustomFn, "no custom JS should be injected for networkidle")
 }

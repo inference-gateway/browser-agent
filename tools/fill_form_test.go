@@ -2,13 +2,15 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	assert "github.com/stretchr/testify/assert"
+	zap "go.uber.org/zap"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
-	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 )
 
 func TestFillFormTool_FillFormHandler_ValidationTests(t *testing.T) {
@@ -121,21 +123,6 @@ func TestFillFormTool_FillFormHandler_ValidationTests(t *testing.T) {
 }
 
 func TestFillFormTool_FillFormHandler_SuccessTests(t *testing.T) {
-	logger := zap.NewNop()
-	mockPlaywright := &mocks.FakeBrowserAutomation{}
-
-	tool := &FillFormTool{
-		logger:     logger,
-		playwright: mockPlaywright,
-	}
-
-	session := &playwright.BrowserSession{ID: "test-session"}
-	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
-	mockPlaywright.GetSessionReturns(session, nil)
-	mockPlaywright.FillFormReturns(nil)
-	mockPlaywright.FillFormReturns(nil)
-	mockPlaywright.ClickElementReturns(nil)
-
 	tests := []struct {
 		name string
 		args map[string]any
@@ -192,13 +179,60 @@ func TestFillFormTool_FillFormHandler_SuccessTests(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			logger := zap.NewNop()
+			mockPlaywright := &mocks.FakeBrowserAutomation{}
+			session := &playwright.BrowserSession{ID: "test-session"}
+			mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
+			mockPlaywright.GetSessionReturns(session, nil)
+			mockPlaywright.FillFormReturns(nil)
+
+			tool := &FillFormTool{logger: logger, playwright: mockPlaywright}
 			result, err := tool.FillFormHandler(context.Background(), tt.args)
 
 			assert.NoError(t, err)
 			assert.NotEmpty(t, result)
-			assert.Contains(t, result, "success")
+
+			var parsed map[string]any
+			assert.NoError(t, json.Unmarshal([]byte(result), &parsed), "response should be valid JSON")
+			assert.Equal(t, true, parsed["success"])
 		})
 	}
+}
+
+// TestFillFormTool_FillFormHandler_SingleBatchCall confirms the refactor:
+// previously the tool re-called FillForm once per field and additionally
+// called ClickElement to submit. After the fix, the playwright service
+// receives one batched call regardless of field count.
+func TestFillFormTool_FillFormHandler_SingleBatchCall(t *testing.T) {
+	logger := zap.NewNop()
+	mockPlaywright := &mocks.FakeBrowserAutomation{}
+	session := &playwright.BrowserSession{ID: "test-session"}
+	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
+	mockPlaywright.GetSessionReturns(session, nil)
+	mockPlaywright.FillFormReturns(nil)
+
+	tool := &FillFormTool{logger: logger, playwright: mockPlaywright}
+
+	_, err := tool.FillFormHandler(context.Background(), map[string]any{
+		"fields": []any{
+			map[string]any{"selector": "#a", "value": "1"},
+			map[string]any{"selector": "#b", "value": "2"},
+			map[string]any{"selector": "#c", "value": "3"},
+		},
+		"submit":          true,
+		"submit_selector": "#submit",
+	})
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, mockPlaywright.FillFormCallCount(),
+		"FillForm should be called exactly once with the full batch")
+	assert.Equal(t, 0, mockPlaywright.ClickElementCallCount(),
+		"submit should be delegated to playwright.FillForm, not a separate ClickElement")
+
+	_, _, gotFields, gotSubmit, gotSelector := mockPlaywright.FillFormArgsForCall(0)
+	assert.Len(t, gotFields, 3)
+	assert.True(t, gotSubmit)
+	assert.Equal(t, "#submit", gotSelector)
 }
 
 func TestFillFormTool_ValidateFieldTypes(t *testing.T) {
@@ -209,12 +243,13 @@ func TestFillFormTool_ValidateFieldTypes(t *testing.T) {
 			logger := zap.NewNop()
 			mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-			tool := &FillFormTool{
-				logger:     logger,
-				playwright: mockPlaywright,
-			}
+			session := &playwright.BrowserSession{ID: "test-session"}
+			mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
+			mockPlaywright.GetSessionReturns(session, nil)
+			mockPlaywright.FillFormReturns(nil)
 
-			args := map[string]any{
+			tool := &FillFormTool{logger: logger, playwright: mockPlaywright}
+			_, err := tool.FillFormHandler(context.Background(), map[string]any{
 				"fields": []any{
 					map[string]any{
 						"selector": "#test",
@@ -222,14 +257,7 @@ func TestFillFormTool_ValidateFieldTypes(t *testing.T) {
 						"type":     fieldType,
 					},
 				},
-			}
-
-			session := &playwright.BrowserSession{ID: "test-session"}
-			mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
-			mockPlaywright.GetSessionReturns(session, nil)
-			mockPlaywright.FillFormReturns(nil)
-
-			_, err := tool.FillFormHandler(context.Background(), args)
+			})
 
 			if err != nil {
 				assert.NotContains(t, err.Error(), "invalid type")
@@ -242,29 +270,23 @@ func TestFillFormTool_DefaultFieldType(t *testing.T) {
 	logger := zap.NewNop()
 	mockPlaywright := &mocks.FakeBrowserAutomation{}
 
-	tool := &FillFormTool{
-		logger:     logger,
-		playwright: mockPlaywright,
-	}
+	session := &playwright.BrowserSession{ID: "test-session"}
+	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
+	mockPlaywright.GetSessionReturns(session, nil)
+	mockPlaywright.FillFormReturns(nil)
 
-	args := map[string]any{
+	tool := &FillFormTool{logger: logger, playwright: mockPlaywright}
+	_, err := tool.FillFormHandler(context.Background(), map[string]any{
 		"fields": []any{
 			map[string]any{
 				"selector": "#test",
 				"value":    "test",
 			},
 		},
-	}
+	})
 
-	session := &playwright.BrowserSession{ID: "test-session"}
-	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
-	mockPlaywright.GetSessionReturns(session, nil)
-	mockPlaywright.FillFormReturns(nil)
+	assert.NoError(t, err)
 
-	_, err := tool.FillFormHandler(context.Background(), args)
-
-	if err != nil {
-		assert.NotContains(t, err.Error(), "invalid type")
-		assert.NotContains(t, err.Error(), "type is required")
-	}
+	_, _, gotFields, _, _ := mockPlaywright.FillFormArgsForCall(0)
+	assert.Equal(t, "text", gotFields[0]["type"], "type should default to text")
 }

@@ -17,6 +17,7 @@ tools/take_screenshot.go
 tools/execute_script.go
 tools/handle_authentication.go
 tools/wait_for_condition.go
+tools/args.go
 internal/playwright/playwright.go
 
 # Bare skill playbooks - edited by hand after initial scaffold

@@ -5,9 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
+
+	server "github.com/inference-gateway/adk/server"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
+)
+
+var (
+	validWaitConditionTypes = []string{"selector", "navigation", "function", "timeout", "networkidle"}
+	validSelectorStates     = []string{"visible", "hidden", "attached", "detached"}
 )
 
 // WaitForConditionTool struct holds the tool with dependencies
@@ -29,7 +36,7 @@ func NewWaitForConditionTool(logger *zap.Logger, playwright playwright.BrowserAu
 			"type": "object",
 			"properties": map[string]any{
 				"condition": map[string]any{
-					"description": "Type of condition (selector, navigation, function, timeout)",
+					"description": "Type of condition (selector, navigation, function, timeout, networkidle)",
 					"type":        "string",
 				},
 				"custom_function": map[string]any{
@@ -46,7 +53,7 @@ func NewWaitForConditionTool(logger *zap.Logger, playwright playwright.BrowserAu
 					"type":        "string",
 				},
 				"timeout": map[string]any{
-					"default":     30000,
+					"default":     defaultTimeoutMs,
 					"description": "Maximum time to wait in milliseconds",
 					"type":        "integer",
 				},
@@ -57,43 +64,47 @@ func NewWaitForConditionTool(logger *zap.Logger, playwright playwright.BrowserAu
 	)
 }
 
-// WaitForConditionHandler handles the wait_for_condition tool execution
+// WaitForConditionHandler handles the wait_for_condition tool execution.
+//
+// Note on 'networkidle': previously this branch injected JavaScript that
+// permanently replaced window.fetch and window.XMLHttpRequest on the page
+// (and never restored the originals, polluting every subsequent request
+// in the same session). It is now delegated to Playwright's native
+// page.WaitForLoadState(LoadStateNetworkidle) via the playwright service,
+// which has no such side effects.
 func (s *WaitForConditionTool) WaitForConditionHandler(ctx context.Context, args map[string]any) (string, error) {
-	condition, ok := args["condition"].(string)
-	if !ok || condition == "" {
-		return "", fmt.Errorf("condition parameter is required and must be a non-empty string")
+	condition, err := requiredString(args, "condition")
+	if err != nil {
+		return "", err
+	}
+	if !oneOf(condition, validWaitConditionTypes...) {
+		return "", fmt.Errorf("invalid condition type: %s. Must be one of: %v", condition, validWaitConditionTypes)
 	}
 
-	if !s.isValidCondition(condition) {
-		return "", fmt.Errorf("invalid condition type: %s. Must be one of: selector, navigation, function, timeout, networkidle", condition)
+	selector, err := stringArg(args, "selector", "")
+	if err != nil {
+		return "", err
 	}
 
-	selector := ""
-	if sel, ok := args["selector"].(string); ok {
-		selector = sel
+	state, err := stringArg(args, "state", "visible")
+	if err != nil {
+		return "", err
+	}
+	if !oneOf(state, validSelectorStates...) {
+		return "", fmt.Errorf("invalid state: %s. Must be one of: %v", state, validSelectorStates)
 	}
 
-	state := "visible"
-	if st, ok := args["state"].(string); ok && st != "" {
-		if !s.isValidState(st) {
-			return "", fmt.Errorf("invalid state: %s. Must be one of: visible, hidden, attached, detached", st)
-		}
-		state = st
+	timeout, err := boundedIntArg(args, "timeout", defaultTimeoutMs, minTimeoutMs, maxTimeoutMs)
+	if err != nil {
+		return "", err
 	}
 
-	timeout := 30000
-	if t, ok := args["timeout"].(int); ok && t > 0 {
-		timeout = t
-	} else if tf, ok := args["timeout"].(float64); ok && tf > 0 {
-		timeout = int(tf)
+	customFunction, err := stringArg(args, "custom_function", "")
+	if err != nil {
+		return "", err
 	}
 
-	customFunction := ""
-	if cf, ok := args["custom_function"].(string); ok {
-		customFunction = cf
-	}
-
-	if err := s.validateConditionRequirements(condition, selector, customFunction); err != nil {
+	if err := validateConditionRequirements(condition, selector, customFunction); err != nil {
 		return "", err
 	}
 
@@ -101,8 +112,7 @@ func (s *WaitForConditionTool) WaitForConditionHandler(ctx context.Context, args
 		zap.String("condition", condition),
 		zap.String("selector", selector),
 		zap.String("state", state),
-		zap.Int("timeout_ms", timeout),
-		zap.String("custom_function", customFunction))
+		zap.Int("timeout_ms", timeout))
 
 	session, err := s.playwright.GetOrCreateTaskSession(ctx)
 	if err != nil {
@@ -113,8 +123,7 @@ func (s *WaitForConditionTool) WaitForConditionHandler(ctx context.Context, args
 	timeoutDuration := time.Duration(timeout) * time.Millisecond
 	startTime := time.Now()
 
-	err = s.executeWaitCondition(ctx, session.ID, condition, selector, state, timeoutDuration, customFunction)
-	if err != nil {
+	if err := s.playwright.WaitForCondition(ctx, session.ID, condition, selector, state, timeoutDuration, customFunction); err != nil {
 		s.logger.Error("wait condition failed",
 			zap.String("condition", condition),
 			zap.String("selector", selector),
@@ -127,11 +136,10 @@ func (s *WaitForConditionTool) WaitForConditionHandler(ctx context.Context, args
 
 	s.logger.Info("wait condition completed successfully",
 		zap.String("condition", condition),
-		zap.String("selector", selector),
 		zap.String("sessionID", session.ID),
 		zap.Int64("actual_wait_ms", actualWaitTime))
 
-	response := map[string]any{
+	return marshalResponse(map[string]any{
 		"success":         true,
 		"condition":       condition,
 		"selector":        selector,
@@ -139,37 +147,15 @@ func (s *WaitForConditionTool) WaitForConditionHandler(ctx context.Context, args
 		"timeout_ms":      timeout,
 		"actual_wait_ms":  actualWaitTime,
 		"session_id":      session.ID,
-		"message":         "Wait condition completed successfully",
 		"custom_function": customFunction,
-	}
-
-	return fmt.Sprintf(`%+v`, response), nil
+		"message":         "Wait condition completed successfully",
+	})
 }
 
-// isValidCondition validates the condition type
-func (s *WaitForConditionTool) isValidCondition(condition string) bool {
-	validConditions := []string{"selector", "navigation", "function", "timeout", "networkidle"}
-	for _, valid := range validConditions {
-		if condition == valid {
-			return true
-		}
-	}
-	return false
-}
-
-// isValidState validates the selector state
-func (s *WaitForConditionTool) isValidState(state string) bool {
-	validStates := []string{"visible", "hidden", "attached", "detached"}
-	for _, valid := range validStates {
-		if state == valid {
-			return true
-		}
-	}
-	return false
-}
-
-// validateConditionRequirements validates condition-specific requirements
-func (s *WaitForConditionTool) validateConditionRequirements(condition, selector, customFunction string) error {
+// validateConditionRequirements validates condition-specific requirements.
+// Standalone function (not a method) so it can be called from tests without
+// constructing a tool.
+func validateConditionRequirements(condition, selector, customFunction string) error {
 	switch condition {
 	case "selector":
 		if selector == "" {
@@ -179,70 +165,6 @@ func (s *WaitForConditionTool) validateConditionRequirements(condition, selector
 		if customFunction == "" {
 			return fmt.Errorf("custom_function parameter is required for function condition")
 		}
-	case "navigation", "timeout", "networkidle":
 	}
 	return nil
-}
-
-// executeWaitCondition executes the appropriate wait operation based on condition type
-func (s *WaitForConditionTool) executeWaitCondition(ctx context.Context, sessionID, condition, selector, state string, timeout time.Duration, customFunction string) error {
-	switch condition {
-	case "selector":
-		return s.playwright.WaitForCondition(ctx, sessionID, condition, selector, state, timeout, "")
-	case "function":
-		return s.playwright.WaitForCondition(ctx, sessionID, condition, "", "", timeout, customFunction)
-	case "navigation":
-		return s.playwright.WaitForCondition(ctx, sessionID, condition, "", "", timeout, "")
-	case "timeout":
-		return s.playwright.WaitForCondition(ctx, sessionID, condition, "", "", timeout, "")
-	case "networkidle":
-		networkIdleFunction := `
-			() => {
-				return new Promise((resolve) => {
-					let timeout;
-					let requestCount = 0;
-					
-					// Monitor fetch requests
-					const originalFetch = window.fetch;
-					window.fetch = function(...args) {
-						requestCount++;
-						return originalFetch.apply(this, args).finally(() => {
-							requestCount--;
-							if (requestCount === 0) {
-								clearTimeout(timeout);
-								timeout = setTimeout(() => resolve(true), 500);
-							}
-						});
-					};
-					
-					// Monitor XMLHttpRequest
-					const originalXHR = window.XMLHttpRequest;
-					window.XMLHttpRequest = function() {
-						const xhr = new originalXHR();
-						const originalSend = xhr.send;
-						xhr.send = function(...args) {
-							requestCount++;
-							xhr.addEventListener('loadend', () => {
-								requestCount--;
-								if (requestCount === 0) {
-									clearTimeout(timeout);
-									timeout = setTimeout(() => resolve(true), 500);
-								}
-							});
-							return originalSend.apply(this, args);
-						};
-						return xhr;
-					};
-					
-					// Initial check
-					if (requestCount === 0) {
-						timeout = setTimeout(() => resolve(true), 500);
-					}
-				});
-			}
-		`
-		return s.playwright.WaitForCondition(ctx, sessionID, "function", "", "", timeout, networkIdleFunction)
-	default:
-		return fmt.Errorf("unsupported condition type: %s", condition)
-	}
 }

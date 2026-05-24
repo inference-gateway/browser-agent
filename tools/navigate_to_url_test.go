@@ -2,13 +2,16 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/inference-gateway/browser-agent/internal/playwright"
-	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
-	"go.uber.org/zap/zaptest"
+	zaptest "go.uber.org/zap/zaptest"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
@@ -34,7 +37,6 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 		args        map[string]any
 		expectError bool
 		errorMsg    string
-		setup       func()
 	}{
 		{
 			name: "successful navigation with default parameters",
@@ -73,7 +75,7 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 				"url": "",
 			},
 			expectError: true,
-			errorMsg:    "url parameter is required",
+			errorMsg:    "non-empty string",
 		},
 		{
 			name: "invalid URL parameter type",
@@ -81,7 +83,7 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 				"url": 123,
 			},
 			expectError: true,
-			errorMsg:    "url parameter is required",
+			errorMsg:    "must be a string",
 		},
 		{
 			name: "invalid wait_until parameter",
@@ -117,21 +119,18 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "negative timeout parameter",
+			name: "negative timeout is rejected with explicit error",
 			args: map[string]any{
 				"url":     "https://example.com",
 				"timeout": -1000,
 			},
-			expectError: false,
+			expectError: true,
+			errorMsg:    "timeout must be between",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.setup != nil {
-				tt.setup()
-			}
-
 			ctx := context.Background()
 			result, err := tool.NavigateToURLHandler(ctx, tt.args)
 
@@ -141,13 +140,21 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 				} else if tt.errorMsg != "" && !strings.Contains(err.Error(), tt.errorMsg) {
 					t.Errorf("expected error message to contain %q, got %q", tt.errorMsg, err.Error())
 				}
-			} else {
-				if err != nil {
-					t.Errorf("expected no error but got: %v", err)
-				}
-				if result == "" {
-					t.Errorf("expected non-empty result")
-				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %v", err)
+			}
+			if result == "" {
+				t.Fatalf("expected non-empty result")
+			}
+			var parsed map[string]any
+			if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+				t.Fatalf("expected valid JSON response, got %q: %v", result, err)
+			}
+			if got, _ := parsed["success"].(bool); !got {
+				t.Errorf("expected success=true in response, got %v", parsed["success"])
 			}
 		})
 	}
@@ -184,7 +191,7 @@ func TestNavigateToURLTool_validateAndNormalizeURL(t *testing.T) {
 			expected: "https://example.com/path",
 		},
 		{
-			name:        "empty URL",
+			name:        "empty URL falls through to host check",
 			input:       "",
 			expectError: true,
 		},
@@ -220,32 +227,6 @@ func TestNavigateToURLTool_validateAndNormalizeURL(t *testing.T) {
 				if result != tt.expected {
 					t.Errorf("expected %q, got %q", tt.expected, result)
 				}
-			}
-		})
-	}
-}
-
-func TestNavigateToURLTool_isValidWaitCondition(t *testing.T) {
-	logger := zaptest.NewLogger(t)
-	tool := &NavigateToURLTool{logger: logger}
-
-	tests := []struct {
-		condition string
-		expected  bool
-	}{
-		{"domcontentloaded", true},
-		{"load", true},
-		{"networkidle", true},
-		{"invalid", false},
-		{"", false},
-		{"LOAD", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.condition, func(t *testing.T) {
-			result := tool.isValidWaitCondition(tt.condition)
-			if result != tt.expected {
-				t.Errorf("expected %v for condition %q, got %v", tt.expected, tt.condition, result)
 			}
 		})
 	}

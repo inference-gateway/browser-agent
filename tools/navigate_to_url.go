@@ -6,10 +6,14 @@ import (
 	"net/url"
 	"time"
 
-	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
+
+	server "github.com/inference-gateway/adk/server"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
+
+var validWaitConditions = []string{"domcontentloaded", "load", "networkidle"}
 
 // NavigateToURLTool struct holds the tool with dependencies
 type NavigateToURLTool struct {
@@ -30,7 +34,7 @@ func NewNavigateToURLTool(logger *zap.Logger, playwright playwright.BrowserAutom
 			"type": "object",
 			"properties": map[string]any{
 				"timeout": map[string]any{
-					"default":     30000,
+					"default":     defaultTimeoutMs,
 					"description": "Maximum navigation timeout in milliseconds",
 					"type":        "integer",
 				},
@@ -52,35 +56,32 @@ func NewNavigateToURLTool(logger *zap.Logger, playwright playwright.BrowserAutom
 
 // NavigateToURLHandler handles the navigate_to_url tool execution
 func (s *NavigateToURLTool) NavigateToURLHandler(ctx context.Context, args map[string]any) (string, error) {
-	url, ok := args["url"].(string)
-	if !ok || url == "" {
-		return "", fmt.Errorf("url parameter is required and must be a non-empty string")
+	rawURL, err := requiredString(args, "url")
+	if err != nil {
+		return "", err
 	}
 
-	normalizedURL, err := s.validateAndNormalizeURL(url)
+	targetURL, err := s.validateAndNormalizeURL(rawURL)
 	if err != nil {
-		s.logger.Error("invalid URL provided", zap.String("url", url), zap.Error(err))
+		s.logger.Error("invalid URL provided", zap.String("url", rawURL), zap.Error(err))
 		return "", fmt.Errorf("invalid URL: %w", err)
 	}
-	url = normalizedURL
 
-	waitUntil := "load"
-	if wu, ok := args["wait_until"].(string); ok && wu != "" {
-		if !s.isValidWaitCondition(wu) {
-			return "", fmt.Errorf("invalid wait_until value: %s. Must be one of: domcontentloaded, load, networkidle", wu)
-		}
-		waitUntil = wu
+	waitUntil, err := stringArg(args, "wait_until", "load")
+	if err != nil {
+		return "", err
+	}
+	if !oneOf(waitUntil, validWaitConditions...) {
+		return "", fmt.Errorf("invalid wait_until value: %s. Must be one of: %v", waitUntil, validWaitConditions)
 	}
 
-	timeout := 30000
-	if t, ok := args["timeout"].(int); ok && t > 0 {
-		timeout = t
-	} else if tf, ok := args["timeout"].(float64); ok && tf > 0 {
-		timeout = int(tf)
+	timeout, err := boundedIntArg(args, "timeout", defaultTimeoutMs, minTimeoutMs, maxTimeoutMs)
+	if err != nil {
+		return "", err
 	}
 
 	s.logger.Info("navigating to URL",
-		zap.String("url", url),
+		zap.String("url", targetURL),
 		zap.String("wait_until", waitUntil),
 		zap.Int("timeout_ms", timeout))
 
@@ -91,37 +92,30 @@ func (s *NavigateToURLTool) NavigateToURLHandler(ctx context.Context, args map[s
 	}
 
 	timeoutDuration := time.Duration(timeout) * time.Millisecond
-	err = s.playwright.NavigateToURL(ctx, session.ID, url, waitUntil, timeoutDuration)
-	if err != nil {
+	if err := s.playwright.NavigateToURL(ctx, session.ID, targetURL, waitUntil, timeoutDuration); err != nil {
 		s.logger.Error("navigation failed",
-			zap.String("url", url),
+			zap.String("url", targetURL),
 			zap.String("sessionID", session.ID),
 			zap.Error(err))
 		return "", fmt.Errorf("navigation failed: %w", err)
 	}
 
 	s.logger.Info("navigation completed successfully",
-		zap.String("url", url),
+		zap.String("url", targetURL),
 		zap.String("sessionID", session.ID))
 
-	response := map[string]any{
+	return marshalResponse(map[string]any{
 		"success":    true,
-		"url":        url,
+		"url":        targetURL,
 		"wait_until": waitUntil,
 		"timeout_ms": timeout,
 		"session_id": session.ID,
 		"message":    "Navigation completed successfully",
-	}
-
-	return fmt.Sprintf(`%+v`, response), nil
+	})
 }
 
 // validateAndNormalizeURL validates that the provided URL is well-formed and supported, returning the normalized URL
 func (s *NavigateToURLTool) validateAndNormalizeURL(urlStr string) (string, error) {
-	if urlStr == "" {
-		return "", fmt.Errorf("URL cannot be empty")
-	}
-
 	parsedURL, err := url.Parse(urlStr)
 	if err != nil {
 		return "", fmt.Errorf("invalid URL format: %w", err)
@@ -144,15 +138,4 @@ func (s *NavigateToURLTool) validateAndNormalizeURL(urlStr string) (string, erro
 	}
 
 	return parsedURL.String(), nil
-}
-
-// isValidWaitCondition validates the wait_until parameter
-func (s *NavigateToURLTool) isValidWaitCondition(condition string) bool {
-	validConditions := []string{"domcontentloaded", "load", "networkidle"}
-	for _, valid := range validConditions {
-		if condition == valid {
-			return true
-		}
-	}
-	return false
 }
