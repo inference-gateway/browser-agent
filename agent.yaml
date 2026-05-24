@@ -424,6 +424,9 @@ spec:
     go:
       module: github.com/inference-gateway/browser-agent
       version: "1.26.2"
+      vendor:
+        deps: []
+        devdeps: []
   acronyms:
     - DOM
     - CSS
@@ -461,3 +464,4 @@ spec:
         enabled: false
       opencode:
         enabled: false
+    deps: []
