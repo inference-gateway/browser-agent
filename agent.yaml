@@ -258,7 +258,7 @@ spec:
             type: string
             description: >-
               JavaScript code to execute in the browser (Playwright
-              page.evaluate context). Use DOM/Web APIs only — Node.js
+              page.evaluate context). Use DOM/Web APIs only - Node.js
               built-ins are unavailable.
           args:
             type: array
