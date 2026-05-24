@@ -5,6 +5,7 @@ tags:
   - forms
   - automation
   - workflow
+license: Apache-2.0
 ---
 
 # form-automation

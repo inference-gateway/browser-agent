@@ -253,7 +253,7 @@ func runStart(ctx context.Context) error {
 	// Register execute_script tool
 	executeScriptTool := tools.NewExecuteScriptTool(l, playwrightSvc)
 	toolBox.AddTool(executeScriptTool)
-	l.Info("registered tool: execute_script (Execute custom JavaScript code in the browser context)")
+	l.Info("registered tool: execute_script (Execute custom JavaScript inside the current page via Playwright's page.evaluate(). The script runs in the browser context, NOT in Node.js: globals like window, document, navigator, fetch and localStorage are available; Node.js built-ins (require, process, __dirname, __filename, fs, path, os, http, https, child_process, etc.) are NOT available and calls to them will be rejected. Use browser/DOM APIs only. The script body is automatically wrapped in an IIFE, so a top-level `return` is valid. Set async=true if the body uses `await`.)")
 
 	// Register handle_authentication tool
 	handleAuthenticationTool := tools.NewHandleAuthenticationTool(l, playwrightSvc)

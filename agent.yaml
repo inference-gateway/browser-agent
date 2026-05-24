@@ -354,6 +354,7 @@ spec:
         - qa
         - e2e
         - playwright
+      license: Apache-2.0
     - id: web-scraping
       bare: true
       name: web-scraping
@@ -362,6 +363,7 @@ spec:
         - scraping
         - extraction
         - data
+      license: Apache-2.0
     - id: form-automation
       bare: true
       name: form-automation
@@ -370,6 +372,7 @@ spec:
         - forms
         - automation
         - workflow
+      license: Apache-2.0
     - id: deep-research
       bare: true
       name: deep-research
@@ -379,6 +382,7 @@ spec:
         - synthesis
         - citations
         - investigation
+      license: Apache-2.0
   agent:
     provider: ""
     model: ""

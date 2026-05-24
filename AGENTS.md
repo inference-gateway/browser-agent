@@ -133,7 +133,7 @@ This agent exposes 12 function-call tools:
 - **Output Schema**: Defined in agent configuration
 
 ### execute_script
-- **Description**: Execute custom JavaScript code in the browser context
+- **Description**: Execute custom JavaScript inside the current page via Playwright's page.evaluate(). The script runs in the browser context, NOT in Node.js: globals like window, document, navigator, fetch and localStorage are available; Node.js built-ins (require, process, __dirname, __filename, fs, path, os, http, https, child_process, etc.) are NOT available and calls to them will be rejected. Use browser/DOM APIs only. The script body is automatically wrapped in an IIFE, so a top-level `return` is valid. Set async=true if the body uses `await`.
 - **Tags**: javascript, execution, custom, playwright
 - **Input Schema**: Defined in agent configuration
 - **Output Schema**: Defined in agent configuration
@@ -258,7 +258,7 @@ docker run -p 8080:8080 browser-agent
 │   └── fill_form.go              # Fill form fields with provided data, handling various input types
 │   └── extract_data.go           # Extract data from the page using selectors and return structured information
 │   └── take_screenshot.go        # Capture a screenshot of the current page or specific element
-│   └── execute_script.go         # Execute custom JavaScript code in the browser context
+│   └── execute_script.go         # Execute custom JavaScript inside the current page via Playwright's page.evaluate(). The script runs in the browser context, NOT in Node.js: globals like window, document, navigator, fetch and localStorage are available; Node.js built-ins (require, process, __dirname, __filename, fs, path, os, http, https, child_process, etc.) are NOT available and calls to them will be rejected. Use browser/DOM APIs only. The script body is automatically wrapped in an IIFE, so a top-level `return` is valid. Set async=true if the body uses `await`.
 │   └── handle_authentication.go  # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 │   └── wait_for_condition.go     # Wait for specific conditions before proceeding with automation
 ├── skills/                       # Skill directories (SKILL.md + optional assets)

@@ -5,6 +5,7 @@ tags:
   - scraping
   - extraction
   - data
+license: Apache-2.0
 ---
 
 # web-scraping

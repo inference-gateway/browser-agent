@@ -6,6 +6,7 @@ tags:
   - qa
   - e2e
   - playwright
+license: Apache-2.0
 ---
 
 # webapp-testing

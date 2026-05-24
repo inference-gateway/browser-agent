@@ -6,6 +6,7 @@ tags:
   - synthesis
   - citations
   - investigation
+license: Apache-2.0
 ---
 
 # deep-research
