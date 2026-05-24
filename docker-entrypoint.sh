@@ -61,4 +61,4 @@ echo "  Headless: ${BROWSER_HEADLESS:-true}"
 echo "  Stealth Mode: ${BROWSER_STEALTH_MODE:-false}"
 echo "  Xvfb Enabled: $XVFB_ENABLED"
 
-exec ./main
+exec ./main start

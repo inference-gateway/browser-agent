@@ -5,7 +5,7 @@
 FROM golang:1.26.2-alpine AS builder
 
 # Build arguments for version injection
-ARG VERSION="0.4.18"
+ARG VERSION="0.5.1"
 ARG AGENT_NAME="browser-agent"
 ARG AGENT_DESCRIPTION="AI agent for browser automation and web testing using Playwright"
 

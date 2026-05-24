@@ -26,6 +26,5 @@ skills/web-scraping/
 skills/form-automation/
 skills/deep-research/
 
-go.mod
 .gitattributes
 Dockerfile

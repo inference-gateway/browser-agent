@@ -426,7 +426,8 @@ spec:
       version: "1.26.2"
       vendor:
         deps: []
-        devdeps: []
+        devdeps:
+          - github.com/maxbrunsfeld/counterfeiter/v6@v6.12.2
   acronyms:
     - DOM
     - CSS
