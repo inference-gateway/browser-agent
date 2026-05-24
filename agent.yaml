@@ -453,7 +453,7 @@ spec:
       devcontainer:
         enabled: false
       dockerCompose:
-        enabled: false
+        enabled: true
     ai:
       claudecode:
         enabled: true
