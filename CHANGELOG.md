@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/inference-gateway/browser-agent/compare/v0.5.1...v0.6.0) (2026-05-24)
+
+### ✨ Features
+
+* Add artifact storage configuration ([1ad4511](https://github.com/inference-gateway/browser-agent/commit/1ad4511172452ba7f015fe0dcb5ee94b2e5c751c))
+* **tools:** Enable fetch built-in with fetch-vs-browser guidance ([8466bec](https://github.com/inference-gateway/browser-agent/commit/8466bec61a0351f91ed98c0a64a0cfe43e32123a))
+
+### 🐛 Bug Fixes
+
+* Remove flags, use declarative approach ([0dc1b1a](https://github.com/inference-gateway/browser-agent/commit/0dc1b1a67cb3486191393605e51664a71c2fc6e6))
+
+### 👷 CI
+
+* **claude:** Simplify conditions for triggering Claude Code actions ([f76ceea](https://github.com/inference-gateway/browser-agent/commit/f76ceeafbd7e4c2f1f92d0e75803ddb59ef1e12c))
+* **deps:** Bump the github-actions group with 3 updates ([#66](https://github.com/inference-gateway/browser-agent/issues/66)) ([e9281c9](https://github.com/inference-gateway/browser-agent/commit/e9281c9289ce20048264d17f2ddf42eb4540acb9))
+* **deps:** Update claude-code-action to version 1.0.130 ([2413f3e](https://github.com/inference-gateway/browser-agent/commit/2413f3ebe517ab9f73d28ae9d95dd1fcfe1de96f))
+
+### 🔧 Miscellaneous
+
+* **adl:** Refresh agent.yaml defaults from ADL CLI v0.33.1 ([#63](https://github.com/inference-gateway/browser-agent/issues/63)) ([6341b52](https://github.com/inference-gateway/browser-agent/commit/6341b5222ec1cd067f5c26052d7990b3d3ce0cc6))
+* **adl:** Refresh agent.yaml defaults from ADL CLI v0.36.0 ([#69](https://github.com/inference-gateway/browser-agent/issues/69)) ([a957176](https://github.com/inference-gateway/browser-agent/commit/a957176f774fc4b0e9762211e1d406f28e881de2))
+* **adl:** Refresh agent.yaml defaults from ADL CLI v0.38.1 ([#76](https://github.com/inference-gateway/browser-agent/issues/76)) ([6efba31](https://github.com/inference-gateway/browser-agent/commit/6efba3127a74ec607b788142498d5ed604b837dd))
+* Allow the CLI to fetch artifacts and enable artifacts server ([be5701f](https://github.com/inference-gateway/browser-agent/commit/be5701fedf4efddcc6ebd2bf56dcde9f2dbc236a))
+* **dependabot:** Update golang and ubuntu version ignore rules in dependabot configuration ([fc92512](https://github.com/inference-gateway/browser-agent/commit/fc92512bba0b81d3beb9e043dc4408c1b7a4fd46))
+* **deps:** Bump ADL CLI to v0.31.0 ([#62](https://github.com/inference-gateway/browser-agent/issues/62)) ([15b33e2](https://github.com/inference-gateway/browser-agent/commit/15b33e26506f7c2026e57578dc0d24949d9be610))
+* **deps:** Bump ADL CLI to v0.34.0 ([#65](https://github.com/inference-gateway/browser-agent/issues/65)) ([5d75e1e](https://github.com/inference-gateway/browser-agent/commit/5d75e1e0497221f1d61cbcb442bdaaabf84df3be))
+* **deps:** Bump ADL CLI to v0.34.1 ([#67](https://github.com/inference-gateway/browser-agent/issues/67)) ([ae29031](https://github.com/inference-gateway/browser-agent/commit/ae2903116f092437a03d6a9f520b8fa7cad40878))
+* **deps:** Bump ADL CLI to v0.34.2 ([#68](https://github.com/inference-gateway/browser-agent/issues/68)) ([811796b](https://github.com/inference-gateway/browser-agent/commit/811796b6bb626ccf56ba59fa4dec1cdd928d9d99))
+* **deps:** Bump ADL CLI to v0.36.1 ([#71](https://github.com/inference-gateway/browser-agent/issues/71)) ([a7abd51](https://github.com/inference-gateway/browser-agent/commit/a7abd5155c6d80e29ceeee0efcec5427ce8d09b2))
+* **deps:** Bump ADL CLI to v0.36.2 ([#73](https://github.com/inference-gateway/browser-agent/issues/73)) ([9697df9](https://github.com/inference-gateway/browser-agent/commit/9697df9e18f54fffb7b30f21dfd915a46ddd92de))
+* **deps:** Bump ADL CLI to v0.36.4 ([#74](https://github.com/inference-gateway/browser-agent/issues/74)) ([c3e5690](https://github.com/inference-gateway/browser-agent/commit/c3e56903b20371f7e4cf46497f03271b52aff4e8))
+* **deps:** Bump ADL CLI to v0.38.1 ([#75](https://github.com/inference-gateway/browser-agent/issues/75)) ([9c0170d](https://github.com/inference-gateway/browser-agent/commit/9c0170d1265dfb99206ca0a1c13f3be00bd13d14))
+* Enable a few tools for artifacts ([cf18eb5](https://github.com/inference-gateway/browser-agent/commit/cf18eb53cc98aac4ac6fef688ded6c30f94fc311))
+* Enable docker compose and generate ([0b5a7af](https://github.com/inference-gateway/browser-agent/commit/0b5a7af9c613bbcd7f9019207f04a4a2eabeb796))
+* **flox:** Add manifest lock file ([7ca21e9](https://github.com/inference-gateway/browser-agent/commit/7ca21e90cfd3902044e88f0d0487fbf279edaaed))
+* **flox:** Generate manifest lock file ([63aa810](https://github.com/inference-gateway/browser-agent/commit/63aa810a6c7665948fbb9d0e3e63d35249e42a4f))
+* Generate missing parts ([1f24afe](https://github.com/inference-gateway/browser-agent/commit/1f24afeee411296a8cc766cca7ab2d0387c5624e))
+* **license:** Update license to Apache 2.0 ([9642254](https://github.com/inference-gateway/browser-agent/commit/96422542154e3cb56f15aa32f4a5c111248070fb))
+
+### ✅ Miscellaneous
+
+* Re-generate the tests ([df97e9e](https://github.com/inference-gateway/browser-agent/commit/df97e9e51edc95b9df573674de7d8d68ef75e7d4))
+
 ## [0.5.1](https://github.com/inference-gateway/browser-agent/compare/v0.5.0...v0.5.1) (2026-05-21)
 
 ### 🐛 Bug Fixes
