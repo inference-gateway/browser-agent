@@ -73,6 +73,7 @@ infer agents add browser-agent http://localhost:8080 \
 | `Read` | Read a file from disk. Returns its contents, optionally sliced by line offset/limit. Use this to load SKILL.md bodies on demand. | file_path, offset, limit |
 | `Write` | Write content to a file, creating intermediate directories as needed. Overwrites the file if it already exists. | file_path, content |
 | `Edit` | Replace a unique string in a file with a new value. Errors if old_string is not found or appears more than once. | file_path, old_string, new_string |
+| `Fetch` | Fetch a URL over HTTP(S). Subject to an allowed-domains whitelist and a max-bytes cap; can optionally save the response body to a file inside the configured download_dir (defaults to /tmp). | url, method, save_path, headers |
 | `navigate_to_url` | Navigate to a specific URL and wait for the page to fully load | timeout, url, wait_until |
 | `click_element` | Click on an element identified by selector, text, or other locator strategies | button, click_count, force, selector, timeout |
 | `fill_form` | Fill form fields with provided data, handling various input types | fields, submit, submit_selector |
@@ -122,6 +123,9 @@ them at runtime.
 | **Browser** | `BROWSER_XVFB_ENABLED` | `false` |
 | **Browser** | `BROWSER_XVFB_SCREEN_RESOLUTION` | `1920x1080x24` |
 | **Tools** | `TOOLS_EDIT_ENABLED` | `true` |
+| **Tools** | `TOOLS_FETCH_ALLOW_DOWNLOADS` | `true` |
+| **Tools** | `TOOLS_FETCH_DOWNLOAD_DIR` | `/tmp/playwright/artifacts` |
+| **Tools** | `TOOLS_FETCH_ENABLED` | `true` |
 | **Tools** | `TOOLS_READ_ENABLED` | `true` |
 | **Tools** | `TOOLS_READ_MAX_LINES` | `2000` |
 | **Tools** | `TOOLS_WRITE_ENABLED` | `true` |

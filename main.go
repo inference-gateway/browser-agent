@@ -217,6 +217,14 @@ func runStart(ctx context.Context) error {
 	toolBox.AddTool(editTool)
 	l.Info("registered built-in: Edit")
 
+	// Register Fetch built-in
+	fetchTool, err := tools.NewFetchTool(ctx, l)
+	if err != nil {
+		return fmt.Errorf("failed to construct Fetch tool: %w", err)
+	}
+	toolBox.AddTool(fetchTool)
+	l.Info("registered built-in: Fetch")
+
 	// Register navigate_to_url tool
 	navigateToURLTool := tools.NewNavigateToURLTool(l, playwrightSvc)
 	toolBox.AddTool(navigateToURLTool)
@@ -295,6 +303,24 @@ When helping users:
 - Consider accessibility and best practices
 - Provide clear explanations of automation steps
 - Optimize for speed while maintaining reliability
+
+**Tool selection: fetch vs browser**
+
+Prefer the fetch tool over navigate_to_url whenever the target does not require JavaScript execution or a stateful session. fetch is an order of magnitude faster, leaves no browser session open, and returns the raw bytes directly (with optional save_path for downloads).
+
+Reach for fetch when:
+- The URL serves static content (raw GitHub files, README.md, sitemap.xml, robots.txt, RFCs, JSON/XML APIs, RSS/Atom feeds).
+- The user wants to download a file (PDF, CSV, image, binary asset).
+- You need a one-shot health/status probe (GET /health).
+- The data the user wants is in a backend JSON endpoint the page calls, not in the rendered DOM.
+
+Reach for navigate_to_url (and the Playwright tools) when:
+- The page is a Single-Page App that hydrates client-side.
+- Content is behind authentication, cookies, or CSRF that requires a browser session.
+- You need to interact with the DOM (click, fill, screenshot).
+- The page renders meaningful content only after JS execution (most modern article sites, dashboards, admin panels).
+
+When in doubt: try fetch first. If the response body looks like an empty shell that gets filled in by JS, fall back to navigate_to_url.
 
 **IMPORTANT - Artifact Creation**:
 When users request screenshots, the take_screenshot tool automatically creates downloadable artifacts. The screenshot will be available via a download URL returned in the response.

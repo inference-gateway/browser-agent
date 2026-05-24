@@ -27,6 +27,22 @@ Do **not** use this for tasks that mutate page state (use
 
 ## Workflow
 
+0. **Skip the browser when you can** - before opening a Playwright
+   session, check if the data is reachable without one:
+   - Does the site expose a JSON/XML API? Many SPAs render from a
+     backend endpoint the page calls; if you can identify it (e.g.
+     from the user's URL pattern, a `/api/` path, or a probe), `fetch`
+     it directly and skip the rest of this workflow.
+   - Is there a `/sitemap.xml`? `fetch` it to enumerate URLs instead
+     of clicking through pagination.
+   - Is the target a static page (RFC, raw GitHub README, plaintext
+     docs)? `fetch` returns the body directly; no DOM rendering needed.
+   - Are the records the user wants linked as downloadable files (CSV
+     exports, PDFs)? `fetch` each with `save_path` and parse offline.
+
+   Only fall through to the Playwright workflow below when the data is
+   exclusive to the rendered DOM.
+
 1. **Reconnaissance** - on the first page only:
    - `navigate_to_url` with `wait_until: networkidle`.
    - `take_screenshot` so you can verify the layout matches what the
@@ -70,6 +86,10 @@ Do **not** use this for tasks that mutate page state (use
      flat; otherwise serialize yourself and `write`.
    - For large scrapes, write incrementally (per page) so a crash
      mid-run doesn't lose everything.
+   - **Binary assets**: if the scrape produces non-HTML artifacts
+     (PDFs, images, CSV exports linked from the page), use `fetch`
+     with `save_path` to download each one straight into the artifact
+     directory rather than going through `execute_script`.
 
 6. **Report back** - tell the user how many records, which file, and
    show a 3-5 row sample inline. Mention any pages that returned

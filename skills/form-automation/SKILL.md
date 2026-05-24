@@ -96,8 +96,11 @@ should rotate the credential.
   interactive CAPTCHAs.
 - **File uploads**: `fill_form` with `type: file` expects a local
   path readable by the browser process. If the user passed a URL,
-  download it first (via `execute_script` + `fetch`) and write it
-  to disk.
+  download it first with the `fetch` tool - set `save_path` to a
+  location under `/tmp/playwright/artifacts/` and pass that path as
+  the field value. Don't reach for `execute_script` to invoke the
+  browser-side `fetch()` API for this; the tool-level `fetch` is
+  simpler and writes the bytes directly to disk.
 - **Hidden steps**: some wizards inject extra confirmation steps
   ("Are you sure?") that aren't in the user's instructions. Treat
   them as part of the flow and proceed if the answer is obvious;

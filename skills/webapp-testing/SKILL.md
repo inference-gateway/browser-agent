@@ -34,6 +34,11 @@ assumptions about the DOM. Always inspect the rendered page before
 choosing selectors.
 
 1. **Reconnaissance**
+   - **Pre-flight probe** (post-deploy smoke tests only): before
+     opening the browser, `fetch GET /health` (or whatever the app's
+     status endpoint is) and confirm a 2xx response. If the backend
+     is already down, surface the failure and stop - exercising the
+     UI tells you nothing the probe didn't already.
    - `navigate_to_url` with `wait_until: networkidle` so client-side
      rendering completes before you look at the DOM.
    - `take_screenshot` with `full_page: true` and save the path - you
@@ -63,6 +68,11 @@ choosing selectors.
      (confirmation message, order ID, redirected URL, etc.).
    - Use `execute_script` to assert on client-side state when no
      visible artifact exists (e.g. `return localStorage.getItem('token') !== null`).
+   - **API-side assertion**: when a UI action is supposed to produce
+     server-side state (an order, a record, a job), `fetch` the
+     corresponding read endpoint and confirm the resource exists
+     with the expected fields. A "success" toast does not prove the
+     row was written - the API does.
 
 5. **Report back** - include the screenshot paths and the extracted
    confirmation values. If any step failed, include the screenshot

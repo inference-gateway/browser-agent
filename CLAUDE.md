@@ -78,6 +78,7 @@ The following tools are currently defined:
 - **Read** (built-in): Read a file from disk. Returns its contents, optionally sliced by line offset/limit. Use this to load SKILL.md bodies on demand.
 - **Write** (built-in): Write content to a file, creating intermediate directories as needed. Overwrites the file if it already exists.
 - **Edit** (built-in): Replace a unique string in a file with a new value. Errors if old_string is not found or appears more than once.
+- **Fetch** (built-in): Fetch a URL over HTTP(S). Subject to an allowed-domains whitelist and a max-bytes cap; can optionally save the response body to a file inside the configured download_dir (defaults to /tmp).
 - **navigate_to_url**: Navigate to a specific URL and wait for the page to fully load
 - **click_element**: Click on an element identified by selector, text, or other locator strategies
 - **fill_form**: Fill form fields with provided data, handling various input types

@@ -80,7 +80,26 @@ workflow is structured to prevent all three.
      deliberate contrarian search ("X limitations", "problems with X",
      "<competitor> on X") before moving on.
 
-4. **Gather** - for each kept source:
+4. **Gather** - for each kept source, pick the right transport
+   *before* committing to a Playwright session:
+   - **Static text** (raw GitHub files, RFCs, plaintext docs, blog
+     posts that render server-side): `fetch` returns the body
+     directly. Much faster than rendering and leaves the body
+     trivially greppable for citation. Verify it's not a hydration
+     shell by checking the response body actually contains the
+     article text rather than `<div id="root"></div>`.
+   - **PDFs** (research papers, vendor whitepapers, standards
+     documents): `fetch` with `save_path` into
+     `/tmp/research-<timestamp>/sources/<n>.pdf`, then summarize
+     from disk. The browser cannot extract PDF text reliably.
+   - **Structured data** (JSON APIs, RSS/Atom feeds, OpenAPI specs):
+     `fetch` the endpoint directly - it's the citable source, not
+     the human-facing page that wraps it.
+   - **JS-rendered articles** (most modern news/blog platforms,
+     anything where the source HTML is a hydration shell): use the
+     `navigate_to_url` path below.
+
+   For the JS-rendered path:
    - `navigate_to_url` with `wait_until: networkidle` (JS-rendered
      articles often hydrate after the initial load).
    - `take_screenshot` with `full_page: true` for audit.
