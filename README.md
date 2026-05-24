@@ -251,7 +251,7 @@ docker build \
 
 **Available Build Arguments:**
 
-- `VERSION` - Agent version (default: `0.6.1`)
+- `VERSION` - Agent version (default: `0.6.2`)
 - `AGENT_NAME` - Agent name (default: `browser-agent`)
 - `AGENT_DESCRIPTION` - Agent description (default: `AI agent for browser automation and web testing using Playwright`)
 

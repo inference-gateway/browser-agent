@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.2](https://github.com/inference-gateway/browser-agent/compare/v0.6.1...v0.6.2) (2026-05-24)
+
+### 🐛 Bug Fixes
+
+* **execute_script:** Actionable rejection reasons & fix function-expression false positive ([#80](https://github.com/inference-gateway/browser-agent/issues/80)) ([105a855](https://github.com/inference-gateway/browser-agent/commit/105a85520908b52d1c4a62600f89d7d2b887ce54))
+
+### 👷 CI
+
+* **deps:** Bump github.com/go-jose/go-jose/v3 from 3.0.4 to 3.0.5 ([#81](https://github.com/inference-gateway/browser-agent/issues/81)) ([64db80d](https://github.com/inference-gateway/browser-agent/commit/64db80d86918e271e236785b28ec2a4cd5432451))
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump ADL CLI to v0.39.2 ([#82](https://github.com/inference-gateway/browser-agent/issues/82)) ([c059510](https://github.com/inference-gateway/browser-agent/commit/c0595100562fc59fef52c2cb5e978309f5de753d))
+* Replace em dash with regular dash ([6683e28](https://github.com/inference-gateway/browser-agent/commit/6683e2816bd6c5a066af67cbde654e6f9d29d5be))
+* Run task generate and add apache-2.0 license to skills ([9692bbe](https://github.com/inference-gateway/browser-agent/commit/9692bbe9d707fcc51bfe79581b4d94b0a4bf95e1))
+
 ## [0.6.1](https://github.com/inference-gateway/browser-agent/compare/v0.6.0...v0.6.1) (2026-05-24)
 
 ### 🔧 Miscellaneous

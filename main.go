@@ -34,7 +34,7 @@ import (
 // via `-ldflags "-X 'main.Version=...'"` (see Dockerfile). They default
 // to the values declared in the ADL.
 var (
-	Version          = "0.6.1"
+	Version          = "0.6.2"
 	AgentName        = "browser-agent"
 	AgentDescription = "AI agent for browser automation and web testing using Playwright"
 )
