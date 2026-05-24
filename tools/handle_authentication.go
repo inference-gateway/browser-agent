@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
+
+	server "github.com/inference-gateway/adk/server"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
+
+var validAuthTypes = []string{"basic", "form", "oauth"}
 
 // HandleAuthenticationTool struct holds the tool with dependencies
 type HandleAuthenticationTool struct {
@@ -23,7 +27,7 @@ func NewHandleAuthenticationTool(logger *zap.Logger, playwright playwright.Brows
 	}
 	return server.NewBasicTool(
 		"handle_authentication",
-		"Handle various authentication scenarios including basic auth, OAuth, and custom login forms",
+		"NOT YET IMPLEMENTED: This tool currently returns an error explaining that authentication is not wired through. For basic auth, configure HTTP credentials at the browser context level. For form login, compose navigate_to_url + fill_form + click_element. For OAuth, run the flow manually with the above primitives.",
 		map[string]any{
 			"type": "object",
 			"properties": map[string]any{
@@ -62,23 +66,30 @@ func NewHandleAuthenticationTool(logger *zap.Logger, playwright playwright.Brows
 	)
 }
 
-// HandleAuthenticationHandler handles the handle_authentication tool execution
+// HandleAuthenticationHandler returns an explicit "not implemented" error
+// instead of the previous silent no-op TODO that returned a fake-success
+// payload. We still validate args["type"] so the caller gets a clearer
+// signal when they passed something garbage in addition to hitting an
+// unimplemented tool.
+//
+// The plumbing in internal/playwright.HandleAuthentication exists but the
+// wiring between this tool's args (login_url, *_selector, ...) and the
+// service's expected layout (selectors map[string]string) was never
+// completed. Until it is, fail loudly.
 func (s *HandleAuthenticationTool) HandleAuthenticationHandler(ctx context.Context, args map[string]any) (string, error) {
-	// TODO: Implement handle_authentication logic
-	// Handle various authentication scenarios including basic auth, OAuth, and custom login forms
+	authType, err := requiredString(args, "type")
+	if err != nil {
+		return "", err
+	}
+	if !oneOf(authType, validAuthTypes...) {
+		return "", fmt.Errorf("invalid auth type: %s. Must be one of: %v", authType, validAuthTypes)
+	}
 
-	// Example of using dependencies:
-	// s.logger.SomeMethod(ctx, ...)
-	// s.playwright.SomeMethod(ctx, ...)
+	s.logger.Warn("handle_authentication invoked but not implemented",
+		zap.String("auth_type", authType))
 
-	// Extract parameters from args
-	// login_url := args["login_url"].(string)
-	// password := args["password"].(string)
-	// password_selector := args["password_selector"].(string)
-	// submit_selector := args["submit_selector"].(string)
-	// type := args["type"].(string)
-	// username := args["username"].(string)
-	// username_selector := args["username_selector"].(string)
-
-	return fmt.Sprintf(`{"result": "TODO: Implement handle_authentication logic", "input": %+v}`, args), nil
+	return "", fmt.Errorf("handle_authentication is not yet implemented (auth_type=%s). "+
+		"For basic auth, configure HTTP credentials at the browser context level. "+
+		"For form login, compose navigate_to_url + fill_form + click_element instead. "+
+		"For OAuth, drive the flow manually with the same primitives", authType)
 }

@@ -6,13 +6,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
-	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
+
+	server "github.com/inference-gateway/adk/server"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
+)
+
+var (
+	validExtractFormats = []string{"json", "csv", "text"}
+
+	// Hoisted regexes — previously compiled per call inside cleanString.
+	whitespaceRun = regexp.MustCompile(`\s+`)
+	controlChars  = regexp.MustCompile(`[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`)
 )
 
 // ExtractDataTool struct holds the tool with dependencies
@@ -35,8 +44,17 @@ func NewExtractDataTool(logger *zap.Logger, playwright playwright.BrowserAutomat
 			"properties": map[string]any{
 				"extractors": map[string]any{
 					"description": "List of data extractors to run",
-					"items":       map[string]any{"type": "object", "properties": map[string]any{"name": map[string]any{"type": "string", "description": "Name for the extracted data field"}, "selector": map[string]any{"type": "string", "description": "CSS selector or XPath to extract data from"}, "attribute": map[string]any{"type": "string", "description": "Attribute to extract (text, href, src, etc.)", "default": "text"}, "multiple": map[string]any{"type": "boolean", "description": "Extract all matching elements or just the first", "default": false}}, "required": []string{"name", "selector"}},
 					"type":        "array",
+					"items": map[string]any{
+						"required": []string{"name", "selector"},
+						"type":     "object",
+						"properties": map[string]any{
+							"name":      map[string]any{"type": "string", "description": "Name for the extracted data field"},
+							"selector":  map[string]any{"type": "string", "description": "CSS selector or XPath to extract data from"},
+							"attribute": map[string]any{"type": "string", "description": "Attribute to extract (text, href, src, etc.)", "default": "text"},
+							"multiple":  map[string]any{"type": "boolean", "description": "Extract all matching elements or just the first", "default": false},
+						},
+					},
 				},
 				"format": map[string]any{
 					"default":     "json",
@@ -50,24 +68,31 @@ func NewExtractDataTool(logger *zap.Logger, playwright playwright.BrowserAutomat
 	)
 }
 
-// ExtractDataHandler handles the extract_data tool execution
+// ExtractDataHandler handles the extract_data tool execution.
+//
+// The playwright service returns canonical JSON for the extracted map;
+// previously this tool carried a hand-rolled "Go %+v map" parser as a
+// fallback because the service emitted fmt.Sprintf("%+v", results). That
+// fallback is now gone.
 func (s *ExtractDataTool) ExtractDataHandler(ctx context.Context, args map[string]any) (string, error) {
-	extractors, ok := args["extractors"].([]any)
-	if !ok || len(extractors) == 0 {
-		s.logger.Error("extractors parameter is required and must be a non-empty array")
+	rawExtractors, present, err := sliceArg(args, "extractors")
+	if err != nil {
+		return "", err
+	}
+	if !present || len(rawExtractors) == 0 {
 		return "", fmt.Errorf("extractors parameter is required and must be a non-empty array")
 	}
 
-	format := "json"
-	if f, ok := args["format"].(string); ok && f != "" {
-		if !s.isValidFormat(f) {
-			return "", fmt.Errorf("invalid format: %s. Must be one of: json, csv, text", f)
-		}
-		format = f
+	format, err := stringArg(args, "format", "json")
+	if err != nil {
+		return "", err
+	}
+	if !oneOf(format, validExtractFormats...) {
+		return "", fmt.Errorf("invalid format: %s. Must be one of: %v", format, validExtractFormats)
 	}
 
 	s.logger.Info("extracting data from page",
-		zap.Int("extractors_count", len(extractors)),
+		zap.Int("extractors_count", len(rawExtractors)),
 		zap.String("format", format))
 
 	session, err := s.playwright.GetOrCreateTaskSession(ctx)
@@ -76,7 +101,7 @@ func (s *ExtractDataTool) ExtractDataHandler(ctx context.Context, args map[strin
 		return "", fmt.Errorf("failed to get browser session: %w", err)
 	}
 
-	playwrightExtractors, err := s.convertExtractors(extractors)
+	playwrightExtractors, err := s.convertExtractors(rawExtractors)
 	if err != nil {
 		s.logger.Error("failed to convert extractors", zap.Error(err))
 		return "", fmt.Errorf("failed to convert extractors: %w", err)
@@ -93,28 +118,35 @@ func (s *ExtractDataTool) ExtractDataHandler(ctx context.Context, args map[strin
 		return "", fmt.Errorf("data extraction failed: %w", err)
 	}
 
-	result, err := s.processExtractedData(rawResult, format, extractors)
+	parsed, err := s.parseRawResult(rawResult)
 	if err != nil {
-		s.logger.Error("failed to process extracted data", zap.Error(err))
-		return "", fmt.Errorf("failed to process extracted data: %w", err)
+		s.logger.Error("failed to parse extracted data", zap.Error(err))
+		return "", fmt.Errorf("failed to parse extracted data: %w", err)
 	}
 
-	s.logger.Info("data extraction completed successfully",
-		zap.String("sessionID", session.ID),
-		zap.String("format", format))
+	cleaned, _ := s.cleanAndNormalizeData(parsed).(map[string]any)
+	if cleaned == nil {
+		cleaned = parsed
+	}
 
-	return result, nil
+	switch format {
+	case "csv":
+		return s.formatAsCSV(cleaned)
+	case "text":
+		return s.formatAsText(cleaned), nil
+	default:
+		return s.formatAsJSON(cleaned, len(rawExtractors))
+	}
 }
 
-// isValidFormat validates the output format parameter
-func (s *ExtractDataTool) isValidFormat(format string) bool {
-	validFormats := []string{"json", "csv", "text"}
-	for _, valid := range validFormats {
-		if format == valid {
-			return true
-		}
+// parseRawResult parses the canonical JSON document returned by the
+// playwright service.
+func (s *ExtractDataTool) parseRawResult(rawResult string) (map[string]any, error) {
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(rawResult), &parsed); err != nil {
+		return nil, fmt.Errorf("playwright service returned non-JSON payload: %w", err)
 	}
-	return false
+	return parsed, nil
 }
 
 // convertExtractors converts extractors from any to the format expected by Playwright service
@@ -158,69 +190,37 @@ func (s *ExtractDataTool) convertExtractors(extractors []any) ([]map[string]any,
 	return converted, nil
 }
 
-// processExtractedData processes the raw extracted data and formats it according to the specified format
-func (s *ExtractDataTool) processExtractedData(rawResult, format string, originalExtractors []any) (string, error) {
-	switch format {
-	case "json":
-		return s.formatAsJSON(rawResult, originalExtractors)
-	case "csv":
-		return s.formatAsCSV(rawResult, originalExtractors)
-	case "text":
-		return s.formatAsText(rawResult, originalExtractors)
-	default:
-		return rawResult, nil
-	}
-}
-
-// formatAsJSON formats the extracted data as JSON with metadata
-func (s *ExtractDataTool) formatAsJSON(rawResult string, extractors []any) (string, error) {
-	parsedData, err := s.parseRawResult(rawResult)
-	if err != nil {
-		return "", err
-	}
-
-	result := map[string]any{
+// formatAsJSON wraps the extracted data in the canonical envelope with
+// metadata. Returns valid JSON.
+func (s *ExtractDataTool) formatAsJSON(data map[string]any, extractorCount int) (string, error) {
+	return marshalResponse(map[string]any{
 		"success":    true,
 		"format":     "json",
-		"extractors": len(extractors),
-		"data":       parsedData,
+		"extractors": extractorCount,
+		"data":       data,
 		"metadata": map[string]any{
 			"extraction_time": time.Now().Unix(),
-			"total_fields":    len(parsedData),
+			"total_fields":    len(data),
 		},
-	}
-
-	cleanedData := s.cleanAndNormalizeData(result["data"])
-	result["data"] = cleanedData
-
-	jsonBytes, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal JSON: %w", err)
-	}
-
-	return string(jsonBytes), nil
+	})
 }
 
-// formatAsCSV formats the extracted data as CSV
-func (s *ExtractDataTool) formatAsCSV(rawResult string, extractors []any) (string, error) {
-	parsedData, err := s.parseRawResult(rawResult)
-	if err != nil {
-		return "", err
-	}
+// formatAsCSV writes a header row of extractor names and as many data rows
+// as the largest array-valued field. Scalar fields appear only on the first
+// row.
+func (s *ExtractDataTool) formatAsCSV(data map[string]any) (string, error) {
+	var buf strings.Builder
+	writer := csv.NewWriter(&buf)
 
-	var csvBuilder strings.Builder
-	writer := csv.NewWriter(&csvBuilder)
-
-	headers := make([]string, 0, len(parsedData))
-	for key := range parsedData {
+	headers := make([]string, 0, len(data))
+	for key := range data {
 		headers = append(headers, key)
 	}
 	if err := writer.Write(headers); err != nil {
 		return "", fmt.Errorf("failed to write CSV header: %w", err)
 	}
 
-	rows := s.generateCSVRows(parsedData, headers)
-	for _, row := range rows {
+	for _, row := range generateCSVRows(data, headers) {
 		if err := writer.Write(row); err != nil {
 			return "", fmt.Errorf("failed to write CSV row: %w", err)
 		}
@@ -231,262 +231,67 @@ func (s *ExtractDataTool) formatAsCSV(rawResult string, extractors []any) (strin
 		return "", fmt.Errorf("CSV writing error: %w", err)
 	}
 
-	return csvBuilder.String(), nil
+	return buf.String(), nil
 }
 
-// formatAsText formats the extracted data as human-readable text
-func (s *ExtractDataTool) formatAsText(rawResult string, extractors []any) (string, error) {
-	parsedData, err := s.parseRawResult(rawResult)
-	if err != nil {
-		return "", err
-	}
+// formatAsText emits a human-readable rendering of the extracted data.
+func (s *ExtractDataTool) formatAsText(data map[string]any) string {
+	var buf strings.Builder
+	buf.WriteString("Extracted Data:\n")
+	buf.WriteString("==============\n\n")
 
-	var textBuilder strings.Builder
-	textBuilder.WriteString("Extracted Data:\n")
-	textBuilder.WriteString("==============\n\n")
-
-	for key, value := range parsedData {
-		fmt.Fprintf(&textBuilder, "%s: ", key)
+	for key, value := range data {
+		fmt.Fprintf(&buf, "%s: ", key)
 		switch v := value.(type) {
 		case []any:
-			textBuilder.WriteString("\n")
+			buf.WriteString("\n")
 			for i, item := range v {
-				fmt.Fprintf(&textBuilder, "  [%d] %v\n", i+1, item)
+				fmt.Fprintf(&buf, "  [%d] %v\n", i+1, item)
 			}
 		default:
-			fmt.Fprintf(&textBuilder, "%v\n", v)
+			fmt.Fprintf(&buf, "%v\n", v)
 		}
-		textBuilder.WriteString("\n")
+		buf.WriteString("\n")
 	}
 
-	return textBuilder.String(), nil
+	return buf.String()
 }
 
-// parseRawResult parses the raw result string from Playwright service
-func (s *ExtractDataTool) parseRawResult(rawResult string) (map[string]any, error) {
-
-	var parsedData map[string]any
-
-	if err := json.Unmarshal([]byte(rawResult), &parsedData); err == nil {
-		return parsedData, nil
-	}
-
-	if strings.HasPrefix(rawResult, "map[") && strings.HasSuffix(rawResult, "]") {
-		return s.parseGoMapFormat(rawResult)
-	}
-
-	return s.extractDataFromString(rawResult)
-}
-
-// parseGoMapFormat parses Go map format: map[key1:value1 key2:value2]
-func (s *ExtractDataTool) parseGoMapFormat(mapStr string) (map[string]any, error) {
-	data := make(map[string]any)
-
-	content := strings.TrimPrefix(mapStr, "map[")
-	content = strings.TrimSuffix(content, "]")
-
-	if content == "" {
-		return data, nil
-	}
-
-	parts := s.smartSplit(content)
-
-	for _, part := range parts {
-		if strings.Contains(part, ":") {
-			keyValue := strings.SplitN(part, ":", 2)
-			if len(keyValue) == 2 {
-				key := strings.TrimSpace(keyValue[0])
-				value := strings.TrimSpace(keyValue[1])
-
-				data[key] = s.parseValue(value)
-			}
-		}
-	}
-
-	return data, nil
-}
-
-// smartSplit splits the map content intelligently, handling quoted values and brackets
-func (s *ExtractDataTool) smartSplit(content string) []string {
-	var parts []string
-	var current strings.Builder
-	inBrackets := 0
-	inQuotes := false
-	foundKey := false
-
-	for i, char := range content {
-		switch char {
-		case '[':
-			inBrackets++
-			current.WriteRune(char)
-		case ']':
-			inBrackets--
-			current.WriteRune(char)
-		case '"', '\'':
-			inQuotes = !inQuotes
-			current.WriteRune(char)
-		case ':':
-			if inBrackets == 0 && !inQuotes && !foundKey {
-				foundKey = true
-				current.WriteRune(char)
-			} else {
-				current.WriteRune(char)
-			}
-		case ' ':
-			if inBrackets == 0 && !inQuotes && foundKey {
-				if s.isNextKeyStart(content, i) {
-					if current.Len() > 0 {
-						parts = append(parts, current.String())
-						current.Reset()
-						foundKey = false
-					}
-				} else {
-					current.WriteRune(char)
-				}
-			} else if inBrackets == 0 && !inQuotes && !foundKey {
-				if current.Len() > 0 {
-					parts = append(parts, current.String())
-					current.Reset()
-				}
-			} else {
-				current.WriteRune(char)
-			}
-		default:
-			current.WriteRune(char)
-		}
-	}
-
-	if current.Len() > 0 {
-		parts = append(parts, current.String())
-	}
-
-	return parts
-}
-
-// isNextKeyStart checks if the next non-space characters form a key (word followed by colon)
-func (s *ExtractDataTool) isNextKeyStart(content string, currentPos int) bool {
-	i := currentPos + 1
-	for i < len(content) && content[i] == ' ' {
-		i++
-	}
-
-	if i >= len(content) {
-		return false
-	}
-
-	wordStart := i
-	for i < len(content) && (content[i] != ' ' && content[i] != ':' && content[i] != '[' && content[i] != ']') {
-		i++
-	}
-
-	return i > wordStart && i < len(content) && content[i] == ':'
-}
-
-// parseValue attempts to parse a string value into appropriate Go type
-func (s *ExtractDataTool) parseValue(value string) any {
-	if strings.HasPrefix(value, "[") && strings.HasSuffix(value, "]") {
-		arrayContent := strings.TrimPrefix(value, "[")
-		arrayContent = strings.TrimSuffix(arrayContent, "]")
-
-		if arrayContent == "" {
-			return []any{}
-		}
-
-		items := strings.Fields(arrayContent)
-		result := make([]any, len(items))
-		for i, item := range items {
-			result[i] = s.parseScalarValue(item)
-		}
-		return result
-	}
-
-	return s.parseScalarValue(value)
-}
-
-// parseScalarValue parses individual scalar values
-func (s *ExtractDataTool) parseScalarValue(value string) any {
-	if (strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"")) ||
-		(strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) {
-		return value[1 : len(value)-1]
-	}
-
-	if intVal, err := strconv.Atoi(value); err == nil {
-		return intVal
-	}
-
-	if floatVal, err := strconv.ParseFloat(value, 64); err == nil {
-		return floatVal
-	}
-
-	if boolVal, err := strconv.ParseBool(value); err == nil {
-		return boolVal
-	}
-
-	if value == "<nil>" || value == "null" {
-		return nil
-	}
-
-	return value
-}
-
-// extractDataFromString extracts data from string representation (fallback method)
-func (s *ExtractDataTool) extractDataFromString(result string) (map[string]any, error) {
-	data := make(map[string]any)
-
-	pattern := regexp.MustCompile(`(\w+):\s*([^\n]+)`)
-	matches := pattern.FindAllStringSubmatch(result, -1)
-
-	for _, match := range matches {
-		if len(match) >= 3 {
-			key := strings.TrimSpace(match[1])
-			value := strings.TrimSpace(match[2])
-			data[key] = value
-		}
-	}
-
-	return data, nil
-}
-
-// generateCSVRows generates CSV rows from parsed data, handling arrays appropriately
-func (s *ExtractDataTool) generateCSVRows(data map[string]any, headers []string) [][]string {
+// generateCSVRows generates CSV rows from parsed data. The number of rows
+// equals the longest array-valued field; scalar fields show only on row 0.
+func generateCSVRows(data map[string]any, headers []string) [][]string {
 	maxRows := 1
 	for _, value := range data {
-		if arr, ok := value.([]any); ok {
-			if len(arr) > maxRows {
-				maxRows = len(arr)
-			}
+		if arr, ok := value.([]any); ok && len(arr) > maxRows {
+			maxRows = len(arr)
 		}
 	}
 
 	rows := make([][]string, maxRows)
-	for i := 0; i < maxRows; i++ {
+	for i := range maxRows {
 		rows[i] = make([]string, len(headers))
 		for j, header := range headers {
-			value := data[header]
-			if arr, ok := value.([]any); ok {
-				if i < len(arr) {
-					rows[i][j] = fmt.Sprintf("%v", arr[i])
-				} else {
-					rows[i][j] = ""
+			switch v := data[header].(type) {
+			case []any:
+				if i < len(v) {
+					rows[i][j] = fmt.Sprintf("%v", v[i])
 				}
-			} else {
+			default:
 				if i == 0 {
-					rows[i][j] = fmt.Sprintf("%v", value)
-				} else {
-					rows[i][j] = ""
+					rows[i][j] = fmt.Sprintf("%v", v)
 				}
 			}
 		}
 	}
-
 	return rows
 }
 
-// cleanAndNormalizeData applies data cleaning and normalization
+// cleanAndNormalizeData walks the JSON tree and applies cleanString to
+// every string leaf.
 func (s *ExtractDataTool) cleanAndNormalizeData(data any) any {
 	switch v := data.(type) {
 	case map[string]any:
-		cleaned := make(map[string]any)
+		cleaned := make(map[string]any, len(v))
 		for key, value := range v {
 			cleaned[key] = s.cleanAndNormalizeData(value)
 		}
@@ -498,21 +303,17 @@ func (s *ExtractDataTool) cleanAndNormalizeData(data any) any {
 		}
 		return cleaned
 	case string:
-		return s.cleanString(v)
+		return cleanString(v)
 	default:
 		return v
 	}
 }
 
-// cleanString performs string cleaning and normalization
-func (s *ExtractDataTool) cleanString(text string) string {
+// cleanString collapses whitespace runs and strips control characters.
+// Regexes are package-level so they compile once.
+func cleanString(text string) string {
 	cleaned := strings.TrimSpace(text)
-
-	spaceRegex := regexp.MustCompile(`\s+`)
-	cleaned = spaceRegex.ReplaceAllString(cleaned, " ")
-
-	controlRegex := regexp.MustCompile(`[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]`)
-	cleaned = controlRegex.ReplaceAllString(cleaned, "")
-
+	cleaned = whitespaceRun.ReplaceAllString(cleaned, " ")
+	cleaned = controlChars.ReplaceAllString(cleaned, "")
 	return cleaned
 }

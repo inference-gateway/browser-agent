@@ -2,24 +2,28 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
-	"github.com/inference-gateway/browser-agent/internal/playwright"
-	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
+	zap "go.uber.org/zap"
+
+	assert "github.com/stretchr/testify/assert"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 func TestClickElementTool_ClickElementHandler(t *testing.T) {
 	logger := zap.NewNop()
 
 	tests := []struct {
-		name           string
-		args           map[string]any
-		setupMock      func(*mocks.FakeBrowserAutomation)
-		expectedError  bool
-		expectedResult string
+		name          string
+		args          map[string]any
+		setupMock     func(*mocks.FakeBrowserAutomation)
+		expectedError bool
+		errorContains string
 	}{
 		{
 			name: "successful basic click",
@@ -27,9 +31,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 				"selector": "#submit-button",
 			},
 			setupMock: func(m *mocks.FakeBrowserAutomation) {
-				session := &playwright.BrowserSession{
-					ID: "test-session",
-				}
+				session := &playwright.BrowserSession{ID: "test-session"}
 				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
@@ -47,9 +49,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 				"timeout":     5000,
 			},
 			setupMock: func(m *mocks.FakeBrowserAutomation) {
-				session := &playwright.BrowserSession{
-					ID: "test-session",
-				}
+				session := &playwright.BrowserSession{ID: "test-session"}
 				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
@@ -63,9 +63,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 				"selector": "//button[@id='submit']",
 			},
 			setupMock: func(m *mocks.FakeBrowserAutomation) {
-				session := &playwright.BrowserSession{
-					ID: "test-session",
-				}
+				session := &playwright.BrowserSession{ID: "test-session"}
 				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
@@ -79,9 +77,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 				"selector": "'Click Me'",
 			},
 			setupMock: func(m *mocks.FakeBrowserAutomation) {
-				session := &playwright.BrowserSession{
-					ID: "test-session",
-				}
+				session := &playwright.BrowserSession{ID: "test-session"}
 				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
@@ -96,6 +92,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 			},
 			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
 			expectedError: true,
+			errorContains: "selector parameter is required",
 		},
 		{
 			name: "empty selector parameter",
@@ -104,6 +101,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 			},
 			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
 			expectedError: true,
+			errorContains: "non-empty string",
 		},
 		{
 			name: "invalid button parameter",
@@ -113,6 +111,27 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 			},
 			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
 			expectedError: true,
+			errorContains: "invalid button value",
+		},
+		{
+			name: "negative timeout rejected",
+			args: map[string]any{
+				"selector": "#button",
+				"timeout":  -1,
+			},
+			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
+			expectedError: true,
+			errorContains: "timeout must be between",
+		},
+		{
+			name: "click_count must be positive",
+			args: map[string]any{
+				"selector":    "#button",
+				"click_count": 0,
+			},
+			setupMock:     func(m *mocks.FakeBrowserAutomation) {},
+			expectedError: true,
+			errorContains: "click_count must be between",
 		},
 		{
 			name: "browser launch failure",
@@ -130,9 +149,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 				"selector": "#nonexistent",
 			},
 			setupMock: func(m *mocks.FakeBrowserAutomation) {
-				session := &playwright.BrowserSession{
-					ID: "test-session",
-				}
+				session := &playwright.BrowserSession{ID: "test-session"}
 				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(errors.New("element not found"))
@@ -145,9 +162,7 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 				"selector": "#button",
 			},
 			setupMock: func(m *mocks.FakeBrowserAutomation) {
-				session := &playwright.BrowserSession{
-					ID: "test-session",
-				}
+				session := &playwright.BrowserSession{ID: "test-session"}
 				m.GetOrCreateTaskSessionReturns(session, nil)
 				m.GetSessionReturns(session, nil)
 				m.WaitForConditionReturns(nil)
@@ -171,36 +186,43 @@ func TestClickElementTool_ClickElementHandler(t *testing.T) {
 
 			if tt.expectedError {
 				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
 				assert.Empty(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.Contains(t, result, "success:true")
+				return
 			}
+
+			assert.NoError(t, err)
+			var parsed map[string]any
+			assert.NoError(t, json.Unmarshal([]byte(result), &parsed), "response should be valid JSON")
+			assert.Equal(t, true, parsed["success"])
 		})
 	}
 }
 
-func TestClickElementTool_isValidButton(t *testing.T) {
-	tool := &ClickElementTool{}
+// TestClickElementTool_ForceSkipsActionabilityWait verifies that force=true
+// bypasses the visibility wait, which is the documented purpose of the flag.
+// Before the fix the flag was accepted but ignored.
+func TestClickElementTool_ForceSkipsActionabilityWait(t *testing.T) {
+	logger := zap.NewNop()
+	mockPlaywright := &mocks.FakeBrowserAutomation{}
+	session := &playwright.BrowserSession{ID: "test-session"}
+	mockPlaywright.GetOrCreateTaskSessionReturns(session, nil)
+	mockPlaywright.GetSessionReturns(session, nil)
+	mockPlaywright.ClickElementReturns(nil)
 
-	tests := []struct {
-		button   string
-		expected bool
-	}{
-		{"left", true},
-		{"right", true},
-		{"middle", true},
-		{"invalid", false},
-		{"", false},
-		{"LEFT", false},
-	}
+	tool := &ClickElementTool{logger: logger, playwright: mockPlaywright}
+	_, err := tool.ClickElementHandler(context.Background(), map[string]any{
+		"selector": "#hidden",
+		"force":    true,
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.button, func(t *testing.T) {
-			result := tool.isValidButton(tt.button)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, 0, mockPlaywright.WaitForConditionCallCount(),
+		"WaitForCondition should be skipped when force=true")
+	assert.Equal(t, 1, mockPlaywright.ClickElementCallCount(),
+		"ClickElement should still be invoked")
 }
 
 func TestClickElementTool_normalizeSelector(t *testing.T) {
@@ -276,6 +298,18 @@ func TestClickElementTool_normalizeSelector(t *testing.T) {
 			name:             "Complex CSS selector",
 			selector:         "div.container > button.primary:first-child",
 			expectedSelector: "div.container > button.primary:first-child",
+			expectedType:     "css",
+		},
+		{
+			name:             "CSS data-text attribute is not misclassified as text",
+			selector:         `[data-text="hello"]`,
+			expectedSelector: `[data-text="hello"]`,
+			expectedType:     "css",
+		},
+		{
+			name:             "CSS attribute selector with text in name stays CSS",
+			selector:         `input[name="search-text"]`,
+			expectedSelector: `input[name="search-text"]`,
 			expectedType:     "css",
 		},
 	}

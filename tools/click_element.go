@@ -7,10 +7,23 @@ import (
 	"strings"
 	"time"
 
-	server "github.com/inference-gateway/adk/server"
-	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 	zap "go.uber.org/zap"
+
+	server "github.com/inference-gateway/adk/server"
+
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
+
+// textSelectorPrefixes recognizes Playwright text-engine selectors.
+// Compiled once at package init instead of per call.
+var textSelectorPrefixes = regexp.MustCompile(`^(text=|:text\(|:has-text\(|:text-is\(|:text-matches\()`)
+
+var validButtons = []string{"left", "right", "middle"}
+
+func isQuotedString(s string) bool {
+	return (strings.HasPrefix(s, "'") && strings.HasSuffix(s, "'")) ||
+		(strings.HasPrefix(s, "\"") && strings.HasSuffix(s, "\""))
+}
 
 // ClickElementTool struct holds the tool with dependencies
 type ClickElementTool struct {
@@ -36,13 +49,13 @@ func NewClickElementTool(logger *zap.Logger, playwright playwright.BrowserAutoma
 					"type":        "string",
 				},
 				"click_count": map[string]any{
-					"default":     1,
+					"default":     defaultClickCount,
 					"description": "Number of times to click",
 					"type":        "integer",
 				},
 				"force": map[string]any{
 					"default":     false,
-					"description": "Force click even if element is not visible",
+					"description": "Force click even if element is not visible or actionable (skips the pre-click visibility wait)",
 					"type":        "boolean",
 				},
 				"selector": map[string]any{
@@ -50,7 +63,7 @@ func NewClickElementTool(logger *zap.Logger, playwright playwright.BrowserAutoma
 					"type":        "string",
 				},
 				"timeout": map[string]any{
-					"default":     30000,
+					"default":     defaultTimeoutMs,
 					"description": "Maximum time to wait for element in milliseconds",
 					"type":        "integer",
 				},
@@ -63,36 +76,32 @@ func NewClickElementTool(logger *zap.Logger, playwright playwright.BrowserAutoma
 
 // ClickElementHandler handles the click_element tool execution
 func (s *ClickElementTool) ClickElementHandler(ctx context.Context, args map[string]any) (string, error) {
-	selector, ok := args["selector"].(string)
-	if !ok || selector == "" {
-		return "", fmt.Errorf("selector parameter is required and must be a non-empty string")
+	selector, err := requiredString(args, "selector")
+	if err != nil {
+		return "", err
 	}
 
-	button := "left"
-	if b, ok := args["button"].(string); ok && b != "" {
-		if !s.isValidButton(b) {
-			return "", fmt.Errorf("invalid button value: %s. Must be one of: left, right, middle", b)
-		}
-		button = b
+	button, err := stringArg(args, "button", "left")
+	if err != nil {
+		return "", err
+	}
+	if !oneOf(button, validButtons...) {
+		return "", fmt.Errorf("invalid button value: %s. Must be one of: %v", button, validButtons)
 	}
 
-	clickCount := 1
-	if c, ok := args["click_count"].(int); ok && c > 0 {
-		clickCount = c
-	} else if cf, ok := args["click_count"].(float64); ok && cf > 0 {
-		clickCount = int(cf)
+	clickCount, err := boundedIntArg(args, "click_count", defaultClickCount, minClickCount, maxClickCount)
+	if err != nil {
+		return "", err
 	}
 
-	force := false
-	if f, ok := args["force"].(bool); ok {
-		force = f
+	force, err := boolArg(args, "force", false)
+	if err != nil {
+		return "", err
 	}
 
-	timeout := 30000
-	if t, ok := args["timeout"].(int); ok && t > 0 {
-		timeout = t
-	} else if tf, ok := args["timeout"].(float64); ok && tf > 0 {
-		timeout = int(tf)
+	timeout, err := boundedIntArg(args, "timeout", defaultTimeoutMs, minTimeoutMs, maxTimeoutMs)
+	if err != nil {
+		return "", err
 	}
 
 	s.logger.Info("clicking element",
@@ -114,24 +123,28 @@ func (s *ClickElementTool) ClickElementHandler(ctx context.Context, args map[str
 		zap.String("normalized", normalizedSelector),
 		zap.String("type", selectorType))
 
+	timeoutDuration := time.Duration(timeout) * time.Millisecond
 	options := map[string]any{
-		"timeout":     time.Duration(timeout) * time.Millisecond,
+		"timeout":     timeoutDuration,
 		"force":       force,
 		"click_count": clickCount,
 		"button":      button,
 	}
 
-	err = s.waitForElementActionable(ctx, session.ID, normalizedSelector, timeout)
-	if err != nil {
-		s.logger.Error("element not actionable",
-			zap.String("selector", normalizedSelector),
-			zap.String("sessionID", session.ID),
-			zap.Error(err))
-		return "", fmt.Errorf("element not actionable: %w", err)
+	// When force=true, skip the actionability wait — the caller explicitly
+	// asked to click without waiting for visibility (e.g. covered elements,
+	// pointer-events:none). The previous behaviour ignored the flag.
+	if !force {
+		if err := s.waitForElementActionable(ctx, session, normalizedSelector, timeout); err != nil {
+			s.logger.Error("element not actionable",
+				zap.String("selector", normalizedSelector),
+				zap.String("sessionID", session.ID),
+				zap.Error(err))
+			return "", fmt.Errorf("element not actionable: %w", err)
+		}
 	}
 
-	err = s.playwright.ClickElement(ctx, session.ID, normalizedSelector, options)
-	if err != nil {
+	if err := s.playwright.ClickElement(ctx, session.ID, normalizedSelector, options); err != nil {
 		s.logger.Error("click failed",
 			zap.String("selector", normalizedSelector),
 			zap.String("sessionID", session.ID),
@@ -143,7 +156,7 @@ func (s *ClickElementTool) ClickElementHandler(ctx context.Context, args map[str
 		zap.String("selector", normalizedSelector),
 		zap.String("sessionID", session.ID))
 
-	response := map[string]any{
+	return marshalResponse(map[string]any{
 		"success":       true,
 		"selector":      selector,
 		"button":        button,
@@ -153,47 +166,28 @@ func (s *ClickElementTool) ClickElementHandler(ctx context.Context, args map[str
 		"session_id":    session.ID,
 		"selector_type": selectorType,
 		"message":       "Element clicked successfully",
-	}
-
-	return fmt.Sprintf(`%+v`, response), nil
+	})
 }
 
-// isValidButton validates the button parameter
-func (s *ClickElementTool) isValidButton(button string) bool {
-	validButtons := []string{"left", "right", "middle"}
-	for _, valid := range validButtons {
-		if button == valid {
-			return true
-		}
-	}
-	return false
-}
-
-// normalizeSelector processes the selector to support CSS, XPath, and text-based strategies
+// normalizeSelector processes the selector to support CSS, XPath, and text-based strategies.
+// The text= classification matches Playwright's text engine PREFIXES exactly, not
+// substring "text=" which would false-positive on CSS like [data-text="x"].
 func (s *ClickElementTool) normalizeSelector(selector string) (string, string) {
 	selector = strings.TrimSpace(selector)
 
-	if strings.HasPrefix(selector, "/") || strings.HasPrefix(selector, "//") || strings.HasPrefix(selector, "xpath=") {
-		if strings.HasPrefix(selector, "xpath=") {
-			return selector[6:], "xpath"
-		}
+	if strings.HasPrefix(selector, "xpath=") {
+		return selector[6:], "xpath"
+	}
+	if strings.HasPrefix(selector, "/") || strings.HasPrefix(selector, "//") {
 		return selector, "xpath"
 	}
 
-	textRegex := regexp.MustCompile(`^(text=|:text\(|:has-text\(|:text-is\(|:text-matches\()`)
-	if textRegex.MatchString(selector) {
+	if textSelectorPrefixes.MatchString(selector) {
 		return selector, "text"
 	}
 
-	if strings.Contains(selector, "text=") ||
-		(strings.HasPrefix(selector, "'") && strings.HasSuffix(selector, "'")) ||
-		(strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
-		if (strings.HasPrefix(selector, "'") && strings.HasSuffix(selector, "'")) ||
-			(strings.HasPrefix(selector, "\"") && strings.HasSuffix(selector, "\"")) {
-			text := selector[1 : len(selector)-1]
-			return fmt.Sprintf("text=%s", text), "text"
-		}
-		return selector, "text"
+	if isQuotedString(selector) {
+		return fmt.Sprintf("text=%s", selector[1:len(selector)-1]), "text"
 	}
 
 	if strings.HasPrefix(selector, "role=") || strings.Contains(selector, "[role=") {
@@ -207,28 +201,27 @@ func (s *ClickElementTool) normalizeSelector(selector string) (string, string) {
 	return selector, "css"
 }
 
-// waitForElementActionable waits for the element to be actionable before clicking
-func (s *ClickElementTool) waitForElementActionable(ctx context.Context, sessionID, selector string, timeoutMs int) error {
-	session, err := s.playwright.GetSession(sessionID)
-	if err != nil {
-		return fmt.Errorf("failed to get session: %w", err)
-	}
-
+// waitForElementActionable waits for the element to be actionable before clicking.
+// Called only when force=false; force=true skips this entirely.
+func (s *ClickElementTool) waitForElementActionable(ctx context.Context, session *playwright.BrowserSession, selector string, timeoutMs int) error {
 	timeoutDuration := time.Duration(timeoutMs) * time.Millisecond
 
-	err = s.playwright.WaitForCondition(ctx, sessionID, "selector", selector, "visible", timeoutDuration, "")
+	err := s.playwright.WaitForCondition(ctx, session.ID, "selector", selector, "visible", timeoutDuration, "")
 	if err != nil {
-		s.logger.Warn("element not visible, attempting force click if enabled",
+		s.logger.Warn("element not visible in main frame, checking iframes",
 			zap.String("selector", selector),
 			zap.Error(err))
-		return s.checkElementInIframes(ctx, session, selector)
+		return s.checkElementInIframes(session, selector)
 	}
 
 	return nil
 }
 
-// checkElementInIframes checks if the element exists within any iframes
-func (s *ClickElementTool) checkElementInIframes(ctx context.Context, session *playwright.BrowserSession, selector string) error {
+// checkElementInIframes reports whether the missing element might live in a
+// nested iframe (cross-frame click is not yet supported). It only inspects
+// the iframe count; the returned error tells the caller why the click cannot
+// proceed.
+func (s *ClickElementTool) checkElementInIframes(session *playwright.BrowserSession, selector string) error {
 	if session.Page == nil {
 		return fmt.Errorf("element not found: %s (page not available)", selector)
 	}
@@ -242,9 +235,9 @@ func (s *ClickElementTool) checkElementInIframes(ctx context.Context, session *p
 		return fmt.Errorf("element not found: %s", selector)
 	}
 
-	s.logger.Info("checking for element in iframes",
+	s.logger.Info("element absent from main frame, iframes detected",
 		zap.String("selector", selector),
 		zap.Int("iframe_count", iframeCount))
 
-	return fmt.Errorf("element not found in main frame, %d iframes detected but cross-frame clicking not yet implemented", iframeCount)
+	return fmt.Errorf("element not found in main frame, %d iframes detected but cross-frame clicking not yet implemented; pass force=true to click without the visibility wait", iframeCount)
 }

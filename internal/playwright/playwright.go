@@ -2,6 +2,7 @@ package playwright
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -9,13 +10,14 @@ import (
 	"sync"
 	"time"
 
-	server "github.com/inference-gateway/adk/server"
-	types "github.com/inference-gateway/adk/types"
-	config "github.com/inference-gateway/browser-agent/config"
 	stealth "github.com/jonfriesen/playwright-go-stealth"
+	playwright "github.com/playwright-community/playwright-go"
 	zap "go.uber.org/zap"
 
-	"github.com/playwright-community/playwright-go"
+	server "github.com/inference-gateway/adk/server"
+	types "github.com/inference-gateway/adk/types"
+
+	config "github.com/inference-gateway/browser-agent/config"
 )
 
 // BrowserEngine represents the browser type
@@ -720,14 +722,16 @@ func (p *playwrightImpl) ExtractData(ctx context.Context, sessionID string, extr
 		}
 	}
 
-	switch format {
-	case "json":
-		return fmt.Sprintf("%+v", results), nil
-	case "csv":
-		return fmt.Sprintf("%+v", results), nil
-	default:
-		return fmt.Sprintf("%+v", results), nil
+	// The tool layer is responsible for converting this canonical JSON
+	// representation into the caller's requested output format (json, csv,
+	// text). Returning JSON unconditionally is what lets the tool drop a
+	// fragile Go-`%+v` map fallback parser.
+	_ = format
+	payload, err := json.Marshal(results)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal extracted data: %w", err)
 	}
+	return string(payload), nil
 }
 
 // TakeScreenshot captures a screenshot
@@ -833,6 +837,13 @@ func (p *playwrightImpl) WaitForCondition(ctx context.Context, sessionID, condit
 	case "timeout":
 		time.Sleep(timeout)
 		return nil
+
+	case "networkidle":
+		timeoutMs := float64(timeout.Milliseconds())
+		return session.Page.WaitForLoadState(playwright.PageWaitForLoadStateOptions{
+			State:   playwright.LoadStateNetworkidle,
+			Timeout: &timeoutMs,
+		})
 
 	default:
 		return fmt.Errorf("unsupported condition type: %s", condition)
