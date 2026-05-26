@@ -1,6 +1,6 @@
 <div align="center">
 
-# Browser-Agent
+# Browser Agent
 
 [![CI](https://github.com/inference-gateway/browser-agent/workflows/CI/badge.svg)](https://github.com/inference-gateway/browser-agent/actions/workflows/ci.yml)
 [![Go Report Card](https://img.shields.io/badge/Go%20Report%20Card-A+-brightgreen?style=flat&logo=go&logoColor=white)](https://goreportcard.com/report/github.com/inference-gateway/browser-agent)
@@ -201,7 +201,7 @@ task fmt
 
 The generator owns the baseline toolchain pins (SDK, server framework,
 logging, CLI, sandbox utilities). To extend the project without forking
-the templates, declare extras in `agent.yaml` — every empty list below
+the templates, declare extras in `agent.yaml` - every empty list below
 is rendered by `adl init --defaults` precisely so it's discoverable:
 
 | Where | Purpose | Example entry | Rendered into |
