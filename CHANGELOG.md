@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.4](https://github.com/inference-gateway/browser-agent/compare/v0.6.3...v0.6.4) (2026-05-26)
+
+### 🔧 Miscellaneous
+
+* **deps:** Bump ADL CLI to v0.39.3 ([#84](https://github.com/inference-gateway/browser-agent/issues/84)) ([3ec3901](https://github.com/inference-gateway/browser-agent/commit/3ec39018def3c99a3b512ae6edb7475b48c1b9d9))
+
 ## [0.6.3](https://github.com/inference-gateway/browser-agent/compare/v0.6.2...v0.6.3) (2026-05-24)
 
 ### ♻️ Improvements
