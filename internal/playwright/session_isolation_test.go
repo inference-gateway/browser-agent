@@ -15,6 +15,21 @@ import (
 	config "github.com/inference-gateway/browser-agent/config"
 )
 
+// newPlaywrightServiceOrSkip creates a real Playwright service, skipping the
+// test when the Playwright driver or browsers cannot be provisioned in the
+// current environment (for example, CI runners without a Playwright install
+// step or network access to the Playwright download CDN). These are browser
+// integration tests: without a working Playwright installation there is nothing
+// meaningful to exercise, so a skip is preferable to a hard failure.
+func newPlaywrightServiceOrSkip(t *testing.T, logger *zap.Logger, cfg *config.Config) BrowserAutomation {
+	t.Helper()
+	service, err := NewPlaywrightService(logger, cfg)
+	if err != nil {
+		t.Skipf("skipping browser integration test: Playwright is not available in this environment: %v", err)
+	}
+	return service
+}
+
 func TestMultiTenantSessionIsolation(t *testing.T) {
 	logger := zap.NewNop()
 	cfg := &config.Config{
@@ -26,8 +41,7 @@ func TestMultiTenantSessionIsolation(t *testing.T) {
 		},
 	}
 
-	service, err := NewPlaywrightService(logger, cfg)
-	require.NoError(t, err)
+	service := newPlaywrightServiceOrSkip(t, logger, cfg)
 	defer func() {
 		err := service.Shutdown(context.Background())
 		assert.NoError(t, err)
@@ -84,8 +98,7 @@ func TestSessionExpiration(t *testing.T) {
 		},
 	}
 
-	service, err := NewPlaywrightService(logger, cfg)
-	require.NoError(t, err)
+	service := newPlaywrightServiceOrSkip(t, logger, cfg)
 	defer func() {
 		err := service.Shutdown(context.Background())
 		assert.NoError(t, err)
