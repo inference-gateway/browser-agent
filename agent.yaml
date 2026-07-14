@@ -461,7 +461,7 @@ spec:
   language:
     go:
       module: github.com/inference-gateway/browser-agent
-      version: "1.26.2"
+      version: "1.26.4"
       vendor:
         deps: []
         devdeps:
