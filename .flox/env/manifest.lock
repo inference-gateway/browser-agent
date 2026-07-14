@@ -4,7 +4,7 @@
     "schema-version": "1.13.0",
     "install": {
       "adl": {
-        "flake": "github:inference-gateway/adl-cli/v0.46.5"
+        "flake": "github:inference-gateway/adl-cli/v0.47.1"
       },
       "claude-code": {
         "pkg-path": "claude-code",
@@ -42,123 +42,6 @@
     "options": {}
   },
   "packages": [
-    {
-      "attr_path": "go",
-      "broken": false,
-      "derivation": "/nix/store/0j94l4ngkz3fppqd0wxqsvjwri4fny1y-go-1.26.4.drv",
-      "description": "Go Programming language",
-      "install_id": "go",
-      "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
-      "name": "go-1.26.4",
-      "pname": "go",
-      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
-      "rev_count": 1027867,
-      "rev_date": "2026-07-05T04:06:12Z",
-      "scrape_date": "2026-07-06T03:12:56.227877Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.26.4",
-      "outputs_to_install": [
-        "out",
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/kyai650rrywrzflnwda9mbk2c2j9w68r-go-1.26.4"
-      },
-      "system": "aarch64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "go",
-      "broken": false,
-      "derivation": "/nix/store/a402qx3ryvfilga56w29z0izz6jgi7gi-go-1.26.4.drv",
-      "description": "Go Programming language",
-      "install_id": "go",
-      "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
-      "name": "go-1.26.4",
-      "pname": "go",
-      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
-      "rev_count": 1027867,
-      "rev_date": "2026-07-05T04:06:12Z",
-      "scrape_date": "2026-07-06T03:41:23.896640Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.26.4",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/lgcj27hrbanbc93xm9zdrldds7b1jrw8-go-1.26.4"
-      },
-      "system": "aarch64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "go",
-      "broken": false,
-      "derivation": "/nix/store/0lvbzgq250sass3jyxxvpamk09gcnym3-go-1.26.4.drv",
-      "description": "Go Programming language",
-      "install_id": "go",
-      "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
-      "name": "go-1.26.4",
-      "pname": "go",
-      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
-      "rev_count": 1027867,
-      "rev_date": "2026-07-05T04:06:12Z",
-      "scrape_date": "2026-07-06T04:09:01.839364Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.26.4",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/h0z6ghmi3cihlbm163d72xs9p9nn04a1-go-1.26.4"
-      },
-      "system": "x86_64-darwin",
-      "group": "toplevel",
-      "priority": 5
-    },
-    {
-      "attr_path": "go",
-      "broken": false,
-      "derivation": "/nix/store/z0b6qhv17xys7hfpnxmk0vm31nc3pxdf-go-1.26.4.drv",
-      "description": "Go Programming language",
-      "install_id": "go",
-      "license": "BSD-3-Clause",
-      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
-      "name": "go-1.26.4",
-      "pname": "go",
-      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
-      "rev_count": 1027867,
-      "rev_date": "2026-07-05T04:06:12Z",
-      "scrape_date": "2026-07-06T04:40:26.718134Z",
-      "stabilities": [
-        "unstable"
-      ],
-      "unfree": false,
-      "version": "1.26.4",
-      "outputs_to_install": [
-        "out"
-      ],
-      "outputs": {
-        "out": "/nix/store/gb0njhqswlc5n127ikgyikvq39r40l6f-go-1.26.4"
-      },
-      "system": "x86_64-linux",
-      "group": "toplevel",
-      "priority": 5
-    },
     {
       "attr_path": "claude-code",
       "broken": false,
@@ -746,13 +629,130 @@
       "priority": 5
     },
     {
+      "attr_path": "go",
+      "broken": false,
+      "derivation": "/nix/store/0j94l4ngkz3fppqd0wxqsvjwri4fny1y-go-1.26.4.drv",
+      "description": "Go Programming language",
+      "install_id": "go",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
+      "name": "go-1.26.4",
+      "pname": "go",
+      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+      "rev_count": 1027867,
+      "rev_date": "2026-07-05T04:06:12Z",
+      "scrape_date": "2026-07-06T03:12:56.227877Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.26.4",
+      "outputs_to_install": [
+        "out",
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/kyai650rrywrzflnwda9mbk2c2j9w68r-go-1.26.4"
+      },
+      "system": "aarch64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "go",
+      "broken": false,
+      "derivation": "/nix/store/a402qx3ryvfilga56w29z0izz6jgi7gi-go-1.26.4.drv",
+      "description": "Go Programming language",
+      "install_id": "go",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
+      "name": "go-1.26.4",
+      "pname": "go",
+      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+      "rev_count": 1027867,
+      "rev_date": "2026-07-05T04:06:12Z",
+      "scrape_date": "2026-07-06T03:41:23.896640Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.26.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/lgcj27hrbanbc93xm9zdrldds7b1jrw8-go-1.26.4"
+      },
+      "system": "aarch64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "go",
+      "broken": false,
+      "derivation": "/nix/store/0lvbzgq250sass3jyxxvpamk09gcnym3-go-1.26.4.drv",
+      "description": "Go Programming language",
+      "install_id": "go",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
+      "name": "go-1.26.4",
+      "pname": "go",
+      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+      "rev_count": 1027867,
+      "rev_date": "2026-07-05T04:06:12Z",
+      "scrape_date": "2026-07-06T04:09:01.839364Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.26.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/h0z6ghmi3cihlbm163d72xs9p9nn04a1-go-1.26.4"
+      },
+      "system": "x86_64-darwin",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
+      "attr_path": "go",
+      "broken": false,
+      "derivation": "/nix/store/z0b6qhv17xys7hfpnxmk0vm31nc3pxdf-go-1.26.4.drv",
+      "description": "Go Programming language",
+      "install_id": "go",
+      "license": "BSD-3-Clause",
+      "locked_url": "https://github.com/flox/nixpkgs?rev=d407951447dcd00442e97087bf374aad70c04cea",
+      "name": "go-1.26.4",
+      "pname": "go",
+      "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+      "rev_count": 1027867,
+      "rev_date": "2026-07-05T04:06:12Z",
+      "scrape_date": "2026-07-06T04:40:26.718134Z",
+      "stabilities": [
+        "unstable"
+      ],
+      "unfree": false,
+      "version": "1.26.4",
+      "outputs_to_install": [
+        "out"
+      ],
+      "outputs": {
+        "out": "/nix/store/gb0njhqswlc5n127ikgyikvq39r40l6f-go-1.26.4"
+      },
+      "system": "x86_64-linux",
+      "group": "toplevel",
+      "priority": 5
+    },
+    {
       "install_id": "adl",
-      "locked-url": "github:inference-gateway/adl-cli/c1be1a75f8e8f32f09a2f8f550444db32a5c4510?narHash=sha256-7UFegn%2Bf3CzP1hdJgLF%2BvuKKpkZJOZWpuF5avWauF4E%3D",
+      "locked-url": "github:inference-gateway/adl-cli/40a7e1ea0348e90f5cb0aa468b8e81c7497ae9ea?narHash=sha256-sj9HME9HmrqrdQSYfYjQz2CspRV%2BFS8fslXdzkQm0XI%3D",
       "flake-description": "ADL CLI - Generate enterprise-ready A2A agents from YAML",
       "locked-flake-attr-path": "packages.aarch64-darwin.default",
-      "derivation": "/nix/store/0xnrvraw4jhv3r2qypxg3piwm882k718-adl-0.46.5.drv",
+      "derivation": "/nix/store/r7vhp5z1fhs7n6rx9x5j74gxqjghwyl9-adl-0.47.1.drv",
       "outputs": {
-        "out": "/nix/store/mdibcklzpsg73znbkwppjiprd7ij5clx-adl-0.46.5"
+        "out": "/nix/store/s9h3bflf5rrnhd50qvkqjmx3yrfq0hbs-adl-0.47.1"
       },
       "output-names": [
         "out"
@@ -763,9 +763,9 @@
       "requested-outputs-to-install": [],
       "package-system": "aarch64-darwin",
       "system": "aarch64-darwin",
-      "name": "adl-0.46.5",
+      "name": "adl-0.47.1",
       "pname": "adl",
-      "version": "0.46.5",
+      "version": "0.47.1",
       "description": "Generate enterprise-ready A2A agents from YAML Agent Definition Language files",
       "licenses": [
         "MIT"
@@ -776,12 +776,12 @@
     },
     {
       "install_id": "adl",
-      "locked-url": "github:inference-gateway/adl-cli/c1be1a75f8e8f32f09a2f8f550444db32a5c4510?narHash=sha256-7UFegn%2Bf3CzP1hdJgLF%2BvuKKpkZJOZWpuF5avWauF4E%3D",
+      "locked-url": "github:inference-gateway/adl-cli/40a7e1ea0348e90f5cb0aa468b8e81c7497ae9ea?narHash=sha256-sj9HME9HmrqrdQSYfYjQz2CspRV%2BFS8fslXdzkQm0XI%3D",
       "flake-description": "ADL CLI - Generate enterprise-ready A2A agents from YAML",
       "locked-flake-attr-path": "packages.aarch64-linux.default",
-      "derivation": "/nix/store/9fd4sxzz1wsrz467212hcljy1w2bm5xq-adl-0.46.5.drv",
+      "derivation": "/nix/store/36mfvjdnjgbf4c7lwfq0dcpx9zdlpldz-adl-0.47.1.drv",
       "outputs": {
-        "out": "/nix/store/qcrk6l7m0v3vxaylmalxh449fd04q2s8-adl-0.46.5"
+        "out": "/nix/store/c4z11h9i5v1vw9zs22glnw262a602f0q-adl-0.47.1"
       },
       "output-names": [
         "out"
@@ -792,9 +792,9 @@
       "requested-outputs-to-install": [],
       "package-system": "aarch64-linux",
       "system": "aarch64-linux",
-      "name": "adl-0.46.5",
+      "name": "adl-0.47.1",
       "pname": "adl",
-      "version": "0.46.5",
+      "version": "0.47.1",
       "description": "Generate enterprise-ready A2A agents from YAML Agent Definition Language files",
       "licenses": [
         "MIT"
@@ -805,12 +805,12 @@
     },
     {
       "install_id": "adl",
-      "locked-url": "github:inference-gateway/adl-cli/c1be1a75f8e8f32f09a2f8f550444db32a5c4510?narHash=sha256-7UFegn%2Bf3CzP1hdJgLF%2BvuKKpkZJOZWpuF5avWauF4E%3D",
+      "locked-url": "github:inference-gateway/adl-cli/40a7e1ea0348e90f5cb0aa468b8e81c7497ae9ea?narHash=sha256-sj9HME9HmrqrdQSYfYjQz2CspRV%2BFS8fslXdzkQm0XI%3D",
       "flake-description": "ADL CLI - Generate enterprise-ready A2A agents from YAML",
       "locked-flake-attr-path": "packages.x86_64-darwin.default",
-      "derivation": "/nix/store/xxrdvps2vf1lkhgph9wk00m45sragq7l-adl-0.46.5.drv",
+      "derivation": "/nix/store/b2bj42qbsq4xyjfhqlq3hwwwk932x0sp-adl-0.47.1.drv",
       "outputs": {
-        "out": "/nix/store/1gffx0kqh6gj9j3885xfif297b29mpvh-adl-0.46.5"
+        "out": "/nix/store/4cbjcpmvz31qmp549mvv08ka0fflw25r-adl-0.47.1"
       },
       "output-names": [
         "out"
@@ -821,9 +821,9 @@
       "requested-outputs-to-install": [],
       "package-system": "x86_64-darwin",
       "system": "x86_64-darwin",
-      "name": "adl-0.46.5",
+      "name": "adl-0.47.1",
       "pname": "adl",
-      "version": "0.46.5",
+      "version": "0.47.1",
       "description": "Generate enterprise-ready A2A agents from YAML Agent Definition Language files",
       "licenses": [
         "MIT"
@@ -834,12 +834,12 @@
     },
     {
       "install_id": "adl",
-      "locked-url": "github:inference-gateway/adl-cli/c1be1a75f8e8f32f09a2f8f550444db32a5c4510?narHash=sha256-7UFegn%2Bf3CzP1hdJgLF%2BvuKKpkZJOZWpuF5avWauF4E%3D",
+      "locked-url": "github:inference-gateway/adl-cli/40a7e1ea0348e90f5cb0aa468b8e81c7497ae9ea?narHash=sha256-sj9HME9HmrqrdQSYfYjQz2CspRV%2BFS8fslXdzkQm0XI%3D",
       "flake-description": "ADL CLI - Generate enterprise-ready A2A agents from YAML",
       "locked-flake-attr-path": "packages.x86_64-linux.default",
-      "derivation": "/nix/store/ypnc0b6r8y0pwhzri6252sc8xj0xxd3d-adl-0.46.5.drv",
+      "derivation": "/nix/store/dpd6p0dpwzm2bn4df17yfcsm13hlm2q1-adl-0.47.1.drv",
       "outputs": {
-        "out": "/nix/store/vni2pp5xxcj0426pckyhciyjrpc2s0az-adl-0.46.5"
+        "out": "/nix/store/ga4svya73514prmda90c3d55wwip1kv0-adl-0.47.1"
       },
       "output-names": [
         "out"
@@ -850,9 +850,9 @@
       "requested-outputs-to-install": [],
       "package-system": "x86_64-linux",
       "system": "x86_64-linux",
-      "name": "adl-0.46.5",
+      "name": "adl-0.47.1",
       "pname": "adl",
-      "version": "0.46.5",
+      "version": "0.47.1",
       "description": "Generate enterprise-ready A2A agents from YAML Agent Definition Language files",
       "licenses": [
         "MIT"
