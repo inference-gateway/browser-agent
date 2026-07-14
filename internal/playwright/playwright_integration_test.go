@@ -394,10 +394,12 @@ func TestPlaywrightServiceIntegrationWithMock(t *testing.T) {
 
 	if launchedSession == nil {
 		t.Fatal("Expected non-nil session")
+		return
 	}
 
 	if launchedSession.ID == "" {
 		t.Fatal("Expected non-empty session ID")
+		return
 	}
 
 	err = mockService.NavigateToURL(ctx, session.ID, "https://example.com", "load", 30*time.Second)
@@ -716,10 +718,12 @@ func TestFullWorkflowWithMock(t *testing.T) {
 
 	if launchedSession == nil {
 		t.Fatal("Expected non-nil session")
+		return
 	}
 
 	if launchedSession.ID == "" {
 		t.Fatal("Expected non-empty session ID")
+		return
 	}
 
 	err = mockService.NavigateToURL(ctx, session.ID, "https://example.com", "load", 30*time.Second)
