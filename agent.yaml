@@ -27,7 +27,9 @@ spec:
       engine: "chromium"
       stealth_mode: false
       session_timeout: "2m"
-      user_agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+      user_agent:
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)
+        Chrome/131.0.0.0 Safari/537.36"
       viewport_width: 1920
       viewport_height: 1080
       header_accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
@@ -63,7 +65,8 @@ spec:
     - id: fetch
     - id: navigate_to_url
       name: navigate_to_url
-      description: Navigate to a specific URL and wait for the page to fully load
+      description:
+        Navigate to a specific URL and wait for the page to fully load
       tags:
         - navigation
         - browser
@@ -76,7 +79,9 @@ spec:
             description: The URL to navigate to
           wait_until:
             type: string
-            description: When to consider navigation succeeded (domcontentloaded, load, networkidle)
+            description:
+              When to consider navigation succeeded (domcontentloaded, load,
+              networkidle)
             default: load
           timeout:
             type: integer
@@ -89,7 +94,9 @@ spec:
         - playwright
     - id: click_element
       name: click_element
-      description: Click on an element identified by selector, text, or other locator strategies
+      description:
+        Click on an element identified by selector, text, or other locator
+        strategies
       tags:
         - interaction
         - click
@@ -123,7 +130,8 @@ spec:
         - playwright
     - id: fill_form
       name: fill_form
-      description: Fill form fields with provided data, handling various input types
+      description:
+        Fill form fields with provided data, handling various input types
       tags:
         - form
         - input
@@ -164,7 +172,9 @@ spec:
         - playwright
     - id: extract_data
       name: extract_data
-      description: Extract data from the page using selectors and return structured information
+      description:
+        Extract data from the page using selectors and return structured
+        information
       tags:
         - scraping
         - extraction
@@ -258,8 +268,8 @@ spec:
             type: string
             description: >-
               JavaScript code to execute in the browser (Playwright
-              page.evaluate context). Use DOM/Web APIs only - Node.js
-              built-ins are unavailable.
+              page.evaluate context). Use DOM/Web APIs only - Node.js built-ins
+              are unavailable.
           args:
             type: array
             items:
@@ -276,7 +286,9 @@ spec:
         - playwright
     - id: handle_authentication
       name: handle_authentication
-      description: Handle various authentication scenarios including basic auth, OAuth, and custom login forms
+      description:
+        Handle various authentication scenarios including basic auth, OAuth, and
+        custom login forms
       tags:
         - authentication
         - login
@@ -313,7 +325,8 @@ spec:
         - playwright
     - id: wait_for_condition
       name: wait_for_condition
-      description: Wait for specific conditions before proceeding with automation
+      description:
+        Wait for specific conditions before proceeding with automation
       tags:
         - wait
         - synchronization
@@ -324,7 +337,9 @@ spec:
         properties:
           condition:
             type: string
-            description: Type of condition (selector, navigation, function, timeout, networkidle)
+            description:
+              Type of condition (selector, navigation, function, timeout,
+              networkidle)
           selector:
             type: string
             description: Selector to wait for if condition is 'selector'
@@ -338,7 +353,8 @@ spec:
             default: 30000
           custom_function:
             type: string
-            description: Custom JavaScript function to evaluate for 'function' condition
+            description:
+              Custom JavaScript function to evaluate for 'function' condition
         required:
           - condition
       inject:
@@ -348,7 +364,12 @@ spec:
     - id: webapp-testing
       bare: true
       name: webapp-testing
-      description: "Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot."
+      description:
+        "Use this when the user asks to verify, validate, or test a webapp
+        end-to-end. Performs reconnaissance-then-action: navigate, screenshot
+        the rendered DOM, identify selectors, then exercise the flow using
+        navigate_to_url, click_element, fill_form, wait_for_condition, and
+        take_screenshot."
       tags:
         - testing
         - qa
@@ -358,7 +379,10 @@ spec:
     - id: web-scraping
       bare: true
       name: web-scraping
-      description: "Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool."
+      description:
+        "Use this when the user asks to extract structured data from one or more
+        pages. Drives extract_data across paginated URLs, normalizes results,
+        and writes a JSON/CSV artifact via the write tool."
       tags:
         - scraping
         - extraction
@@ -367,7 +391,11 @@ spec:
     - id: form-automation
       bare: true
       name: form-automation
-      description: "Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation."
+      description:
+        "Use this when the user asks to complete a multi-step form, optionally
+        behind a login. Orchestrates handle_authentication, navigate_to_url,
+        fill_form, click_element, wait_for_condition, and take_screenshot to
+        capture the post-submit confirmation."
       tags:
         - forms
         - automation
@@ -376,7 +404,11 @@ spec:
     - id: deep-research
       bare: true
       name: deep-research
-      description: "Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write."
+      description:
+        "Use this when the user asks an open-ended question that needs synthesis
+        from multiple web sources. Plans sub-questions, drives a search engine,
+        visits and cross-references sources via navigate_to_url + extract_data,
+        and writes a cited markdown report with write."
       tags:
         - research
         - synthesis
@@ -488,6 +520,8 @@ spec:
     dependabot: true
     ci: true
     cd: true
+    app_id_secret: RELEASER_APP_ID
+    app_private_key_secret: RELEASER_APP_PRIVATE_KEY
   documentation:
     pages:
       - title: Getting Started
@@ -495,13 +529,16 @@ spec:
         description: Build, run, and verify the agent locally or with Docker.
       - title: Configuration
         path: docs/configuration.md
-        description: Environment variables for the LLM provider, server, browser, and tools.
+        description:
+          Environment variables for the LLM provider, server, browser, and
+          tools.
       - title: Usage
         path: docs/usage.md
         description: Submitting tasks and driving the agent's tools and skills.
       - title: Playwright Service
         path: docs/playwright-service.md
-        description: The browser-automation service that backs the agent's tools.
+        description:
+          The browser-automation service that backs the agent's tools.
   examples:
     - title: End-to-end webapp testing
       description: >-
@@ -524,7 +561,8 @@ spec:
       description: >-
         Give the agent an open-ended question. It plans sub-questions, drives a
         search engine, cross-references multiple sources with navigate_to_url
-        and extract_data, and writes a cited Markdown report with the write tool.
+        and extract_data, and writes a cited Markdown report with the write
+        tool.
   artifacts:
     enabled: true
   development:
@@ -539,8 +577,12 @@ spec:
       orchestrators:
         claudecode:
           enabled: true
+          appIdSecret: CLAUDE_APP_ID
+          appPrivateKeySecret: CLAUDE_APP_PRIVATE_KEY
         infer:
           enabled: true
+          appIdSecret: INFER_APP_ID
+          appPrivateKeySecret: INFER_APP_PRIVATE_KEY
         codex:
           enabled: false
         gemini:
