@@ -463,9 +463,23 @@ spec:
       module: github.com/inference-gateway/browser-agent
       version: "1.26.4"
       vendor:
-        deps: []
+        deps:
+          # Runtime deps for the Playwright browser-automation service
+          # (internal/playwright/playwright.go). Must be declared here so
+          # `task generate` pins them in go.mod instead of dropping them.
+          - github.com/playwright-community/playwright-go@v0.6000.0
+          - github.com/jonfriesen/playwright-go-stealth@v0.0.3
+          # Test assertions used by the generated tool/service tests.
+          - github.com/stretchr/testify@v1.11.1
         devdeps:
           - github.com/maxbrunsfeld/counterfeiter/v6@v6.12.2
+  hooks:
+    # The v0.48.0+ generator emits a manifest-driven go.mod; run tidy after
+    # generation to rebuild the indirect graph + go.sum and keep the pinned
+    # versions above (so playwright-go stays at v0.6000.0 and does not resolve
+    # to the broken v0.6100.0).
+    post:
+      - go mod tidy
   acronyms:
     - DOM
     - CSS
