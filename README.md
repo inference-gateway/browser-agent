@@ -83,6 +83,15 @@ infer agents add browser-agent http://localhost:8080 \
 | `handle_authentication` | Handle various authentication scenarios including basic auth, OAuth, and custom login forms | login_url, password, password_selector, submit_selector, type, username, username_selector |
 | `wait_for_condition` | Wait for specific conditions before proceeding with automation | condition, custom_function, selector, state, timeout |
 
+## Examples
+
+| Example | Description |
+|---------|-------------|
+| End-to-end webapp testing | Ask the agent to verify a web app flow. It navigates to the page, screenshots the rendered DOM to discover selectors, then drives the flow with navigate_to_url, click_element, fill_form, and wait_for_condition, capturing a screenshot at each checkpoint. |
+| Structured web scraping | Point the agent at one or more (optionally paginated) pages. It uses extract_data to pull fields into structured records, normalizes them, and writes a downloadable JSON or CSV artifact via the write tool. |
+| Authenticated form automation | Hand the agent a multi-step form behind a login. It chains handle_authentication, fill_form, and click_element, waits for the post-submit state with wait_for_condition, and returns a screenshot of the confirmation page. |
+| Cited deep research | Give the agent an open-ended question. It plans sub-questions, drives a search engine, cross-references multiple sources with navigate_to_url and extract_data, and writes a cited Markdown report with the write tool. |
+
 ## Skills (loaded into the system prompt)
 
 | Skill | Description | Source |
@@ -91,6 +100,12 @@ infer agents add browser-agent http://localhost:8080 \
 | `web-scraping` | Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool. | bare scaffold (`skills/web-scraping.md`) |
 | `form-automation` | Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation. | bare scaffold (`skills/form-automation.md`) |
 | `deep-research` | Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write. | bare scaffold (`skills/deep-research.md`) |
+
+## Documentation
+- [Getting Started](docs/getting-started.md)
+- [Configuration](docs/configuration.md)
+- [Usage](docs/usage.md)
+- [Playwright Service](docs/playwright-service.md)
 
 ## Configuration
 
