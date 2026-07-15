@@ -3,7 +3,7 @@ module github.com/inference-gateway/browser-agent
 go 1.26.4
 
 require (
-	github.com/inference-gateway/adk v0.22.0
+	github.com/inference-gateway/adk v0.23.0
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
 	github.com/playwright-community/playwright-go v0.6000.0
 	github.com/sethvargo/go-envconfig v1.3.1
@@ -79,7 +79,10 @@ require (
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.44.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.44.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.44.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.44.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.44.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.44.0 // indirect
 	go.opentelemetry.io/otel/exporters/prometheus v0.66.0 // indirect
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
