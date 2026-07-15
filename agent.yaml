@@ -488,6 +488,43 @@ spec:
     dependabot: true
     ci: true
     cd: true
+  documentation:
+    pages:
+      - title: Getting Started
+        path: docs/getting-started.md
+        description: Build, run, and verify the agent locally or with Docker.
+      - title: Configuration
+        path: docs/configuration.md
+        description: Environment variables for the LLM provider, server, browser, and tools.
+      - title: Usage
+        path: docs/usage.md
+        description: Submitting tasks and driving the agent's tools and skills.
+      - title: Playwright Service
+        path: docs/playwright-service.md
+        description: The browser-automation service that backs the agent's tools.
+  examples:
+    - title: End-to-end webapp testing
+      description: >-
+        Ask the agent to verify a web app flow. It navigates to the page,
+        screenshots the rendered DOM to discover selectors, then drives the flow
+        with navigate_to_url, click_element, fill_form, and wait_for_condition,
+        capturing a screenshot at each checkpoint.
+    - title: Structured web scraping
+      description: >-
+        Point the agent at one or more (optionally paginated) pages. It uses
+        extract_data to pull fields into structured records, normalizes them,
+        and writes a downloadable JSON or CSV artifact via the write tool.
+    - title: Authenticated form automation
+      description: >-
+        Hand the agent a multi-step form behind a login. It chains
+        handle_authentication, fill_form, and click_element, waits for the
+        post-submit state with wait_for_condition, and returns a screenshot of
+        the confirmation page.
+    - title: Cited deep research
+      description: >-
+        Give the agent an open-ended question. It plans sub-questions, drives a
+        search engine, cross-references multiple sources with navigate_to_url
+        and extract_data, and writes a cited Markdown report with the write tool.
   artifacts:
     enabled: true
   development:
