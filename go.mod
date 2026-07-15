@@ -3,7 +3,7 @@ module github.com/inference-gateway/browser-agent
 go 1.26.4
 
 require (
-	github.com/inference-gateway/adk v0.23.0
+	github.com/inference-gateway/adk v0.23.2
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
 	github.com/playwright-community/playwright-go v0.6000.0
 	github.com/sethvargo/go-envconfig v1.3.1
@@ -23,7 +23,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudevents/sdk-go/v2 v2.16.2 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
-	github.com/coreos/go-oidc/v3 v3.19.0 // indirect
+	github.com/coreos/go-oidc/v3 v3.20.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/inference-gateway/sdk v1.19.0 // indirect
+	github.com/inference-gateway/sdk v1.21.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
