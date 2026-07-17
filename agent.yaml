@@ -565,6 +565,13 @@ spec:
         tool.
   artifacts:
     enabled: true
+  telemetry:
+    enabled: true
+    metrics:
+      exporter:
+        prometheus:
+          host: ""
+          port: 9464
   development:
     sandbox:
       flox:
