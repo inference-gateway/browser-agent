@@ -22,6 +22,7 @@ import (
 	cobra "github.com/spf13/cobra"
 
 	server "github.com/inference-gateway/adk/server"
+	otel "github.com/inference-gateway/adk/server/otel"
 
 	config "github.com/inference-gateway/browser-agent/config"
 	tools "github.com/inference-gateway/browser-agent/tools"
@@ -170,6 +171,9 @@ func runStart(ctx context.Context) error {
 	// empty strings, and so any other consumer of cfg.A2A sees the real values.
 	cfg.A2A.AgentName = AgentName
 	cfg.A2A.AgentVersion = Version
+	// The OpenTelemetry SDK settings are read as A2A_OTEL_* through the ADK's
+	// A2A_-prefixed config (cfg.A2A.OTelConfig), so the single Process call above
+	// already loaded them - no separate OTel pass is required.
 
 	// Initialize logger
 	l, err := logger.NewLogger(ctx, &cfg)
@@ -177,8 +181,14 @@ func runStart(ctx context.Context) error {
 		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
-	l.Info("starting " + AgentName + " agent", zap.String("version", Version), zap.Bool("debug", cfg.A2A.Debug))
+	l.Info("starting "+AgentName+" agent", zap.String("version", Version), zap.Bool("debug", cfg.A2A.Debug))
 	l.Debug("loaded configuration", zap.Any("config", cfg))
+
+	// Initialize OpenTelemetry (no-op unless A2A_TELEMETRY_ENABLE=true)
+	otelInstance, err := otel.NewOpenTelemetry(&cfg.A2A, l)
+	if err != nil {
+		l.Warn("failed to initialize OpenTelemetry, continuing without telemetry", zap.Error(err))
+	}
 
 	resolvedSkillsDir := skillsDir
 	if v := os.Getenv("A2A_SKILLS_DIR"); v != "" {
@@ -382,6 +392,7 @@ Your automation solutions should be maintainable, efficient, and production-read
 			"url":         cfg.A2A.AgentURL,
 		}).
 		WithArtifactService(artifactService).
+		WithTelemetry(otelInstance).
 		WithDefaultBackgroundTaskHandler().
 		WithDefaultStreamingTaskHandler().
 		Build()
@@ -417,6 +428,9 @@ Your automation solutions should be maintainable, efficient, and production-read
 	a2aServer.Stop(ctx)
 	if artifactsServer != nil {
 		artifactsServer.Stop(ctx)
+	}
+	if otelInstance != nil {
+		otelInstance.ShutDown(ctx)
 	}
 	l.Info("browser-agent agent stopped")
 	return nil

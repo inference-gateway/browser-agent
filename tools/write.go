@@ -66,6 +66,8 @@ func NewWriteTool(ctx context.Context, logger *zap.Logger) (server.Tool, error) 
 
 // Handler executes the Write tool.
 func (t *WriteTool) Handler(ctx context.Context, args map[string]any) (string, error) {
+	span := startToolSpan(ctx, "write")
+	defer span.End()
 	if !t.cfg.Enabled {
 		return "", errors.New("write tool is disabled; set spec.config.tools.write.enabled: true in the ADL and regenerate")
 	}

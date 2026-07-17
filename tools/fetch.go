@@ -118,6 +118,8 @@ func NewFetchTool(ctx context.Context, logger *zap.Logger) (server.Tool, error) 
 
 // Handler executes the Fetch tool.
 func (t *FetchTool) Handler(ctx context.Context, args map[string]any) (string, error) {
+	span := startToolSpan(ctx, "fetch")
+	defer span.End()
 	if !t.cfg.Enabled {
 		return "", errors.New("fetch tool is disabled; set spec.config.tools.fetch.enabled: true or TOOLS_FETCH_ENABLED=true")
 	}

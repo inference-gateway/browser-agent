@@ -28,3 +28,4 @@ skills/deep-research/
 
 .gitattributes
 Dockerfile
+main.go

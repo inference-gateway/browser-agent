@@ -192,6 +192,10 @@ them at runtime.
 | **Artifacts** | `A2A_ARTIFACTS_RETENTION_MAX_AGE` | Max artifact age (0 = no age limit) | `168h` |
 | **Artifacts** | `A2A_ARTIFACTS_RETENTION_CLEANUP_INTERVAL` | Cleanup frequency (0 = manual only) | `24h` |
 | **Authentication** | `A2A_AUTH_ENABLE` | Enable OIDC authentication | `false` |
+| **Telemetry** | `A2A_TELEMETRY_ENABLE` | Enable OpenTelemetry instrumentation | `true` |
+| **Telemetry** | `A2A_OTEL_TRACES_EXPORTER` | Trace exporter (`otlp` or `none`) | `none` |
+| **Telemetry** | `A2A_OTEL_METRICS_EXPORTER` | Metrics exporter (`otlp`, `prometheus`, or `none`) | `prometheus` |
+| **Telemetry** | `A2A_OTEL_EXPORTER_PROMETHEUS_PORT` | Prometheus metrics exporter port | `9464` |
 
 ## Development
 
