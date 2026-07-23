@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.3](https://github.com/inference-gateway/browser-agent/compare/v0.7.2...v0.7.3) (2026-07-23)
+
+### ♻️ Improvements
+
+* un-fork main.go and .gitattributes from .adl-ignore ([#135](https://github.com/inference-gateway/browser-agent/issues/135)) ([fa94901](https://github.com/inference-gateway/browser-agent/commit/fa9490123d503ad9aa8e30580bca5c52993222a0)), references [#133](https://github.com/inference-gateway/browser-agent/issues/133) [#128](https://github.com/inference-gateway/browser-agent/issues/128) [#134](https://github.com/inference-gateway/browser-agent/issues/134)
+
+### 🐛 Bug Fixes
+
+* migrate to mxschmitt/playwright-go fork to fix retired driver CDN ([#134](https://github.com/inference-gateway/browser-agent/issues/134)) ([8250db7](https://github.com/inference-gateway/browser-agent/commit/8250db7dca8281c438e51840c87b899de1b9aec5))
+
+### 🔧 Miscellaneous
+
+* **flox:** add lockfile ([c5d6523](https://github.com/inference-gateway/browser-agent/commit/c5d652379a7cdc614df1ce72e545080f3f1c8cd2))
+
 ## [0.7.2](https://github.com/inference-gateway/browser-agent/compare/v0.7.1...v0.7.2) (2026-07-23)
 
 ### 🐛 Bug Fixes
