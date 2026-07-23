@@ -499,7 +499,7 @@ spec:
       version: "1.26.4"
       vendor:
         deps:
-          - github.com/playwright-community/playwright-go@v0.6000.0
+          - github.com/mxschmitt/playwright-go@v0.6100.0
           - github.com/jonfriesen/playwright-go-stealth@v0.0.3
           - github.com/stretchr/testify@v1.11.1
         devdeps:

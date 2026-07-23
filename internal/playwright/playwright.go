@@ -11,7 +11,7 @@ import (
 	"time"
 
 	stealth "github.com/jonfriesen/playwright-go-stealth"
-	playwright "github.com/playwright-community/playwright-go"
+	playwright "github.com/mxschmitt/playwright-go"
 	zap "go.uber.org/zap"
 
 	server "github.com/inference-gateway/adk/server"
@@ -289,7 +289,7 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 	}
 
 	if p.config.Browser.StealthMode {
-		if err := stealth.Inject(page); err != nil {
+		if err := page.AddInitScript(playwright.Script{Content: playwright.String(stealth.StealthJS)}); err != nil {
 			p.logger.Warn("failed to inject stealth script", zap.Error(err))
 		} else {
 			p.logger.Info("stealth mode enabled - stealth script injected")
@@ -441,7 +441,7 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 	}
 
 	if p.config.Browser.StealthMode {
-		if err := stealth.Inject(page); err != nil {
+		if err := page.AddInitScript(playwright.Script{Content: playwright.String(stealth.StealthJS)}); err != nil {
 			p.logger.Warn("failed to inject stealth script", zap.Error(err))
 		} else {
 			p.logger.Info("stealth mode enabled - stealth script injected")
