@@ -11,6 +11,10 @@ Dockerfile linguist-generated=true
 Taskfile.yml linguist-generated=true
 .gitignore linguist-generated=true
 
+# Docker Compose dev stack (generated)
+docker-compose.yaml linguist-generated=true
+.env.example linguist-generated=true
+
 # CI/CD workflows
 .github/workflows/ci.yml linguist-generated=true
 .github/workflows/cd.yml linguist-generated=true
@@ -23,6 +27,7 @@ Taskfile.yml linguist-generated=true
 CLAUDE.md linguist-generated=true
 AGENTS.md linguist-generated=true
 .github/workflows/claude.yml linguist-generated=true
+.github/workflows/infer.yml linguist-generated=true
 
 # Kubernetes manifests
 k8s/*.yaml linguist-generated=true
@@ -35,9 +40,11 @@ k8s/*.yml linguist-generated=true
 tools/read.go linguist-generated=true
 tools/write.go linguist-generated=true
 tools/edit.go linguist-generated=true
+tools/fetch.go linguist-generated=true
 
 # Documentation (partially generated)
 README.md linguist-documentation=true
+CONFIGURATIONS.md linguist-documentation=true
 
 # Preserve line endings for generated files
 *.go text eol=lf
@@ -47,6 +54,3 @@ README.md linguist-documentation=true
 *.md text eol=lf
 Dockerfile text eol=lf
 Taskfile.yml text eol=lf
-
-# Vendored
-example/demo-site/index.html linguist-vendored=true

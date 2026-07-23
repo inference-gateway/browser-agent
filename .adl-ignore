@@ -26,6 +26,4 @@ internal/playwright/playwright.go
 .agents/skills/form-automation/
 .agents/skills/deep-research/
 
-.gitattributes
 Dockerfile
-main.go
