@@ -21,10 +21,10 @@ tools/args.go
 internal/playwright/playwright.go
 
 # Bare skill playbooks - edited by hand after initial scaffold
-skills/webapp-testing/
-skills/web-scraping/
-skills/form-automation/
-skills/deep-research/
+.agents/skills/webapp-testing/
+.agents/skills/web-scraping/
+.agents/skills/form-automation/
+.agents/skills/deep-research/
 
 .gitattributes
 Dockerfile
