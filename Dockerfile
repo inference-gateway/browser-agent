@@ -21,8 +21,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Install playwright CLI with right version for later use
-RUN PWGO_VER=$(grep -oE "playwright-go v[0-9]+\.[0-9]+\.[0-9]+" /app/go.mod | sed 's/playwright-go v//g') \
-    && go install github.com/playwright-community/playwright-go/cmd/playwright@v${PWGO_VER}
+RUN PWGO_VER=$(grep -oE "mxschmitt/playwright-go v[0-9]+\.[0-9]+\.[0-9]+" /app/go.mod | sed 's#.*/playwright-go v##') \
+    && go install github.com/mxschmitt/playwright-go/cmd/playwright@v${PWGO_VER}
 
 # Copy source code
 COPY . .

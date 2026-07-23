@@ -5,7 +5,7 @@ go 1.26.4
 require (
 	github.com/inference-gateway/adk v0.24.0
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
-	github.com/playwright-community/playwright-go v0.6000.0
+	github.com/mxschmitt/playwright-go v0.6100.0
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
@@ -69,6 +69,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.3.1 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/playwright-community/playwright-go v0.6000.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.24.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
