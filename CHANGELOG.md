@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2](https://github.com/inference-gateway/browser-agent/compare/v0.7.1...v0.7.2) (2026-07-23)
+
+### 🐛 Bug Fixes
+
+* copy and load skills from .agents/skills ([#133](https://github.com/inference-gateway/browser-agent/issues/133)) ([aec6515](https://github.com/inference-gateway/browser-agent/commit/aec6515fafbf8d886c74e0e81d8283d070805b21)), references [#308](https://github.com/inference-gateway/browser-agent/issues/308)
+
 ## [0.7.1](https://github.com/inference-gateway/browser-agent/compare/v0.7.0...v0.7.1) (2026-07-23)
 
 ### 🔧 Miscellaneous
