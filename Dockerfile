@@ -88,7 +88,7 @@ RUN mkdir -p /home/agent/.cache && \
     chown -R agent:a2a /home/agent
 
 # Copy skills directory so loadSkillsManifest can read SKILL.md at runtime
-COPY --from=builder /app/skills ./skills
+COPY --from=builder /app/.agents/skills ./.agents/skills
 
 # Change ownership to agent user
 RUN chown -R agent:a2a /app
