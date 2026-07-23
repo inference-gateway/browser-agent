@@ -157,22 +157,22 @@ This agent ships 4 markdown skills that are loaded into the system prompt at sta
 ### webapp-testing
 - **Description**: Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
 - **Tags**: testing, qa, e2e, playwright
-- **Source**: scaffolded locally (`skills/webapp-testing/SKILL.md`)
+- **Source**: scaffolded locally (`.agents/skills/webapp-testing/SKILL.md`)
 
 ### web-scraping
 - **Description**: Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool.
 - **Tags**: scraping, extraction, data
-- **Source**: scaffolded locally (`skills/web-scraping/SKILL.md`)
+- **Source**: scaffolded locally (`.agents/skills/web-scraping/SKILL.md`)
 
 ### form-automation
 - **Description**: Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
 - **Tags**: forms, automation, workflow
-- **Source**: scaffolded locally (`skills/form-automation/SKILL.md`)
+- **Source**: scaffolded locally (`.agents/skills/form-automation/SKILL.md`)
 
 ### deep-research
 - **Description**: Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write.
 - **Tags**: research, synthesis, citations, investigation
-- **Source**: scaffolded locally (`skills/deep-research/SKILL.md`)
+- **Source**: scaffolded locally (`.agents/skills/deep-research/SKILL.md`)
 
 ## Server Configuration
 
@@ -261,7 +261,7 @@ docker run -p 8080:8080 browser-agent
 │   └── execute_script.go         # Execute custom JavaScript inside the current page via Playwright's page.evaluate(). The script runs in the browser context, NOT in Node.js: globals like window, document, navigator, fetch and localStorage are available; Node.js built-ins (require, process, __dirname, __filename, fs, path, os, http, https, child_process, etc.) are NOT available and calls to them will be rejected. Use browser/DOM APIs only. The script body is automatically wrapped in an IIFE, so a top-level `return` is valid. Set async=true if the body uses `await`.
 │   └── handle_authentication.go  # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 │   └── wait_for_condition.go     # Wait for specific conditions before proceeding with automation
-├── skills/                       # Skill directories (SKILL.md + optional assets)
+├── .agents/skills/               # Skill directories (SKILL.md + optional assets)
 │   └── webapp-testing/           # Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
 │       └── SKILL.md              # Playbook prepended to the system prompt
 │   └── web-scraping/             # Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool.
