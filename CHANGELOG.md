@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.5](https://github.com/inference-gateway/browser-agent/compare/v0.7.4...v0.7.5) (2026-07-29)
+
+### 👷 CI
+
+* **deps:** bump anthropics/claude-code-action from 1.0.181 to 1.0.183 in the github-actions group ([#139](https://github.com/inference-gateway/browser-agent/issues/139)) ([247d456](https://github.com/inference-gateway/browser-agent/commit/247d4560aa435b632001e7a6bd93df137a23d057))
+* **deps:** bump docker/login-action from 4.4.0 to 4.5.0 in the github-actions group ([#137](https://github.com/inference-gateway/browser-agent/issues/137)) ([9abb65b](https://github.com/inference-gateway/browser-agent/commit/9abb65bb855b56cc1f58600ce14e16a364983602))
+* **deps:** bump docker/login-action from 4.5.2 to 4.6.0 in the github-actions group ([#141](https://github.com/inference-gateway/browser-agent/issues/141)) ([5bce32f](https://github.com/inference-gateway/browser-agent/commit/5bce32f3feb28bc8f809fb86b9d139e6f039a404))
+
+### 🔧 Miscellaneous
+
+* **adl:** refresh agent.yaml defaults from ADL CLI v0.57.0 ([#142](https://github.com/inference-gateway/browser-agent/issues/142)) ([dc65c55](https://github.com/inference-gateway/browser-agent/commit/dc65c559266ea03b085ea93f633b0e12fd6de975))
+* **deps:** bump ADL CLI to v0.56.0 ([#138](https://github.com/inference-gateway/browser-agent/issues/138)) ([5699f31](https://github.com/inference-gateway/browser-agent/commit/5699f31414b0eb11482f289f54400cc06796b845))
+* **deps:** bump ADL CLI to v0.57.0 ([#140](https://github.com/inference-gateway/browser-agent/issues/140)) ([6c1776e](https://github.com/inference-gateway/browser-agent/commit/6c1776eb1571e6fefeed0b0010c3f305f14a401b))
+* **deps:** bump ADL CLI to v0.57.1 ([#143](https://github.com/inference-gateway/browser-agent/issues/143)) ([8720ac4](https://github.com/inference-gateway/browser-agent/commit/8720ac49b013deda57e35cd5e924eacfe41ea326))
+
 ## [0.7.4](https://github.com/inference-gateway/browser-agent/compare/v0.7.3...v0.7.4) (2026-07-23)
 
 ### 🔧 Miscellaneous
