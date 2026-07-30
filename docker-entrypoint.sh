@@ -60,5 +60,12 @@ echo "  Engine: ${BROWSER_ENGINE:-chromium}"
 echo "  Headless: ${BROWSER_HEADLESS:-true}"
 echo "  Stealth Mode: ${BROWSER_STEALTH_MODE:-false}"
 echo "  Xvfb Enabled: $XVFB_ENABLED"
+if [ "${BROWSER_ENGINE:-chromium}" = "lightpanda" ]; then
+    echo "  CDP URL: ${BROWSER_CDP_URL:-<not set>}"
+    if [ -z "${BROWSER_CDP_URL}" ]; then
+        echo "Warning: BROWSER_ENGINE=lightpanda but BROWSER_CDP_URL is not set."
+        echo "The agent will fail at startup with a clear error message."
+    fi
+fi
 
 exec ./main start

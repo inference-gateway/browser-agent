@@ -46,6 +46,8 @@ ARG BROWSER_ENGINE=chromium
 
 # Install system dependencies
 # Note: x11-utils added for xdpyinfo (Xvfb health check)
+# When BROWSER_ENGINE=lightpanda, these are still needed for Xvfb if enabled,
+# but the browser itself is not installed locally.
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     tzdata \
@@ -72,13 +74,17 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/agent/.cache/ms-playwright
 
 # Install browsers and system dependencies as root based on build argument
-# Supports: chromium, firefox, webkit, or "all" for multiple browsers
+# Supports: chromium, firefox, webkit, lightpanda, or "all" for multiple browsers
+# When BROWSER_ENGINE=lightpanda, no local browser is installed - the agent
+# connects to a remote CDP endpoint at runtime.
 RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
         playwright install --with-deps chromium firefox webkit; \
     elif [ "$BROWSER_ENGINE" = "firefox" ]; then \
         playwright install --with-deps firefox; \
     elif [ "$BROWSER_ENGINE" = "webkit" ]; then \
         playwright install --with-deps webkit; \
+    elif [ "$BROWSER_ENGINE" = "lightpanda" ]; then \
+        echo "lightpanda engine selected, skipping local browser installation"; \
     else \
         playwright install --with-deps chromium; \
     fi

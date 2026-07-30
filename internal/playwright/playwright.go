@@ -24,9 +24,10 @@ import (
 type BrowserEngine string
 
 const (
-	Chromium BrowserEngine = "chromium"
-	Firefox  BrowserEngine = "firefox"
-	WebKit   BrowserEngine = "webkit"
+	Chromium  BrowserEngine = "chromium"
+	Firefox   BrowserEngine = "firefox"
+	WebKit    BrowserEngine = "webkit"
+	Lightpanda BrowserEngine = "lightpanda"
 )
 
 const (
@@ -41,6 +42,7 @@ type BrowserConfig struct {
 	ViewportWidth  int
 	ViewportHeight int
 	Args           []string
+	CdpURL         string
 }
 
 // DefaultBrowserConfig returns default browser configuration
@@ -98,6 +100,8 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		engine = Firefox
 	case "webkit":
 		engine = WebKit
+	case "lightpanda":
+		engine = Lightpanda
 	default:
 		engine = Chromium
 	}
@@ -109,6 +113,7 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		ViewportWidth:  width,
 		ViewportHeight: height,
 		Args:           args,
+		CdpURL:         cfg.Browser.CdpURL,
 	}
 }
 
@@ -213,9 +218,17 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 	return service, nil
 }
 
-// ensurePlaywrightInstalled checks and installs playwright browsers if needed
+// ensurePlaywrightInstalled checks and installs playwright browsers if needed.
+// For CDP-based engines like Lightpanda, no local browser installation is needed.
 func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 	if p.isInstalled {
+		return nil
+	}
+
+	browserConfig := NewBrowserConfigFromConfig(p.config)
+	if browserConfig.Engine == Lightpanda {
+		p.logger.Info("lightpanda engine selected, skipping local browser installation")
+		p.isInstalled = true
 		return nil
 	}
 
@@ -233,7 +246,26 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 	return nil
 }
 
-// LaunchBrowser launches a new browser instance with the given configuration
+// connectCDP connects to a remote CDP endpoint (e.g. Lightpanda) instead of
+// launching a local browser. Returns a Browser instance connected to the
+// remote endpoint.
+func (p *playwrightImpl) connectCDP(ctx context.Context, cdpURL string) (playwright.Browser, error) {
+	if cdpURL == "" {
+		return nil, fmt.Errorf("BROWSER_CDP_URL is required when BROWSER_ENGINE=lightpanda")
+	}
+
+	p.logger.Info("connecting to remote CDP endpoint", zap.String("url", cdpURL))
+	browser, err := p.pw.Chromium.ConnectOverCDP(cdpURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to CDP endpoint %s: %w", cdpURL, err)
+	}
+	p.logger.Info("connected to remote CDP endpoint successfully")
+	return browser, nil
+}
+
+// LaunchBrowser launches a new browser instance with the given configuration.
+// For Lightpanda engine, it connects to a remote CDP endpoint instead of
+// launching a local browser.
 func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfig) (*BrowserSession, error) {
 	if config == nil {
 		config = NewBrowserConfigFromConfig(p.config)
@@ -242,6 +274,48 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 	p.logger.Info("launching browser",
 		zap.String("engine", string(config.Engine)),
 		zap.Bool("headless", config.Headless))
+
+	// For Lightpanda, connect via CDP instead of launching a local browser
+	if config.Engine == Lightpanda {
+		browser, err := p.connectCDP(ctx, config.CdpURL)
+		if err != nil {
+			return nil, err
+		}
+		contextOptions := p.createContextOptions(config)
+		context, err := browser.NewContext(contextOptions)
+		if err != nil {
+			if closeErr := browser.Close(); closeErr != nil {
+				p.logger.Error("failed to close browser after context creation error", zap.Error(closeErr))
+			}
+			return nil, fmt.Errorf("failed to create browser context: %w", err)
+		}
+		page, err := context.NewPage()
+		if err != nil {
+			if closeErr := context.Close(); closeErr != nil {
+				p.logger.Error("failed to close context after page creation error", zap.Error(closeErr))
+			}
+			if closeErr := browser.Close(); closeErr != nil {
+				p.logger.Error("failed to close browser after page creation error", zap.Error(closeErr))
+			}
+			return nil, fmt.Errorf("failed to create page: %w", err)
+		}
+		sessionID := fmt.Sprintf("session_%d", time.Now().UnixNano())
+		now := time.Now()
+		session := &BrowserSession{
+			ID:        sessionID,
+			Browser:   browser,
+			Context:   context,
+			Page:      page,
+			Created:   now,
+			LastUsed:  now,
+			ExpiresAt: now.Add(p.sessionTimeout),
+		}
+		p.sessionsMux.Lock()
+		p.sessions[sessionID] = session
+		p.sessionsMux.Unlock()
+		p.logger.Info("browser session created via CDP", zap.String("sessionID", sessionID))
+		return session, nil
+	}
 
 	var browserType playwright.BrowserType
 	switch config.Engine {
@@ -394,6 +468,55 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 	p.logger.Info("creating new task-scoped browser session", zap.String("sessionID", taskID))
 
 	config := NewBrowserConfigFromConfig(p.config)
+
+	// For Lightpanda, connect via CDP instead of launching a local browser
+	if config.Engine == Lightpanda {
+			browser, err := p.connectCDP(ctx, config.CdpURL)
+			if err != nil {
+				return nil, err
+			}
+			contextOptions := p.createContextOptions(config)
+			context, err := browser.NewContext(contextOptions)
+			if err != nil {
+				if closeErr := browser.Close(); closeErr != nil {
+					p.logger.Error("failed to close browser after context creation error", zap.Error(closeErr))
+				}
+				return nil, fmt.Errorf("failed to create browser context: %w", err)
+			}
+			page, err := context.NewPage()
+			if err != nil {
+				if closeErr := context.Close(); closeErr != nil {
+					p.logger.Error("failed to close context after page creation error", zap.Error(closeErr))
+				}
+				if closeErr := browser.Close(); closeErr != nil {
+					p.logger.Error("failed to close browser after page creation error", zap.Error(closeErr))
+				}
+				return nil, fmt.Errorf("failed to create page: %w", err)
+			}
+			if p.config.Browser.StealthMode {
+				if err := page.AddInitScript(playwright.Script{Content: playwright.String(stealth.StealthJS)}); err != nil {
+					p.logger.Warn("failed to inject stealth script", zap.Error(err))
+				} else {
+					p.logger.Info("stealth mode enabled - stealth script injected")
+				}
+			}
+			now := time.Now()
+			session := &BrowserSession{
+				ID:        taskID,
+				Browser:   browser,
+				Context:   context,
+				Page:      page,
+				Created:   now,
+				LastUsed:  now,
+				ExpiresAt: now.Add(p.sessionTimeout),
+				TaskID:    taskID,
+			}
+			p.sessions[taskID] = session
+			p.logger.Info("task-scoped browser session created via CDP",
+				zap.String("sessionID", taskID),
+				zap.Time("expiresAt", session.ExpiresAt))
+			return session, nil
+	}
 
 	var browserType playwright.BrowserType
 	switch config.Engine {

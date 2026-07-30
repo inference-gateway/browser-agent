@@ -8,6 +8,7 @@ derived from `agent.yaml`; the env vars below override them at runtime.
 | Category | Variable | Default |
 |----------|----------|---------|
 | **Browser** | `BROWSER_ARGS` | `[--disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor --no-first-run --disable-default-apps --disable-extensions --disable-plugins --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-zygote --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-ipc-flooding-protection]` |
+| **Browser** | `BROWSER_CDP_URL` | `` |
 | **Browser** | `BROWSER_DATA_DIR` | `/tmp/playwright/artifacts` |
 | **Browser** | `BROWSER_ENGINE` | `chromium` |
 | **Browser** | `BROWSER_HEADER_ACCEPT` | `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7` |

@@ -20,6 +20,7 @@ type Config struct {
 // BrowserConfig represents the browser configuration
 type BrowserConfig struct {
 	Args string `env:"ARGS,default=[--disable-blink-features=AutomationControlled --disable-features=VizDisplayCompositor --no-first-run --disable-default-apps --disable-extensions --disable-plugins --disable-sync --disable-translate --hide-scrollbars --mute-audio --no-zygote --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-ipc-flooding-protection]"`
+	CdpURL string `env:"CDP_URL,default="`
 	DataDir string `env:"DATA_DIR,default=/tmp/playwright/artifacts"`
 	Engine string `env:"ENGINE,default=chromium"`
 	HeaderAccept string `env:"HEADER_ACCEPT,default=text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"`
