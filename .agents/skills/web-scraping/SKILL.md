@@ -28,11 +28,6 @@ Do **not** use this for tasks that mutate page state (use
 
 ## Workflow
 
-> **Note:** The `take_screenshot` tool is only available when using Chromium,
-> Firefox, or WebKit engines. When the engine is lightpanda (no graphical
-> rendering), skip screenshot steps and rely on `extract_data` and
-> `execute_script` for DOM inspection.
-
 0. **Skip the browser when you can** - before opening a Playwright
    session, check if the data is reachable without one:
    - Does the site expose a JSON/XML API? Many SPAs render from a
