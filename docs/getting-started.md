@@ -39,9 +39,9 @@ docker build -t browser-agent .
 docker run -p 8080:8080 browser-agent
 ```
 
-Published images ship one browser each — `:latest` and `:lightpanda` are
-Lightpanda, `:chromium`, `:firefox` and `:webkit` are the Playwright engines.
-See [Configuration](configuration.md#browser-engines) for the tradeoffs.
+Published images ship one browser each — `:latest` and `:chromium` are Chromium,
+with `:firefox`, `:webkit` and a lean `:lightpanda` alongside. See
+[Configuration](configuration.md#browser-engines) for the tradeoffs.
 
 ## Run the local stack
 

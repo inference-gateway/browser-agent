@@ -4,7 +4,7 @@ The Playwright Service provides comprehensive browser automation capabilities fo
 
 ## Features
 
-- **Multi-Browser Support**: Lightpanda (over CDP, default), Chromium, Firefox, and WebKit
+- **Multi-Browser Support**: Chromium (default), Firefox, WebKit, and Lightpanda (over CDP)
 - **Concurrent Sessions**: Thread-safe browser session management
 - **Configurable Browsers**: Headless/headed modes, viewport settings
 - **Comprehensive Automation**: Navigation, form filling, data extraction, screenshots

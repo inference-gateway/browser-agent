@@ -32,7 +32,7 @@ These map to `spec.config.browser` and control the Playwright runtime.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `BROWSER_ENGINE` | Browser engine: `lightpanda`, `chromium`, `firefox`, `webkit` | `lightpanda` |
+| `BROWSER_ENGINE` | Browser engine: `chromium`, `firefox`, `webkit`, `lightpanda` | `chromium` |
 | `BROWSER_CDP_URL` | CDP endpoint to drive when the engine is `lightpanda` | `ws://127.0.0.1:9222` |
 | `BROWSER_HEADLESS` | Run headless | `true` |
 | `BROWSER_STEALTH_MODE` | Enable stealth patches | `false` |
@@ -45,45 +45,47 @@ These map to `spec.config.browser` and control the Playwright runtime.
 
 ### Browser engines
 
-`lightpanda` is the default. The Docker image bundles the
+`chromium` is the default and covers the full Web platform. `firefox` and
+`webkit` launch locally through Playwright the same way.
+
+`lightpanda` is the lean alternative: the image bundles the
 [Lightpanda](https://github.com/lightpanda-io/browser) binary and the entrypoint
 starts it on `127.0.0.1:9222`, so nothing extra needs to run. Playwright drives
-it over CDP rather than launching a browser per session, which cuts cold-start
-time and drops Chromium's apt dependency tree from the image.
+it over CDP instead of launching a browser per session, which cuts cold-start
+time and drops Chromium's apt dependency tree — 871MB against 3.03GB.
 
-The tradeoff is coverage: Lightpanda implements a subset of the Web platform, so
-JavaScript-heavy pages that work under Chromium can fail or render incompletely.
-It has no graphical rendering engine at all, so `take_screenshot` returns an
-error — use a Chromium, Firefox or WebKit image for anything visual.
+The tradeoff is coverage. Lightpanda implements a subset of the Web platform, so
+JavaScript-heavy pages that work under Chromium can fail or render incompletely,
+and it has no graphical rendering engine at all, so `take_screenshot` returns an
+error. Every shipped skill uses screenshots, so pick it only for text and DOM
+extraction where speed matters.
 
-The engine is baked into the image so that nothing has to be downloaded or
-installed at runtime — each variant ships exactly one browser and its system
-libraries. Pick the tag that matches the engine you want rather than setting
-`BROWSER_ENGINE` on the default image:
+The engine is baked into the image so nothing has to be downloaded or installed
+at runtime — each variant ships exactly one browser and its system libraries.
+Pick the tag that matches the engine you want:
 
-| Image tag | Engine |
-|-----------|--------|
-| `ghcr.io/inference-gateway/browser-agent:<version>`, `:latest` | `lightpanda` |
-| `ghcr.io/inference-gateway/browser-agent:lightpanda-<version>`, `:lightpanda` | `lightpanda` (explicit alias) |
-| `ghcr.io/inference-gateway/browser-agent:chromium-<version>`, `:chromium` | `chromium` |
-| `ghcr.io/inference-gateway/browser-agent:firefox-<version>`, `:firefox` | `firefox` |
-| `ghcr.io/inference-gateway/browser-agent:webkit-<version>`, `:webkit` | `webkit` |
+| Image tag | Engine | Size |
+|-----------|--------|------|
+| `ghcr.io/inference-gateway/browser-agent:<version>`, `:latest` | `chromium` | 3.03GB |
+| `ghcr.io/inference-gateway/browser-agent:chromium-<version>`, `:chromium` | `chromium` (explicit alias) | 3.03GB |
+| `ghcr.io/inference-gateway/browser-agent:firefox-<version>`, `:firefox` | `firefox` | 1.74GB |
+| `ghcr.io/inference-gateway/browser-agent:webkit-<version>`, `:webkit` | `webkit` | 1.95GB |
+| `ghcr.io/inference-gateway/browser-agent:lightpanda-<version>`, `:lightpanda` | `lightpanda` | 871MB |
 
 Each image sets `BROWSER_ENGINE` to its own engine, so no configuration is
 needed. Setting it to an engine the image doesn't ship will fail at startup. To
 build a variant locally:
 
 ```sh
-docker build --build-arg BROWSER_ENGINE=chromium -t browser-agent:chromium .
+docker build --build-arg BROWSER_ENGINE=lightpanda -t browser-agent:lightpanda .
 ```
 
-Set `BROWSER_CDP_URL` to a non-loopback address to drive a Lightpanda running
-elsewhere; the entrypoint then skips the bundled one. See
-`docker-compose.lightpanda.yaml` for a sidecar example.
-
-`chromium`, `firefox` and `webkit` launch locally via Playwright and ignore
-`BROWSER_CDP_URL`. Outside Docker (`task run`), the bundled binary does not
-exist — either run a Lightpanda yourself or set `BROWSER_ENGINE=chromium`.
+`BROWSER_CDP_URL` applies to the `lightpanda` engine only; `chromium`, `firefox`
+and `webkit` launch locally and ignore it. Point it at a non-loopback address to
+drive a Lightpanda running elsewhere — the entrypoint then skips the bundled one.
+See `docker-compose.lightpanda.yaml` for a sidecar example. Outside Docker
+(`task run`), the bundled binary does not exist, so `lightpanda` needs one you
+run yourself.
 
 ## Built-in tools
 

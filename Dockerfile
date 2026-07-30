@@ -42,7 +42,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 FROM ubuntu:24.04
 
 # Build arguments for browser selection
-ARG BROWSER_ENGINE=lightpanda
+ARG BROWSER_ENGINE=chromium
 ARG TARGETARCH
 
 # Install system dependencies
