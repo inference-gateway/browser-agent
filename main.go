@@ -254,10 +254,17 @@ func runStart(ctx context.Context) error {
 	toolBox.AddTool(extractDataTool)
 	l.Info("registered tool: extract_data (Extract data from the page using selectors and return structured information)")
 
-	// Register take_screenshot tool
-	takeScreenshotTool := tools.NewTakeScreenshotTool(l, playwrightSvc)
-	toolBox.AddTool(takeScreenshotTool)
-	l.Info("registered tool: take_screenshot (Capture a screenshot of the current page or specific element)")
+	// Determine if the engine supports screenshots (lightpanda has no graphical rendering engine)
+	isLightpanda := strings.EqualFold(cfg.Browser.Engine, string(playwright.Lightpanda))
+
+	// Register take_screenshot tool (only for engines that support it)
+	if !isLightpanda {
+			takeScreenshotTool := tools.NewTakeScreenshotTool(l, playwrightSvc)
+			toolBox.AddTool(takeScreenshotTool)
+			l.Info("registered tool: take_screenshot (Capture a screenshot of the current page or specific element)")
+	} else {
+			l.Info("skipped take_screenshot tool: not supported by lightpanda engine")
+	}
 
 	// Register execute_script tool
 	executeScriptTool := tools.NewExecuteScriptTool(l, playwrightSvc)
@@ -279,14 +286,23 @@ func runStart(ctx context.Context) error {
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
-	systemPrompt := `You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
+	// Build the system prompt, omitting screenshot-related content when the engine does not support it
+	var systemPrompt string
+	{
+		prompt := `You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
 
 Your core capabilities include:
 1. **Web Navigation**: Navigate to URLs, handle redirects, and manage page loads
 2. **Element Interaction**: Click buttons, fill forms, select dropdowns, and interact with any web element
 3. **Data Extraction**: Scrape and extract structured data from web pages
-4. **Form Automation**: Fill and submit complex forms with validation
-5. **Screenshot Capture**: Take full-page or element-specific screenshots
+4. **Form Automation**: Fill and submit complex forms with validation`
+
+		if !isLightpanda {
+			prompt += `
+5. **Screenshot Capture**: Take full-page or element-specific screenshots`
+		}
+
+		prompt += `
 6. **JavaScript Execution**: Run custom scripts in the browser context
 7. **Authentication Handling**: Manage various authentication methods
 8. **Synchronization**: Wait for specific conditions and handle dynamic content
@@ -326,21 +342,37 @@ Reach for fetch when:
 Reach for navigate_to_url (and the Playwright tools) when:
 - The page is a Single-Page App that hydrates client-side.
 - Content is behind authentication, cookies, or CSRF that requires a browser session.
-- You need to interact with the DOM (click, fill, screenshot).
+- You need to interact with the DOM (click, fill,`
+
+		if !isLightpanda {
+			prompt += ` screenshot).`
+		} else {
+			prompt += `).`
+		}
+
+		prompt += `
 - The page renders meaningful content only after JS execution (most modern article sites, dashboards, admin panels).
 
 When in doubt: try fetch first. If the response body looks like an empty shell that gets filled in by JS, fall back to navigate_to_url.
 
-**IMPORTANT - Artifact Creation**:
+`
+
+		if !isLightpanda {
+			prompt += `**IMPORTANT - Artifact Creation**:
 When users request screenshots, the take_screenshot tool automatically creates downloadable artifacts. The screenshot will be available via a download URL returned in the response.
 
-For data extraction, you can use the create_artifact tool to save extracted data as downloadable files (JSON/CSV/TXT).
+`
+		}
+
+		prompt += `For data extraction, you can use the create_artifact tool to save extracted data as downloadable files (JSON/CSV/TXT).
 
 **IMPORTANT - Answering capability questions**:
 When the user asks about your skills, tools, capabilities, or what you can do (e.g. "what skills do you have?", "list your tools", "what can you do?"), answer directly from this system prompt and the AVAILABLE SKILLS list below. Do NOT call any tools, do NOT navigate to a URL, and do NOT Read SKILL.md files. Only load a SKILL.md (via the Read tool) once the user has given you a concrete task that matches one of those skills.
 
 Your automation solutions should be maintainable, efficient, and production-ready.
 `
+		systemPrompt = prompt
+	}
 	if skillsPrompt != "" {
 		systemPrompt = systemPrompt + "\n\n" + skillsPrompt
 	}
