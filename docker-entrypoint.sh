@@ -103,7 +103,7 @@ echo "  Engine: ${BROWSER_ENGINE:-chromium}"
 echo "  Headless: ${BROWSER_HEADLESS:-true}"
 echo "  Stealth Mode: ${BROWSER_STEALTH_MODE:-false}"
 echo "  Xvfb Enabled: $XVFB_ENABLED"
-if [ "${BROWSER_ENGINE:-chromium}" = "lightpanda" ]; then
+if [ -n "${BROWSER_CDP_URL:-}" ]; then
     echo "  CDP URL: $BROWSER_CDP_URL"
 fi
 

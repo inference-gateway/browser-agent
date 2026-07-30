@@ -33,7 +33,7 @@ These map to `spec.config.browser` and control the Playwright runtime.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `BROWSER_ENGINE` | Browser engine: `chromium`, `firefox`, `webkit`, `lightpanda` | `chromium` |
-| `BROWSER_CDP_URL` | CDP endpoint to drive when the engine is `lightpanda` | `ws://127.0.0.1:9222` |
+| `BROWSER_CDP_URL` | Drive a browser at this CDP endpoint instead of launching one | _(unset)_ |
 | `BROWSER_HEADLESS` | Run headless | `true` |
 | `BROWSER_STEALTH_MODE` | Enable stealth patches | `false` |
 | `BROWSER_SESSION_TIMEOUT` | Idle session timeout | `2m` |
@@ -80,12 +80,29 @@ build a variant locally:
 docker build --build-arg BROWSER_ENGINE=lightpanda -t browser-agent:lightpanda .
 ```
 
-`BROWSER_CDP_URL` applies to the `lightpanda` engine only; `chromium`, `firefox`
-and `webkit` launch locally and ignore it. Point it at a non-loopback address to
-drive a Lightpanda running elsewhere — the entrypoint then skips the bundled one.
-See `docker-compose.lightpanda.yaml` for a sidecar example. Outside Docker
-(`task run`), the bundled binary does not exist, so `lightpanda` needs one you
-run yourself.
+### Driving a remote browser over CDP
+
+Set `BROWSER_CDP_URL` and the agent connects to that endpoint instead of
+launching a browser of its own. This is the Chrome DevTools Protocol, so it
+works with `chromium` and `lightpanda`; Playwright cannot drive `firefox` or
+`webkit` over CDP and setting the variable for those engines is rejected at
+startup.
+
+```sh
+# a Chrome started with --remote-debugging-port, a browser pod, a hosted service
+docker run -e BROWSER_CDP_URL=ws://chrome.internal:9222 \
+  ghcr.io/inference-gateway/browser-agent:latest
+```
+
+No local browser is installed when a CDP URL is set, and the endpoint is dialled
+once at startup so an unreachable one fails immediately rather than on the first
+task.
+
+For `lightpanda` the entrypoint starts the bundled binary and points
+`BROWSER_CDP_URL` at it automatically; give it a non-loopback address to use one
+running elsewhere instead. See `docker-compose.lightpanda.yaml` for a sidecar
+example. Outside Docker (`task run`) there is no bundled binary, so `lightpanda`
+needs an endpoint you run yourself.
 
 ## Built-in tools
 

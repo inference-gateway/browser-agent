@@ -208,10 +208,10 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 
 	browserConfig := NewBrowserConfigFromConfig(cfg)
 
-	if browserConfig.Engine == Lightpanda {
+	if browserConfig.Engine == Lightpanda || browserConfig.CDPURL != "" {
 		browser, err := service.acquireBrowser(browserConfig)
 		if err != nil {
-			return nil, fmt.Errorf("lightpanda CDP endpoint unusable: %w", err)
+			return nil, fmt.Errorf("CDP endpoint unusable: %w", err)
 		}
 		if err := browser.Close(); err != nil {
 			logger.Warn("failed to close CDP probe connection", zap.Error(err))
@@ -236,8 +236,8 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 		return nil
 	}
 
-	if strings.EqualFold(p.config.Browser.Engine, string(Lightpanda)) {
-		p.logger.Info("lightpanda engine selected, skipping local browser installation")
+	if p.config.Browser.CDPURL != "" || strings.EqualFold(p.config.Browser.Engine, string(Lightpanda)) {
+		p.logger.Info("driving a remote CDP endpoint, skipping local browser installation")
 		p.isInstalled = true
 		return nil
 	}
@@ -256,12 +256,17 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 	return nil
 }
 
-// acquireBrowser connects over CDP for Lightpanda and launches locally for
-// every other engine. The only step that differs between engines.
+// acquireBrowser connects over CDP when BROWSER_CDP_URL is set and launches
+// locally otherwise. The only step that differs between engines.
 func (p *playwrightImpl) acquireBrowser(config *BrowserConfig) (playwright.Browser, error) {
-	if config.Engine == Lightpanda {
-		if config.CDPURL == "" {
-			return nil, fmt.Errorf("BROWSER_CDP_URL is required when BROWSER_ENGINE=lightpanda")
+	if config.Engine == Lightpanda && config.CDPURL == "" {
+		return nil, fmt.Errorf("BROWSER_CDP_URL is required when BROWSER_ENGINE=lightpanda")
+	}
+
+	if config.CDPURL != "" {
+		// Playwright speaks CDP to Chromium-based browsers only.
+		if config.Engine != Chromium && config.Engine != Lightpanda {
+			return nil, fmt.Errorf("BROWSER_CDP_URL is not supported by the %s engine, only chromium and lightpanda", config.Engine)
 		}
 		p.logger.Info("connecting to remote CDP endpoint", zap.String("url", config.CDPURL))
 		browser, err := p.pw.Chromium.ConnectOverCDP(config.CDPURL)

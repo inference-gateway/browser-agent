@@ -141,7 +141,6 @@ ENV A2A_SERVER_PORT=8080
 # Browser configuration defaults (can be overridden at runtime).
 # The runtime engine follows whatever was built into the image.
 ENV BROWSER_ENGINE=${BROWSER_ENGINE}
-ENV BROWSER_CDP_URL=ws://127.0.0.1:9222
 ENV BROWSER_HEADLESS=true
 ENV BROWSER_STEALTH_MODE=false
 ENV BROWSER_XVFB_ENABLED=false

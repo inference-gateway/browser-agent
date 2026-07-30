@@ -35,13 +35,13 @@ Each browser session includes:
 
 ```go
 type BrowserConfig struct {
-    Engine         BrowserEngine  // lightpanda, chromium, firefox, webkit
+    Engine         BrowserEngine  // chromium, firefox, webkit, lightpanda
     Headless       bool           // Run in headless mode
     Timeout        time.Duration  // Browser operation timeout
     ViewportWidth  int            // Browser viewport width
     ViewportHeight int            // Browser viewport height
     Args           []string       // Additional browser arguments
-    CDPURL         string         // CDP endpoint, lightpanda only
+    CDPURL         string         // CDP endpoint; chromium and lightpanda only
 }
 ```
 

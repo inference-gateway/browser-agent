@@ -67,3 +67,17 @@ func TestAcquireBrowserRejectsUnknownEngine(t *testing.T) {
 
 	assert.ErrorContains(t, err, "unsupported browser engine")
 }
+
+// Playwright cannot drive firefox or webkit over CDP, so a CDP URL set against
+// them is a misconfiguration rather than something to silently ignore.
+func TestAcquireBrowserRejectsCDPURLForNonChromiumEngines(t *testing.T) {
+	for _, engine := range []BrowserEngine{Firefox, WebKit} {
+		t.Run(string(engine), func(t *testing.T) {
+			p := &playwrightImpl{logger: zap.NewNop()}
+
+			_, err := p.acquireBrowser(&BrowserConfig{Engine: engine, CDPURL: "ws://127.0.0.1:9222"})
+
+			assert.ErrorContains(t, err, "not supported by the "+string(engine)+" engine")
+		})
+	}
+}
