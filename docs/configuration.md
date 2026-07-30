@@ -53,9 +53,25 @@ time and drops Chromium's apt dependency tree from the image.
 
 The tradeoff is coverage: Lightpanda implements a subset of the Web platform, so
 JavaScript-heavy pages that work under Chromium can fail or render incompletely.
-Switch back per deployment with `BROWSER_ENGINE=chromium` — that path is
-unchanged, but note the default image no longer ships Chromium, so build one that
-does:
+It has no graphical rendering engine at all, so `take_screenshot` returns an
+error — use a Chromium, Firefox or WebKit image for anything visual.
+
+The engine is baked into the image so that nothing has to be downloaded or
+installed at runtime — each variant ships exactly one browser and its system
+libraries. Pick the tag that matches the engine you want rather than setting
+`BROWSER_ENGINE` on the default image:
+
+| Image tag | Engine |
+|-----------|--------|
+| `ghcr.io/inference-gateway/browser-agent:<version>`, `:latest` | `lightpanda` |
+| `ghcr.io/inference-gateway/browser-agent:lightpanda-<version>`, `:lightpanda` | `lightpanda` (explicit alias) |
+| `ghcr.io/inference-gateway/browser-agent:chromium-<version>`, `:chromium` | `chromium` |
+| `ghcr.io/inference-gateway/browser-agent:firefox-<version>`, `:firefox` | `firefox` |
+| `ghcr.io/inference-gateway/browser-agent:webkit-<version>`, `:webkit` | `webkit` |
+
+Each image sets `BROWSER_ENGINE` to its own engine, so no configuration is
+needed. Setting it to an engine the image doesn't ship will fail at startup. To
+build a variant locally:
 
 ```sh
 docker build --build-arg BROWSER_ENGINE=chromium -t browser-agent:chromium .

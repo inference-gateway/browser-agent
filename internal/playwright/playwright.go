@@ -87,13 +87,6 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		height = 1080
 	}
 
-	argsStr := strings.Trim(cfg.Browser.Args, "[]")
-	args := []string{"--disable-dev-shm-usage", "--no-sandbox"}
-	if argsStr != "" {
-		configArgs := strings.Fields(argsStr)
-		args = append(args, configArgs...)
-	}
-
 	var engine BrowserEngine
 	switch strings.ToLower(cfg.Browser.Engine) {
 	case "firefox":
@@ -104,6 +97,14 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		engine = Lightpanda
 	default:
 		engine = Chromium
+	}
+
+	var args []string
+	if engine == Chromium {
+		args = []string{"--disable-dev-shm-usage", "--no-sandbox"}
+	}
+	if argsStr := strings.Trim(cfg.Browser.Args, "[]"); argsStr != "" {
+		args = append(args, strings.Fields(argsStr)...)
 	}
 
 	return &BrowserConfig{
@@ -762,6 +763,10 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 	session, err := p.GetSession(sessionID)
 	if err != nil {
 		return err
+	}
+
+	if strings.EqualFold(p.config.Browser.Engine, string(Lightpanda)) {
+		return fmt.Errorf("screenshots are not supported by the lightpanda engine (it has no graphical rendering engine); use a chromium, firefox or webkit image")
 	}
 
 	p.logger.Info("taking screenshot", zap.String("sessionID", sessionID), zap.String("path", path))

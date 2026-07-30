@@ -39,6 +39,10 @@ docker build -t browser-agent .
 docker run -p 8080:8080 browser-agent
 ```
 
+Published images ship one browser each — `:latest` and `:lightpanda` are
+Lightpanda, `:chromium`, `:firefox` and `:webkit` are the Playwright engines.
+See [Configuration](configuration.md#browser-engines) for the tradeoffs.
+
 ## Run the local stack
 
 A `docker-compose.yaml` brings up the Inference Gateway alongside the agent
