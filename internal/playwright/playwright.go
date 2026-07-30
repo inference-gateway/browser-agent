@@ -264,7 +264,6 @@ func (p *playwrightImpl) acquireBrowser(config *BrowserConfig) (playwright.Brows
 	}
 
 	if config.CDPURL != "" {
-		// Playwright speaks CDP to Chromium-based browsers only.
 		if config.Engine != Chromium && config.Engine != Lightpanda {
 			return nil, fmt.Errorf("BROWSER_CDP_URL is not supported by the %s engine, only chromium and lightpanda", config.Engine)
 		}
