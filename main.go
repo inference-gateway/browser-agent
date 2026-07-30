@@ -339,6 +339,8 @@ For data extraction, you can use the create_artifact tool to save extracted data
 **IMPORTANT - Answering capability questions**:
 When the user asks about your skills, tools, capabilities, or what you can do (e.g. "what skills do you have?", "list your tools", "what can you do?"), answer directly from this system prompt and the AVAILABLE SKILLS list below. Do NOT call any tools, do NOT navigate to a URL, and do NOT Read SKILL.md files. Only load a SKILL.md (via the Read tool) once the user has given you a concrete task that matches one of those skills.
 
+**Note**: When the browser engine is configured as lightpanda (no graphical rendering), the take_screenshot tool is not available. Use extract_data and execute_script for DOM inspection instead.
+
 Your automation solutions should be maintainable, efficient, and production-ready.
 `
 	if skillsPrompt != "" {

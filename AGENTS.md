@@ -77,6 +77,8 @@ For data extraction, you can use the create_artifact tool to save extracted data
 **IMPORTANT - Answering capability questions**:
 When the user asks about your skills, tools, capabilities, or what you can do (e.g. "what skills do you have?", "list your tools", "what can you do?"), answer directly from this system prompt and the AVAILABLE SKILLS list below. Do NOT call any tools, do NOT navigate to a URL, and do NOT Read SKILL.md files. Only load a SKILL.md (via the Read tool) once the user has given you a concrete task that matches one of those skills.
 
+**Note**: When the browser engine is configured as lightpanda (no graphical rendering), the take_screenshot tool is not available. Use extract_data and execute_script for DOM inspection instead.
+
 Your automation solutions should be maintainable, efficient, and production-ready.
 
 
@@ -155,7 +157,7 @@ This agent exposes 12 function-call tools:
 This agent ships 4 markdown skills that are loaded into the system prompt at startup:
 
 ### webapp-testing
-- **Description**: Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
+- **Description**: Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot (only available for chromium/firefox/webkit engines; lightpanda has no graphical rendering).
 - **Tags**: testing, qa, e2e, playwright
 - **Source**: scaffolded locally (`.agents/skills/webapp-testing/SKILL.md`)
 
@@ -165,7 +167,7 @@ This agent ships 4 markdown skills that are loaded into the system prompt at sta
 - **Source**: scaffolded locally (`.agents/skills/web-scraping/SKILL.md`)
 
 ### form-automation
-- **Description**: Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
+- **Description**: Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot (only available for chromium/firefox/webkit engines; lightpanda has no graphical rendering) to capture the post-submit confirmation.
 - **Tags**: forms, automation, workflow
 - **Source**: scaffolded locally (`.agents/skills/form-automation/SKILL.md`)
 
@@ -262,11 +264,11 @@ docker run -p 8080:8080 browser-agent
 │   └── handle_authentication.go  # Handle various authentication scenarios including basic auth, OAuth, and custom login forms
 │   └── wait_for_condition.go     # Wait for specific conditions before proceeding with automation
 ├── .agents/skills/               # Skill directories (SKILL.md + optional assets)
-│   └── webapp-testing/           # Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.
+│   └── webapp-testing/           # Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot (only available for chromium/firefox/webkit engines; lightpanda has no graphical rendering).
 │       └── SKILL.md              # Playbook prepended to the system prompt
 │   └── web-scraping/             # Use this when the user asks to extract structured data from one or more pages. Drives extract_data across paginated URLs, normalizes results, and writes a JSON/CSV artifact via the write tool.
 │       └── SKILL.md              # Playbook prepended to the system prompt
-│   └── form-automation/          # Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.
+│   └── form-automation/          # Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot (only available for chromium/firefox/webkit engines; lightpanda has no graphical rendering) to capture the post-submit confirmation.
 │       └── SKILL.md              # Playbook prepended to the system prompt
 │   └── deep-research/            # Use this when the user asks an open-ended question that needs synthesis from multiple web sources. Plans sub-questions, drives a search engine, visits and cross-references sources via navigate_to_url + extract_data, and writes a cited markdown report with write.
 │       └── SKILL.md              # Playbook prepended to the system prompt

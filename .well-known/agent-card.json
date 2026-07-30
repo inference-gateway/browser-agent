@@ -16,7 +16,7 @@
 		{
 			"id": "webapp-testing",
 			"name": "webapp-testing",
-			"description": "Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot.",
+			"description": "Use this when the user asks to verify, validate, or test a webapp end-to-end. Performs reconnaissance-then-action: navigate, screenshot the rendered DOM, identify selectors, then exercise the flow using navigate_to_url, click_element, fill_form, wait_for_condition, and take_screenshot (only available for chromium/firefox/webkit engines; lightpanda has no graphical rendering).",
 			"tags": ["testing","qa","e2e","playwright"]
 		},
 		{
@@ -28,7 +28,7 @@
 		{
 			"id": "form-automation",
 			"name": "form-automation",
-			"description": "Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot to capture the post-submit confirmation.",
+			"description": "Use this when the user asks to complete a multi-step form, optionally behind a login. Orchestrates handle_authentication, navigate_to_url, fill_form, click_element, wait_for_condition, and take_screenshot (only available for chromium/firefox/webkit engines; lightpanda has no graphical rendering) to capture the post-submit confirmation.",
 			"tags": ["forms","automation","workflow"]
 		},
 		{
