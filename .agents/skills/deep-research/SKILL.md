@@ -36,6 +36,11 @@ skill.
 
 ## Workflow: plan-then-execute (6 steps)
 
+> **Note:** The `take_screenshot` tool is only available when using Chromium,
+> Firefox, or WebKit engines. When the engine is lightpanda (no graphical
+> rendering), skip screenshot steps and rely on `extract_data` and
+> `execute_script` for DOM inspection.
+
 The most common failure modes in deep research are (a) jumping
 straight to the first search result, (b) treating N restatements of
 one primary source as N independent confirmations, and (c)

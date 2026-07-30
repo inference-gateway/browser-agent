@@ -370,7 +370,8 @@ spec:
         end-to-end. Performs reconnaissance-then-action: navigate, screenshot
         the rendered DOM, identify selectors, then exercise the flow using
         navigate_to_url, click_element, fill_form, wait_for_condition, and
-        take_screenshot."
+        take_screenshot (only available for chromium/firefox/webkit engines;
+        lightpanda has no graphical rendering)."
       tags:
         - testing
         - qa
@@ -395,8 +396,9 @@ spec:
       description:
         "Use this when the user asks to complete a multi-step form, optionally
         behind a login. Orchestrates handle_authentication, navigate_to_url,
-        fill_form, click_element, wait_for_condition, and take_screenshot to
-        capture the post-submit confirmation."
+        fill_form, click_element, wait_for_condition, and take_screenshot (only
+        available for chromium/firefox/webkit engines; lightpanda has no
+        graphical rendering) to capture the post-submit confirmation."
       tags:
         - forms
         - automation
@@ -419,6 +421,10 @@ spec:
   agent:
     provider: ""
     model: ""
+    # NOTE: The system prompt is built dynamically at runtime (see main.go).
+    # Screenshot-related content (capability #5, "screenshot" in the DOM
+    # interaction hint, and the "IMPORTANT - Artifact Creation" section) is
+    # omitted when the engine is lightpanda, which has no graphical rendering.
     systemPrompt: |
       You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
 

@@ -30,6 +30,11 @@ or for filling a single form (use `form-automation`).
 
 ## Workflow: reconnaissance-then-action
 
+> **Note:** The `take_screenshot` tool is only available when using Chromium,
+> Firefox, or WebKit engines. When the engine is lightpanda (no graphical
+> rendering), skip screenshot steps and rely on `extract_data` and
+> `execute_script` for DOM inspection.
+
 The most common failure mode in webapp testing is acting on stale
 assumptions about the DOM. Always inspect the rendered page before
 choosing selectors.

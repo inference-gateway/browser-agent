@@ -31,6 +31,11 @@ Do **not** use this for testing whether a form *works* (use
 
 ## Workflow
 
+> **Note:** The `take_screenshot` tool is only available when using Chromium,
+> Firefox, or WebKit engines. When the engine is lightpanda (no graphical
+> rendering), skip screenshot steps and rely on `extract_data` and
+> `execute_script` for DOM inspection.
+
 1. **Optional: authenticate** - if the form requires login, run
    `handle_authentication` first. The session carries cookies across
    subsequent calls.
