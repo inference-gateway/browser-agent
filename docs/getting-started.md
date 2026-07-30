@@ -7,8 +7,11 @@ covers building and running it locally.
 ## Prerequisites
 
 - Go 1.26.4+ (only if building/running from source)
-- A Chromium/Firefox/WebKit runtime for Playwright. The provided `Dockerfile`
-  ships the browsers preinstalled — this is the simplest way to run the agent.
+- A browser for Playwright to drive. The provided `Dockerfile` bundles Lightpanda
+  and starts it for you — this is the simplest way to run the agent. Running from
+  source instead needs either your own Lightpanda on `BROWSER_CDP_URL` or
+  `BROWSER_ENGINE=chromium` with the Playwright browsers installed. See
+  [Browser engines](configuration.md#browser-engines).
 - An OpenAI-compatible LLM endpoint and credentials (see
   [Configuration](configuration.md)).
 

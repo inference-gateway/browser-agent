@@ -99,23 +99,3 @@ services:
     depends_on:
       browser-agent:
         condition: service_started
-
-  # Lightpanda sidecar - a lightweight headless browser that speaks CDP.
-  # Enable with: docker compose --profile lightpanda up
-  lightpanda:
-    image: ghcr.io/lightpanda-io/browser:latest
-    profiles:
-      - lightpanda
-    pull_policy: always
-    restart: unless-stopped
-    environment:
-      LP_HEADLESS: "true"
-      LP_PORT: "9222"
-    ports:
-      - "9222:9222"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9222/json/version"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 10s

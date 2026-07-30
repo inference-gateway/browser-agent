@@ -1,0 +1,23 @@
+# Override that points the agent at a Lightpanda sidecar instead of the one
+# bundled in the image. Useful for sharing one browser across agent replicas.
+#
+#   docker compose -f docker-compose.yaml -f docker-compose.lightpanda.yaml up --build
+---
+services:
+  browser-agent:
+    environment:
+      BROWSER_CDP_URL: ws://lightpanda:9222
+    depends_on:
+      lightpanda:
+        condition: service_healthy
+
+  lightpanda:
+    image: lightpanda/browser:nightly
+    restart: unless-stopped
+    healthcheck:
+      # ponytail: bash /dev/tcp - the image ships no curl or wget.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9222"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s

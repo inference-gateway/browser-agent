@@ -1,85 +1,101 @@
 package playwright
 
 import (
+	"context"
+	"os"
 	"testing"
+	"time"
 
-	"github.com/inference-gateway/browser-agent/config"
-	"github.com/stretchr/testify/assert"
+	assert "github.com/stretchr/testify/assert"
+	require "github.com/stretchr/testify/require"
+
+	zap "go.uber.org/zap"
+
+	config "github.com/inference-gateway/browser-agent/config"
 )
 
-func TestLightpandaEngineConstant(t *testing.T) {
-	assert.Equal(t, BrowserEngine("lightpanda"), Lightpanda)
+func TestNewBrowserConfigFromConfigEngineMapping(t *testing.T) {
+	tests := []struct {
+		name       string
+		engine     string
+		cdpURL     string
+		wantEngine BrowserEngine
+		wantCDPURL string
+	}{
+		{"lightpanda", "lightpanda", "ws://lightpanda:9222", Lightpanda, "ws://lightpanda:9222"},
+		{"lightpanda is case insensitive", "LIGHTPANDA", "ws://lightpanda:9222", Lightpanda, "ws://lightpanda:9222"},
+		{"lightpanda without a cdp url", "lightpanda", "", Lightpanda, ""},
+		{"unknown engine falls back to chromium", "unknown-engine", "", Chromium, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			browserConfig := NewBrowserConfigFromConfig(&config.Config{
+				Browser: config.BrowserConfig{
+					Engine:         tt.engine,
+					CDPURL:         tt.cdpURL,
+					Headless:       true,
+					ViewportWidth:  "1920",
+					ViewportHeight: "1080",
+				},
+			})
+
+			assert.Equal(t, tt.wantEngine, browserConfig.Engine)
+			assert.Equal(t, tt.wantCDPURL, browserConfig.CDPURL)
+			assert.True(t, browserConfig.Headless)
+		})
+	}
 }
 
-func TestNewBrowserConfigFromConfigWithLightpanda(t *testing.T) {
-	cfg := &config.Config{
+// Drives a real Lightpanda when BROWSER_CDP_URL points at one, e.g.
+//
+//	docker run -d --rm -p 9222:9222 lightpanda/browser:nightly
+//	BROWSER_CDP_URL=ws://127.0.0.1:9222 go test ./internal/playwright/ -run Lightpanda
+//
+// Guards the assumption the CDP path rests on: Lightpanda accepts
+// browser.NewContext(), so it shares the local-launch code path.
+func TestLightpandaEndToEnd(t *testing.T) {
+	cdpURL := os.Getenv("BROWSER_CDP_URL")
+	if cdpURL == "" {
+		t.Skip("BROWSER_CDP_URL not set - no Lightpanda endpoint to drive")
+	}
+
+	service, err := NewPlaywrightService(zap.NewNop(), &config.Config{
 		Browser: config.BrowserConfig{
-			Engine:         "lightpanda",
-			CdpURL:         "ws://lightpanda:9222",
+			Engine:         string(Lightpanda),
+			CDPURL:         cdpURL,
 			Headless:       true,
 			ViewportWidth:  "1920",
 			ViewportHeight: "1080",
 		},
-	}
+	})
+	require.NoError(t, err)
+	defer func() { require.NoError(t, service.Shutdown(context.Background())) }()
 
-	browserConfig := NewBrowserConfigFromConfig(cfg)
-	assert.Equal(t, Lightpanda, browserConfig.Engine)
-	assert.Equal(t, "ws://lightpanda:9222", browserConfig.CdpURL)
-	assert.True(t, browserConfig.Headless)
+	session, err := service.LaunchBrowser(context.Background(), nil)
+	require.NoError(t, err)
+	defer func() { _ = service.CloseBrowser(context.Background(), session.ID) }()
+
+	require.NoError(t, service.NavigateToURL(context.Background(), session.ID, "https://example.com", "load", 30*time.Second))
+
+	h1, err := session.Page.Locator("h1").TextContent()
+	require.NoError(t, err)
+	assert.Equal(t, "Example Domain", h1)
 }
 
-func TestNewBrowserConfigFromConfigWithLightpandaNoCDPURL(t *testing.T) {
-	cfg := &config.Config{
-		Browser: config.BrowserConfig{
-			Engine:         "lightpanda",
-			CdpURL:         "",
-			Headless:       true,
-			ViewportWidth:  "1920",
-			ViewportHeight: "1080",
-		},
-	}
+// The guard runs before p.pw is touched, so this needs no live browser.
+func TestAcquireBrowserLightpandaRequiresCDPURL(t *testing.T) {
+	p := &playwrightImpl{logger: zap.NewNop()}
 
-	browserConfig := NewBrowserConfigFromConfig(cfg)
-	assert.Equal(t, Lightpanda, browserConfig.Engine)
-	assert.Empty(t, browserConfig.CdpURL)
+	_, err := p.acquireBrowser(&BrowserConfig{Engine: Lightpanda})
+
+	assert.ErrorContains(t, err, "BROWSER_CDP_URL is required")
 }
 
-func TestNewBrowserConfigFromConfigWithLightpandaCaseInsensitive(t *testing.T) {
-	cfg := &config.Config{
-		Browser: config.BrowserConfig{
-			Engine: "LIGHTPANDA",
-			CdpURL: "ws://lightpanda:9222",
-		},
-	}
+func TestAcquireBrowserRejectsUnknownEngine(t *testing.T) {
+	p := &playwrightImpl{logger: zap.NewNop()}
 
-	browserConfig := NewBrowserConfigFromConfig(cfg)
-	assert.Equal(t, Lightpanda, browserConfig.Engine)
-}
+	_, err := p.acquireBrowser(&BrowserConfig{Engine: BrowserEngine("nope")})
 
-func TestDefaultBrowserConfigIsChromium(t *testing.T) {
-	config := DefaultBrowserConfig()
-	assert.Equal(t, Chromium, config.Engine)
-	assert.Empty(t, config.CdpURL)
-}
-
-func TestBrowserEngineValues(t *testing.T) {
-	assert.Equal(t, BrowserEngine("chromium"), Chromium)
-	assert.Equal(t, BrowserEngine("firefox"), Firefox)
-	assert.Equal(t, BrowserEngine("webkit"), WebKit)
-	assert.Equal(t, BrowserEngine("lightpanda"), Lightpanda)
-}
-
-func TestNewBrowserConfigFromConfigDefaultsToChromium(t *testing.T) {
-	cfg := &config.Config{
-		Browser: config.BrowserConfig{
-			Engine:         "unknown-engine",
-			Headless:       true,
-			ViewportWidth:  "1920",
-			ViewportHeight: "1080",
-		},
-	}
-
-	browserConfig := NewBrowserConfigFromConfig(cfg)
-	assert.Equal(t, Chromium, browserConfig.Engine)
-	assert.Empty(t, browserConfig.CdpURL)
+	assert.ErrorContains(t, err, "unsupported browser engine")
 }

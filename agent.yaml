@@ -24,8 +24,8 @@ spec:
         download_dir: "/tmp/playwright/artifacts"
     browser:
       headless: true
-      engine: "chromium"
-      cdp_url: ""
+      engine: "lightpanda"
+      cdp_url: "ws://127.0.0.1:9222"
       stealth_mode: false
       session_timeout: "2m"
       user_agent:
@@ -509,6 +509,7 @@ spec:
     post:
       - go mod tidy
   acronyms:
+    - CDP
     - DOM
     - CSS
     - XPath
