@@ -469,7 +469,6 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 
 	config := NewBrowserConfigFromConfig(p.config)
 
-	// For Lightpanda, connect via CDP instead of launching a local browser
 	if config.Engine == Lightpanda {
 			browser, err := p.connectCDP(ctx, config.CdpURL)
 			if err != nil {
