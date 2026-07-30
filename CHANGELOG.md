@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/inference-gateway/browser-agent/compare/v0.7.5...v0.8.0) (2026-07-30)
+
+### ✨ Features
+
+* **browser:** add Lightpanda as a selectable browser backend via CDP ([#146](https://github.com/inference-gateway/browser-agent/issues/146)) ([30a2043](https://github.com/inference-gateway/browser-agent/commit/30a20436256bb3925d3aad5074315c0afd3fce2f)), closes [#145](https://github.com/inference-gateway/browser-agent/issues/145)
+
+### 🔧 Miscellaneous
+
+* **deps:** bump ADL CLI to v0.57.2 ([#144](https://github.com/inference-gateway/browser-agent/issues/144)) ([8a86995](https://github.com/inference-gateway/browser-agent/commit/8a86995a4d295e21a91b476ff864ba0f3e03cc60))
+* **deps:** bump ADL CLI to v0.58.0 ([#148](https://github.com/inference-gateway/browser-agent/issues/148)) ([95e769d](https://github.com/inference-gateway/browser-agent/commit/95e769ddba4a8384d7f06a030be435a4b64f00fb))
+
 ## [0.7.5](https://github.com/inference-gateway/browser-agent/compare/v0.7.4...v0.7.5) (2026-07-29)
 
 ### 👷 CI
