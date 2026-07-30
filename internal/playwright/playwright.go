@@ -275,7 +275,6 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 		zap.String("engine", string(config.Engine)),
 		zap.Bool("headless", config.Headless))
 
-	// For Lightpanda, connect via CDP instead of launching a local browser
 	if config.Engine == Lightpanda {
 		browser, err := p.connectCDP(ctx, config.CdpURL)
 		if err != nil {
