@@ -24,13 +24,14 @@ import (
 type BrowserEngine string
 
 const (
-	Chromium BrowserEngine = "chromium"
-	Firefox  BrowserEngine = "firefox"
-	WebKit   BrowserEngine = "webkit"
+	Chromium   BrowserEngine = "chromium"
+	Firefox    BrowserEngine = "firefox"
+	WebKit     BrowserEngine = "webkit"
+	Lightpanda BrowserEngine = "lightpanda"
 )
 
 const (
-	CleanupInterval = 2 * time.Minute // How often to run cleanup
+	CleanupInterval = 2 * time.Minute
 )
 
 // BrowserConfig holds browser configuration options
@@ -41,6 +42,7 @@ type BrowserConfig struct {
 	ViewportWidth  int
 	ViewportHeight int
 	Args           []string
+	CDPURL         string
 }
 
 // DefaultBrowserConfig returns default browser configuration
@@ -85,21 +87,24 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		height = 1080
 	}
 
-	argsStr := strings.Trim(cfg.Browser.Args, "[]")
-	args := []string{"--disable-dev-shm-usage", "--no-sandbox"}
-	if argsStr != "" {
-		configArgs := strings.Fields(argsStr)
-		args = append(args, configArgs...)
-	}
-
 	var engine BrowserEngine
 	switch strings.ToLower(cfg.Browser.Engine) {
 	case "firefox":
 		engine = Firefox
 	case "webkit":
 		engine = WebKit
+	case "lightpanda":
+		engine = Lightpanda
 	default:
 		engine = Chromium
+	}
+
+	var args []string
+	if engine == Chromium {
+		args = []string{"--disable-dev-shm-usage", "--no-sandbox"}
+	}
+	if argsStr := strings.Trim(cfg.Browser.Args, "[]"); argsStr != "" {
+		args = append(args, strings.Fields(argsStr)...)
 	}
 
 	return &BrowserConfig{
@@ -109,6 +114,7 @@ func NewBrowserConfigFromConfig(cfg *config.Config) *BrowserConfig {
 		ViewportWidth:  width,
 		ViewportHeight: height,
 		Args:           args,
+		CDPURL:         cfg.Browser.CDPURL,
 	}
 }
 
@@ -201,6 +207,17 @@ func NewPlaywrightService(logger *zap.Logger, cfg *config.Config) (BrowserAutoma
 	service.pw = pw
 
 	browserConfig := NewBrowserConfigFromConfig(cfg)
+
+	if browserConfig.Engine == Lightpanda || browserConfig.CDPURL != "" {
+		browser, err := service.acquireBrowser(browserConfig)
+		if err != nil {
+			return nil, fmt.Errorf("CDP endpoint unusable: %w", err)
+		}
+		if err := browser.Close(); err != nil {
+			logger.Warn("failed to close CDP probe connection", zap.Error(err))
+		}
+	}
+
 	logger.Info("playwright service initialized successfully",
 		zap.String("engine", string(browserConfig.Engine)),
 		zap.Bool("headless", browserConfig.Headless),
@@ -219,6 +236,12 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 		return nil
 	}
 
+	if p.config.Browser.CDPURL != "" || strings.EqualFold(p.config.Browser.Engine, string(Lightpanda)) {
+		p.logger.Info("driving a remote CDP endpoint, skipping local browser installation")
+		p.isInstalled = true
+		return nil
+	}
+
 	p.logger.Info("checking playwright browser installation")
 
 	if _, err := os.Stat(os.Getenv("PLAYWRIGHT_BROWSERS_PATH")); err != nil {
@@ -233,15 +256,24 @@ func (p *playwrightImpl) ensurePlaywrightInstalled() error {
 	return nil
 }
 
-// LaunchBrowser launches a new browser instance with the given configuration
-func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfig) (*BrowserSession, error) {
-	if config == nil {
-		config = NewBrowserConfigFromConfig(p.config)
+// acquireBrowser connects over CDP when BROWSER_CDP_URL is set and launches
+// locally otherwise. The only step that differs between engines.
+func (p *playwrightImpl) acquireBrowser(config *BrowserConfig) (playwright.Browser, error) {
+	if config.Engine == Lightpanda && config.CDPURL == "" {
+		return nil, fmt.Errorf("BROWSER_CDP_URL is required when BROWSER_ENGINE=lightpanda")
 	}
 
-	p.logger.Info("launching browser",
-		zap.String("engine", string(config.Engine)),
-		zap.Bool("headless", config.Headless))
+	if config.CDPURL != "" {
+		if config.Engine != Chromium && config.Engine != Lightpanda {
+			return nil, fmt.Errorf("BROWSER_CDP_URL is not supported by the %s engine, only chromium and lightpanda", config.Engine)
+		}
+		p.logger.Info("connecting to remote CDP endpoint", zap.String("url", config.CDPURL))
+		browser, err := p.pw.Chromium.ConnectOverCDP(config.CDPURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to CDP endpoint %s: %w", config.CDPURL, err)
+		}
+		return browser, nil
+	}
 
 	var browserType playwright.BrowserType
 	switch config.Engine {
@@ -256,15 +288,30 @@ func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfi
 	}
 
 	timeoutMs := float64(config.Timeout.Milliseconds())
-	launchOptions := playwright.BrowserTypeLaunchOptions{
+	browser, err := browserType.Launch(playwright.BrowserTypeLaunchOptions{
 		Headless: &config.Headless,
 		Args:     config.Args,
 		Timeout:  &timeoutMs,
-	}
-
-	browser, err := browserType.Launch(launchOptions)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch browser: %w", err)
+	}
+	return browser, nil
+}
+
+// LaunchBrowser launches a new browser instance with the given configuration
+func (p *playwrightImpl) LaunchBrowser(ctx context.Context, config *BrowserConfig) (*BrowserSession, error) {
+	if config == nil {
+		config = NewBrowserConfigFromConfig(p.config)
+	}
+
+	p.logger.Info("launching browser",
+		zap.String("engine", string(config.Engine)),
+		zap.Bool("headless", config.Headless))
+
+	browser, err := p.acquireBrowser(config)
+	if err != nil {
+		return nil, err
 	}
 
 	contextOptions := p.createContextOptions(config)
@@ -395,28 +442,9 @@ func (p *playwrightImpl) GetOrCreateTaskSession(ctx context.Context) (*BrowserSe
 
 	config := NewBrowserConfigFromConfig(p.config)
 
-	var browserType playwright.BrowserType
-	switch config.Engine {
-	case Chromium:
-		browserType = p.pw.Chromium
-	case Firefox:
-		browserType = p.pw.Firefox
-	case WebKit:
-		browserType = p.pw.WebKit
-	default:
-		return nil, fmt.Errorf("unsupported browser engine: %s", config.Engine)
-	}
-
-	timeoutMs := float64(config.Timeout.Milliseconds())
-	launchOptions := playwright.BrowserTypeLaunchOptions{
-		Headless: &config.Headless,
-		Args:     config.Args,
-		Timeout:  &timeoutMs,
-	}
-
-	browser, err := browserType.Launch(launchOptions)
+	browser, err := p.acquireBrowser(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to launch browser: %w", err)
+		return nil, err
 	}
 
 	contextOptions := p.createContextOptions(config)
@@ -741,6 +769,10 @@ func (p *playwrightImpl) TakeScreenshot(ctx context.Context, sessionID, path str
 		return err
 	}
 
+	if strings.EqualFold(p.config.Browser.Engine, string(Lightpanda)) {
+		return fmt.Errorf("screenshots are not supported by the lightpanda engine (it has no graphical rendering engine); use a chromium, firefox or webkit image")
+	}
+
 	p.logger.Info("taking screenshot", zap.String("sessionID", sessionID), zap.String("path", path))
 
 	options := playwright.PageScreenshotOptions{
@@ -990,6 +1022,10 @@ func (p *playwrightImpl) createContextOptions(browserConfig *BrowserConfig) play
 		AcceptDownloads:   playwright.Bool(false),
 		JavaScriptEnabled: playwright.Bool(true),
 		BypassCSP:         playwright.Bool(true),
+	}
+
+	if browserConfig.Engine == Lightpanda {
+		contextOptions.BypassCSP = nil
 	}
 
 	storagePath := p.config.Browser.DataDir + "/browser-state"

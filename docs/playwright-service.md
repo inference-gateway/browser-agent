@@ -4,7 +4,7 @@ The Playwright Service provides comprehensive browser automation capabilities fo
 
 ## Features
 
-- **Multi-Browser Support**: Chromium, Firefox, and WebKit
+- **Multi-Browser Support**: Chromium (default), Firefox, WebKit, and Lightpanda (over CDP)
 - **Concurrent Sessions**: Thread-safe browser session management
 - **Configurable Browsers**: Headless/headed modes, viewport settings
 - **Comprehensive Automation**: Navigation, form filling, data extraction, screenshots
@@ -35,12 +35,13 @@ Each browser session includes:
 
 ```go
 type BrowserConfig struct {
-    Engine         BrowserEngine  // chromium, firefox, webkit
+    Engine         BrowserEngine  // chromium, firefox, webkit, lightpanda
     Headless       bool           // Run in headless mode
     Timeout        time.Duration  // Browser operation timeout
     ViewportWidth  int            // Browser viewport width
     ViewportHeight int            // Browser viewport height
     Args           []string       // Additional browser arguments
+    CDPURL         string         // CDP endpoint; chromium and lightpanda only
 }
 ```
 

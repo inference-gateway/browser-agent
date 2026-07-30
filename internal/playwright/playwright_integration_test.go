@@ -5,10 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/inference-gateway/browser-agent/config"
-	"github.com/inference-gateway/browser-agent/internal/playwright"
-	"github.com/inference-gateway/browser-agent/internal/playwright/mocks"
-	"go.uber.org/zap"
+	zap "go.uber.org/zap"
+
+	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
+
+	config "github.com/inference-gateway/browser-agent/config"
+	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
 
 func TestPlaywrightServiceWithMock(t *testing.T) {

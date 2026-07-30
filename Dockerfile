@@ -43,6 +43,7 @@ FROM ubuntu:24.04
 
 # Build arguments for browser selection
 ARG BROWSER_ENGINE=chromium
+ARG TARGETARCH
 
 # Install system dependencies
 # Note: x11-utils added for xdpyinfo (Xvfb health check)
@@ -72,15 +73,30 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/agent/.cache/ms-playwright
 
 # Install browsers and system dependencies as root based on build argument
-# Supports: chromium, firefox, webkit, or "all" for multiple browsers
+# Supports: chromium, firefox, webkit, lightpanda, or "all" for multiple browsers
 RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
         playwright install --with-deps chromium firefox webkit; \
     elif [ "$BROWSER_ENGINE" = "firefox" ]; then \
         playwright install --with-deps firefox; \
     elif [ "$BROWSER_ENGINE" = "webkit" ]; then \
         playwright install --with-deps webkit; \
+    elif [ "$BROWSER_ENGINE" = "lightpanda" ]; then \
+        echo "lightpanda engine selected, skipping local Playwright browser installation"; \
     else \
         playwright install --with-deps chromium; \
+    fi
+
+# ponytail: nightly tag - upstream publishes no stable release yet.
+RUN if [ "$BROWSER_ENGINE" = "lightpanda" ]; then \
+        case "${TARGETARCH:-amd64}" in \
+            amd64) LP_ARCH=x86_64 ;; \
+            arm64) LP_ARCH=aarch64 ;; \
+            *) echo "unsupported TARGETARCH for lightpanda: $TARGETARCH" >&2; exit 1 ;; \
+        esac; \
+        curl -fsSL -o /usr/local/bin/lightpanda \
+            "https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-${LP_ARCH}-linux"; \
+        chmod +x /usr/local/bin/lightpanda; \
+        /usr/local/bin/lightpanda version; \
     fi
 
 # Create and set ownership for cache directory
@@ -102,12 +118,16 @@ USER agent
 # --with-deps, which would otherwise emit a Playwright host-validation
 # warning about missing libgtk-3-t64, libxcursor1, libpangocairo-1.0-0,
 # libcairo-gobject2, and libgdk-pixbuf-2.0-0.
+# playwright.Run() refuses to start without a driver, and the CLI downloads one
+# before running any subcommand - so --version fetches it without a browser.
 RUN if [ "$BROWSER_ENGINE" = "all" ]; then \
         playwright install chromium firefox webkit; \
     elif [ "$BROWSER_ENGINE" = "firefox" ]; then \
         playwright install firefox; \
     elif [ "$BROWSER_ENGINE" = "webkit" ]; then \
         playwright install webkit; \
+    elif [ "$BROWSER_ENGINE" = "lightpanda" ]; then \
+        playwright --version; \
     else \
         playwright install chromium; \
     fi
@@ -118,8 +138,9 @@ EXPOSE 8080
 # Set environment variables
 ENV A2A_SERVER_PORT=8080
 
-# Browser configuration defaults (can be overridden at runtime)
-ENV BROWSER_ENGINE=chromium
+# Browser configuration defaults (can be overridden at runtime).
+# The runtime engine follows whatever was built into the image.
+ENV BROWSER_ENGINE=${BROWSER_ENGINE}
 ENV BROWSER_HEADLESS=true
 ENV BROWSER_STEALTH_MODE=false
 ENV BROWSER_XVFB_ENABLED=false
