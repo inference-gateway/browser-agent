@@ -27,3 +27,5 @@ internal/playwright/playwright.go
 .agents/skills/deep-research/
 
 Dockerfile
+
+docker-compose.yaml
