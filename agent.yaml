@@ -421,10 +421,6 @@ spec:
   agent:
     provider: ""
     model: ""
-    # NOTE: The system prompt is built dynamically at runtime (see main.go).
-    # Screenshot-related content (capability #5, "screenshot" in the DOM
-    # interaction hint, and the "IMPORTANT - Artifact Creation" section) is
-    # omitted when the engine is lightpanda, which has no graphical rendering.
     systemPrompt: |
       You are an expert Playwright browser automation assistant with the ability to create downloadable artifacts. Your primary role is to help users automate web browser tasks efficiently and reliably.
 
