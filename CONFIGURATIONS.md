@@ -66,7 +66,7 @@ derived from `agent.yaml`; the env vars below override them at runtime.
 | **Storage** | `A2A_QUEUE_URL` | Redis connection URL (when using Redis) | - |
 | **Storage** | `A2A_QUEUE_MAX_SIZE` | Maximum queue size | `100` |
 | **Storage** | `A2A_QUEUE_CLEANUP_INTERVAL` | Task cleanup interval | `30s` |
-| **Artifacts** | `A2A_ARTIFACTS_ENABLE` | Enable artifacts support | `false` |
+| **Artifacts** | `A2A_ARTIFACTS_ENABLED` | Enable artifacts support | `false` |
 | **Artifacts** | `A2A_ARTIFACTS_SERVER_HOST` | Artifacts server host | `localhost` |
 | **Artifacts** | `A2A_ARTIFACTS_SERVER_PORT` | Artifacts server port | `8081` |
 | **Artifacts** | `A2A_ARTIFACTS_STORAGE_PROVIDER` | Storage backend (`filesystem` or `minio`) | `filesystem` |
@@ -81,7 +81,7 @@ derived from `agent.yaml`; the env vars below override them at runtime.
 | **Artifacts** | `A2A_ARTIFACTS_RETENTION_MAX_AGE` | Max artifact age (0 = no age limit) | `168h` |
 | **Artifacts** | `A2A_ARTIFACTS_RETENTION_CLEANUP_INTERVAL` | Cleanup frequency (0 = manual only) | `24h` |
 | **Authentication** | `A2A_AUTH_ENABLED` | Enable OIDC authentication | `false` |
-| **Telemetry** | `A2A_TELEMETRY_ENABLE` | Enable OpenTelemetry instrumentation | `true` |
+| **Telemetry** | `A2A_TELEMETRY_ENABLED` | Enable OpenTelemetry instrumentation | `true` |
 | **Telemetry** | `A2A_OTEL_TRACES_EXPORTER` | Trace exporter (`otlp` or `none`) | `none` |
 | **Telemetry** | `A2A_OTEL_METRICS_EXPORTER` | Metrics exporter (`otlp`, `prometheus`, or `none`) | `prometheus` |
 | **Telemetry** | `A2A_OTEL_EXPORTER_PROMETHEUS_PORT` | Prometheus metrics exporter port | `9464` |
