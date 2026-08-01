@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1](https://github.com/inference-gateway/browser-agent/compare/v0.8.0...v0.8.1) (2026-08-01)
+
+### 🐛 Bug Fixes
+
+* disable take_screenshot tool and remove screenshot references from system prompt for lightpanda engine ([#150](https://github.com/inference-gateway/browser-agent/issues/150)) ([51d7c3d](https://github.com/inference-gateway/browser-agent/commit/51d7c3dff390d5ef0412db2b536592761533ad69)), closes [#149](https://github.com/inference-gateway/browser-agent/issues/149), references [#5](https://github.com/inference-gateway/browser-agent/issues/5)
+
+### 🔧 Miscellaneous
+
+* **deps:** bump ADL CLI to v0.58.1 ([#151](https://github.com/inference-gateway/browser-agent/issues/151)) ([6b94c67](https://github.com/inference-gateway/browser-agent/commit/6b94c6797be4237596c678d94d0112163ac58f2c))
+
 ## [0.8.0](https://github.com/inference-gateway/browser-agent/compare/v0.7.5...v0.8.0) (2026-07-30)
 
 ### ✨ Features
