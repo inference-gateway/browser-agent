@@ -121,7 +121,7 @@ The `read`, `write`, `edit`, and `fetch` tools are toggled and tuned here.
 ## Artifacts
 
 Screenshots and extracted data are saved as downloadable artifacts. Enable the
-artifacts server with `A2A_ARTIFACTS_ENABLE=true` (`filesystem` and `minio`
+artifacts server with `A2A_ARTIFACTS_ENABLED=true` (`filesystem` and `minio`
 backends are supported). See the `README.md` for the full `A2A_ARTIFACTS_*`
 table.
 

@@ -73,4 +73,4 @@ on demand.
   write a cited Markdown report."
 
 Screenshots and extracted data are returned as downloadable artifacts when the
-artifacts server is enabled (`A2A_ARTIFACTS_ENABLE=true`).
+artifacts server is enabled (`A2A_ARTIFACTS_ENABLED=true`).
