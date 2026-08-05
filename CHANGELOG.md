@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.2](https://github.com/inference-gateway/browser-agent/compare/v0.8.1...v0.8.2) (2026-08-05)
+
+### 🐛 Bug Fixes
+
+* **docs:** correct environment variable name for artifacts server in documentation ([36e758f](https://github.com/inference-gateway/browser-agent/commit/36e758f9578d6c4a2062652232bb0358df5af523))
+* update environment variable names for A2A authentication and artifacts settings ([7f2c77d](https://github.com/inference-gateway/browser-agent/commit/7f2c77d40fb86bbf7bb7cd5712b44834bc3bf968))
+
+### 👷 CI
+
+* remove deprecated ollama-api-key input ([#152](https://github.com/inference-gateway/browser-agent/issues/152)) ([56e9877](https://github.com/inference-gateway/browser-agent/commit/56e9877425ea194e2afd7c3e29b9cf2489d002f8))
+
+### 🔧 Miscellaneous
+
+* **deps:** bump ADL CLI to v0.59.0 ([#153](https://github.com/inference-gateway/browser-agent/issues/153)) ([5a6d9b1](https://github.com/inference-gateway/browser-agent/commit/5a6d9b1dbe2b1a830f8a3249f5eba744da16b183))
+
 ## [0.8.1](https://github.com/inference-gateway/browser-agent/compare/v0.8.0...v0.8.1) (2026-08-01)
 
 ### 🐛 Bug Fixes
