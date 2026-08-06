@@ -27,3 +27,8 @@ internal/playwright/playwright.go
 .agents/skills/deep-research/
 
 Dockerfile
+
+# Forked from the generator: runs extra task processors so A2A tasks execute
+# concurrently (issue #154). Re-apply by hand if ever regenerated.
+main.go
+main_test.go
