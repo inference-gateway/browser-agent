@@ -440,9 +440,13 @@ Your automation solutions should be maintainable, efficient, and production-read
 	<-quit
 
 	l.Info("shutdown signal received, gracefully stopping server...")
-	a2aServer.Stop(ctx)
+	if err := a2aServer.Stop(ctx); err != nil {
+		l.Error("failed to stop A2A server", zap.Error(err))
+	}
 	if artifactsServer != nil {
-		artifactsServer.Stop(ctx)
+		if err := artifactsServer.Stop(ctx); err != nil {
+			l.Error("failed to stop artifacts server", zap.Error(err))
+		}
 	}
 	l.Info("browser-agent agent stopped")
 	return nil
