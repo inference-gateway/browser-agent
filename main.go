@@ -123,9 +123,8 @@ func extractFrontmatter(content []byte) ([]byte, bool) {
 		return nil, false
 	}
 	return rest[:idx], true
-}// taskWorkers returns the total number of task processors to run.
-// Each concurrent task launches its own browser, so the default stays
-// small; override with TASK_WORKERS.
+}
+
 func taskWorkers() int {
 	n, err := strconv.Atoi(os.Getenv("TASK_WORKERS"))
 	if err != nil || n < 1 {
@@ -410,12 +409,6 @@ Your automation solutions should be maintainable, efficient, and production-read
 		}
 	}()
 
-	// Start already runs one task processor, which executes queued tasks
-	// strictly one at a time - a long-running task blocks every later
-	// submission (issue #154). Run extra processors so tasks execute
-	// concurrently; each task gets its own isolated browser session.
-	// ponytail: each extra processor also starts a redundant cleanup ticker;
-	// harmless, fix upstream in the ADK if it ever matters.
 	workers := taskWorkers()
 	l.Info("task processor workers", zap.Int("count", workers))
 	for range workers - 1 {
