@@ -512,6 +512,7 @@ spec:
   hooks:
     post:
       - go mod tidy
+      - go fmt ./...
   acronyms:
     - CDP
     - DOM
