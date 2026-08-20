@@ -18,9 +18,9 @@ import (
 	"syscall"
 
 	envconfig "github.com/sethvargo/go-envconfig"
+	cobra "github.com/spf13/cobra"
 	zap "go.uber.org/zap"
 	yaml "gopkg.in/yaml.v3"
-	cobra "github.com/spf13/cobra"
 
 	server "github.com/inference-gateway/adk/server"
 
@@ -30,7 +30,6 @@ import (
 	logger "github.com/inference-gateway/browser-agent/internal/logger"
 	playwright "github.com/inference-gateway/browser-agent/internal/playwright"
 )
-
 
 // Version, AgentName and AgentDescription are injected at build time
 // via `-ldflags "-X 'main.Version=...'"` (see Dockerfile). They default
@@ -135,7 +134,7 @@ func taskWorkers() int {
 		return 4
 	}
 	return n
-}// newRootCmd builds the top-level CLI for the agent binary. The
+} // newRootCmd builds the top-level CLI for the agent binary. The
 // generated binary is a real CLI: `<bin> --version`, `<bin> --help`,
 // and `<bin> start` are all supported. Subcommands are added in
 // dedicated constructors so they can be unit-tested in isolation.
@@ -190,7 +189,7 @@ func runStart(ctx context.Context) error {
 		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
-	l.Info("starting " + AgentName + " agent", zap.String("version", Version), zap.Bool("debug", cfg.A2A.Debug))
+	l.Info("starting "+AgentName+" agent", zap.String("version", Version), zap.Bool("debug", cfg.A2A.Debug))
 	l.Debug("loaded configuration", zap.Any("config", cfg))
 
 	resolvedSkillsDir := skillsDir
@@ -370,7 +369,6 @@ Your automation solutions should be maintainable, efficient, and production-read
 		return fmt.Errorf("failed to create agent: %w", err)
 	}
 
-
 	artifactService, err := server.NewArtifactService(&cfg.A2A.ArtifactsConfig, l)
 	if err != nil {
 		l.Warn("artifact service could not be created - check A2A_ARTIFACTS_ENABLED environment variable", zap.Error(err))
@@ -416,7 +414,6 @@ Your automation solutions should be maintainable, efficient, and production-read
 	for range workers - 1 {
 		go a2aServer.StartTaskProcessor(ctx)
 	}
-
 
 	if artifactsServer != nil {
 		go func() {
