@@ -558,6 +558,10 @@ spec:
         path: docs/playwright-service.md
         description:
           The browser-automation service that backs the agent's tools.
+      - title: Security
+        path: docs/security.md
+        description:
+          Default auth posture, tool sandboxing, and hardening for exposure.
   examples:
     - title: End-to-end webapp testing
       description: >-
