@@ -24,7 +24,7 @@ import (
 // env vars override them at startup.
 type WriteConfig struct {
 	Enabled      bool     `env:"TOOLS_WRITE_ENABLED, default=true"`
-	AllowedRoots []string `env:"TOOLS_WRITE_ALLOWED_ROOTS"`
+	AllowedRoots []string `env:"TOOLS_WRITE_ALLOWED_ROOTS, default=/tmp/playwright/artifacts"`
 }
 
 // WriteTool exposes a Write built-in. Disabled by default; flip

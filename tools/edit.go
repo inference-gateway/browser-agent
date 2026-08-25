@@ -24,7 +24,7 @@ import (
 // env vars override them at startup.
 type EditConfig struct {
 	Enabled      bool     `env:"TOOLS_EDIT_ENABLED, default=true"`
-	AllowedRoots []string `env:"TOOLS_EDIT_ALLOWED_ROOTS"`
+	AllowedRoots []string `env:"TOOLS_EDIT_ALLOWED_ROOTS, default=/tmp/playwright/artifacts"`
 }
 
 // EditTool exposes an Edit built-in. Disabled by default; flip

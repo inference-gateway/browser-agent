@@ -39,8 +39,8 @@ import (
 type FetchConfig struct {
 	Enabled        bool     `env:"TOOLS_FETCH_ENABLED, default=true"`
 	AllowedDomains []string `env:"TOOLS_FETCH_ALLOWED_DOMAINS"`
-	MaxBytes       int      `env:"TOOLS_FETCH_MAX_BYTES, default=0"`
-	TimeoutSeconds int      `env:"TOOLS_FETCH_TIMEOUT_SECONDS, default=0"`
+	MaxBytes       int      `env:"TOOLS_FETCH_MAX_BYTES, default=10485760"`
+	TimeoutSeconds int      `env:"TOOLS_FETCH_TIMEOUT_SECONDS, default=30"`
 	DownloadDir    string   `env:"TOOLS_FETCH_DOWNLOAD_DIR, default=/tmp/playwright/artifacts"`
 	AllowDownloads bool     `env:"TOOLS_FETCH_ALLOW_DOWNLOADS, default=true"`
 }
