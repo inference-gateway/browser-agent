@@ -28,8 +28,8 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 	mockPlaywright.NavigateToURLReturns(nil)
 
 	tool := &NavigateToURLTool{
-		logger:     logger,
-		playwright: mockPlaywright,
+		logger:        logger,
+		playwright:    mockPlaywright,
 		allowInternal: true,
 	}
 
