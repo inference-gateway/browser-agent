@@ -30,8 +30,6 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 	tool := &NavigateToURLTool{
 		logger:     logger,
 		playwright: mockPlaywright,
-		// skip the internal-host DNS check; it is covered by
-		// TestCheckInternalHost and would make this test hit the network
 		allowInternal: true,
 	}
 
