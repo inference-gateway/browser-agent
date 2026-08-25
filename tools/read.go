@@ -26,7 +26,7 @@ import (
 type ReadConfig struct {
 	Enabled      bool     `env:"TOOLS_READ_ENABLED, default=true"`
 	MaxLines     int      `env:"TOOLS_READ_MAX_LINES, default=2000"`
-	AllowedRoots []string `env:"TOOLS_READ_ALLOWED_ROOTS"`
+	AllowedRoots []string `env:"TOOLS_READ_ALLOWED_ROOTS, default=/tmp/playwright/artifacts,.agents/skills"`
 }
 
 // ReadTool exposes a Read built-in. Disabled by default; flip

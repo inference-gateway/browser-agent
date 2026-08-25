@@ -14,14 +14,23 @@ spec:
       read:
         enabled: true
         max_lines: 2000
+        allowed_roots:
+          - "/tmp/playwright/artifacts"
+          - ".agents/skills"
       write:
         enabled: true
+        allowed_roots:
+          - "/tmp/playwright/artifacts"
       edit:
         enabled: true
+        allowed_roots:
+          - "/tmp/playwright/artifacts"
       fetch:
         enabled: true
         allow_downloads: true
         download_dir: "/tmp/playwright/artifacts"
+        max_bytes: 10485760
+        timeout_seconds: 30
     browser:
       headless: true
       engine: "chromium"
@@ -549,6 +558,10 @@ spec:
         path: docs/playwright-service.md
         description:
           The browser-automation service that backs the agent's tools.
+      - title: Security
+        path: docs/security.md
+        description:
+          Default auth posture, tool sandboxing, and hardening for exposure.
   examples:
     - title: End-to-end webapp testing
       description: >-

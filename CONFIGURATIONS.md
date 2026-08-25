@@ -26,12 +26,17 @@ derived from `agent.yaml`; the env vars below override them at runtime.
 | **Browser** | `BROWSER_XVFB_DISPLAY` | `:99` |
 | **Browser** | `BROWSER_XVFB_ENABLED` | `false` |
 | **Browser** | `BROWSER_XVFB_SCREEN_RESOLUTION` | `1920x1080x24` |
+| **Tools** | `TOOLS_EDIT_ALLOWED_ROOTS` | `[/tmp/playwright/artifacts]` |
 | **Tools** | `TOOLS_EDIT_ENABLED` | `true` |
 | **Tools** | `TOOLS_FETCH_ALLOW_DOWNLOADS` | `true` |
 | **Tools** | `TOOLS_FETCH_DOWNLOAD_DIR` | `/tmp/playwright/artifacts` |
 | **Tools** | `TOOLS_FETCH_ENABLED` | `true` |
+| **Tools** | `TOOLS_FETCH_MAX_BYTES` | `10485760` |
+| **Tools** | `TOOLS_FETCH_TIMEOUT_SECONDS` | `30` |
+| **Tools** | `TOOLS_READ_ALLOWED_ROOTS` | `[/tmp/playwright/artifacts .agents/skills]` |
 | **Tools** | `TOOLS_READ_ENABLED` | `true` |
 | **Tools** | `TOOLS_READ_MAX_LINES` | `2000` |
+| **Tools** | `TOOLS_WRITE_ALLOWED_ROOTS` | `[/tmp/playwright/artifacts]` |
 | **Tools** | `TOOLS_WRITE_ENABLED` | `true` |
 
 ## Environment Variables

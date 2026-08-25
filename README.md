@@ -105,6 +105,7 @@ infer agents add browser-agent http://localhost:8080 \
 - [Configuration](docs/configuration.md)
 - [Usage](docs/usage.md)
 - [Playwright Service](docs/playwright-service.md)
+- [Security](docs/security.md)
 
 ## Configuration
 

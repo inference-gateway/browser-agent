@@ -28,8 +28,9 @@ func TestNavigateToURLTool_NavigateToURLHandler(t *testing.T) {
 	mockPlaywright.NavigateToURLReturns(nil)
 
 	tool := &NavigateToURLTool{
-		logger:     logger,
-		playwright: mockPlaywright,
+		logger:        logger,
+		playwright:    mockPlaywright,
+		allowInternal: true,
 	}
 
 	tests := []struct {
@@ -227,6 +228,41 @@ func TestNavigateToURLTool_validateAndNormalizeURL(t *testing.T) {
 				if result != tt.expected {
 					t.Errorf("expected %q, got %q", tt.expected, result)
 				}
+			}
+		})
+	}
+}
+
+func TestCheckInternalHost(t *testing.T) {
+	tests := []struct {
+		name          string
+		url           string
+		allowInternal bool
+		wantBlocked   bool
+	}{
+		{name: "loopback IPv4", url: "http://127.0.0.1:8080/admin", wantBlocked: true},
+		{name: "localhost hostname", url: "http://localhost/", wantBlocked: true},
+		{name: "loopback IPv6", url: "http://[::1]/", wantBlocked: true},
+		{name: "RFC1918 10.x", url: "http://10.0.0.5/", wantBlocked: true},
+		{name: "RFC1918 172.16.x", url: "http://172.16.1.1/", wantBlocked: true},
+		{name: "RFC1918 192.168.x", url: "http://192.168.1.1/", wantBlocked: true},
+		{name: "cloud metadata", url: "http://169.254.169.254/latest/meta-data/", wantBlocked: true},
+		{name: "IPv6 ULA", url: "http://[fd00::1]/", wantBlocked: true},
+		{name: "unspecified", url: "http://0.0.0.0/", wantBlocked: true},
+		{name: "IPv4-mapped IPv6 loopback", url: "http://[::ffff:127.0.0.1]/", wantBlocked: true},
+		{name: "public IP", url: "http://8.8.8.8/", wantBlocked: false},
+		{name: "loopback allowed via opt-out", url: "http://127.0.0.1/", allowInternal: true, wantBlocked: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tool := &NavigateToURLTool{logger: zaptest.NewLogger(t), allowInternal: tt.allowInternal}
+			err := tool.checkInternalHost(context.Background(), tt.url)
+			if tt.wantBlocked && err == nil {
+				t.Fatalf("expected %s to be blocked, got nil error", tt.url)
+			}
+			if !tt.wantBlocked && err != nil {
+				t.Fatalf("expected %s to be allowed, got: %v", tt.url, err)
 			}
 		})
 	}

@@ -3,7 +3,9 @@ package tools
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
+	"os"
 	"time"
 
 	zap "go.uber.org/zap"
@@ -17,15 +19,17 @@ var validWaitConditions = []string{"domcontentloaded", "load", "networkidle"}
 
 // NavigateToURLTool struct holds the tool with dependencies
 type NavigateToURLTool struct {
-	logger     *zap.Logger
-	playwright playwright.BrowserAutomation
+	logger        *zap.Logger
+	playwright    playwright.BrowserAutomation
+	allowInternal bool
 }
 
 // NewNavigateToURLTool creates a new navigate_to_url tool
 func NewNavigateToURLTool(logger *zap.Logger, playwright playwright.BrowserAutomation) server.Tool {
 	tool := &NavigateToURLTool{
-		logger:     logger,
-		playwright: playwright,
+		logger:        logger,
+		playwright:    playwright,
+		allowInternal: os.Getenv("BROWSER_ALLOW_INTERNAL_URLS") == "true",
 	}
 	return server.NewBasicTool(
 		"navigate_to_url",
@@ -65,6 +69,11 @@ func (s *NavigateToURLTool) NavigateToURLHandler(ctx context.Context, args map[s
 	if err != nil {
 		s.logger.Error("invalid URL provided", zap.String("url", rawURL), zap.Error(err))
 		return "", fmt.Errorf("invalid URL: %w", err)
+	}
+
+	if err := s.checkInternalHost(ctx, targetURL); err != nil {
+		s.logger.Error("navigation to internal address blocked", zap.String("url", targetURL), zap.Error(err))
+		return "", err
 	}
 
 	waitUntil, err := stringArg(args, "wait_until", "load")
@@ -138,4 +147,36 @@ func (s *NavigateToURLTool) validateAndNormalizeURL(urlStr string) (string, erro
 	}
 
 	return parsedURL.String(), nil
+}
+
+// checkInternalHost blocks navigation to loopback, private (RFC1918/ULA),
+// link-local (incl. cloud metadata 169.254.169.254), and unspecified
+// addresses unless BROWSER_ALLOW_INTERNAL_URLS=true is set. The host is
+// resolved so hostnames pointing at internal ranges are caught too.
+// ponytail: resolve-then-navigate is DNS-rebinding-susceptible; a resolving
+// proxy in front of the browser is the upgrade path if that matters.
+func (s *NavigateToURLTool) checkInternalHost(ctx context.Context, targetURL string) error {
+	if s.allowInternal {
+		return nil
+	}
+
+	parsedURL, err := url.Parse(targetURL)
+	if err != nil {
+		return fmt.Errorf("invalid URL format: %w", err)
+	}
+
+	host := parsedURL.Hostname()
+	addrs, err := net.DefaultResolver.LookupNetIP(ctx, "ip", host)
+	if err != nil {
+		return fmt.Errorf("failed to resolve host %q: %w", host, err)
+	}
+
+	for _, addr := range addrs {
+		addr = addr.Unmap()
+		if addr.IsLoopback() || addr.IsPrivate() || addr.IsLinkLocalUnicast() || addr.IsLinkLocalMulticast() || addr.IsUnspecified() {
+			return fmt.Errorf("navigation to internal address blocked: %s resolves to %s; set BROWSER_ALLOW_INTERNAL_URLS=true to allow internal targets", host, addr)
+		}
+	}
+
+	return nil
 }
