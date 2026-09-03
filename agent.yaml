@@ -510,7 +510,7 @@ spec:
   language:
     go:
       module: github.com/inference-gateway/browser-agent
-      version: "1.26.4"
+      version: "1.26.7"
       vendor:
         deps:
           - github.com/mxschmitt/playwright-go@v0.6201.1

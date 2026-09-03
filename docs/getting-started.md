@@ -6,7 +6,7 @@ covers building and running it locally.
 
 ## Prerequisites
 
-- Go 1.26.4+ (only if building/running from source)
+- Go 1.26.7+ (only if building/running from source)
 - A browser for Playwright to drive. The provided `Dockerfile` bundles Lightpanda
   and starts it for you — this is the simplest way to run the agent. Running from
   source instead needs either your own Lightpanda on `BROWSER_CDP_URL` or

@@ -1,6 +1,6 @@
 module github.com/inference-gateway/browser-agent
 
-go 1.26.4
+go 1.26.7
 
 require (
 	github.com/inference-gateway/adk v0.26.4
