@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.5](https://github.com/inference-gateway/browser-agent/compare/v0.8.4...v0.8.5) (2026-09-04)
+
+### 🔧 Miscellaneous
+
+* bump go toolchain to 1.26.7 and pin explicitly ([#184](https://github.com/inference-gateway/browser-agent/issues/184)) ([ca6dbbf](https://github.com/inference-gateway/browser-agent/commit/ca6dbbf74d0b658771eb9da52c91abe4dab19b85)), closes [#182](https://github.com/inference-gateway/browser-agent/issues/182)
+* **deps:** bump ADL CLI to v0.62.2 ([#175](https://github.com/inference-gateway/browser-agent/issues/175)) ([aedce40](https://github.com/inference-gateway/browser-agent/commit/aedce40b01cffa174c991f76ef02f7e21ea7ea03))
+* **deps:** bump ADL CLI to v0.62.3 ([#176](https://github.com/inference-gateway/browser-agent/issues/176)) ([e246cbc](https://github.com/inference-gateway/browser-agent/commit/e246cbcbcb340b1d1f959429acd13feb31c4e564))
+* **deps:** bump ADL CLI to v0.62.5 ([#183](https://github.com/inference-gateway/browser-agent/issues/183)) ([6ebfd1a](https://github.com/inference-gateway/browser-agent/commit/6ebfd1a32efe765c417b2c90de9691ee5b75f227))
+* **deps:** bump ADL CLI to v0.62.8 ([#186](https://github.com/inference-gateway/browser-agent/issues/186)) ([c56286b](https://github.com/inference-gateway/browser-agent/commit/c56286bad641dd06c146c6dc176028d04fd641db))
+* sync generated project with ADL manifest ([#178](https://github.com/inference-gateway/browser-agent/issues/178)) ([c1fcbc2](https://github.com/inference-gateway/browser-agent/commit/c1fcbc2adff66a44577f1a8b75f0ba97fccdb57d))
+
+### 🔨 Miscellaneous
+
+* **deps:** bump docker/setup-qemu-action from 4.2.0 to 4.3.0 in the github-actions group ([#187](https://github.com/inference-gateway/browser-agent/issues/187)) ([244c456](https://github.com/inference-gateway/browser-agent/commit/244c456bb5c0e39d31a9a9f732ef17f137aa3873))
+* **deps:** bump github.com/go-jose/go-jose/v3 from 3.0.3 to 3.0.5 ([#177](https://github.com/inference-gateway/browser-agent/issues/177)) ([4cf0df8](https://github.com/inference-gateway/browser-agent/commit/4cf0df8a88cfb2802863ed7de2b66f7c3e0f28a3))
+* **deps:** bump google.golang.org/grpc from 1.83.0 to 1.83.1 ([#179](https://github.com/inference-gateway/browser-agent/issues/179)) ([2b0c30b](https://github.com/inference-gateway/browser-agent/commit/2b0c30bc11e1495b7b68b8b6d0385194d567bcf5))
+
 ## [0.8.4](https://github.com/inference-gateway/browser-agent/compare/v0.8.3...v0.8.4) (2026-08-26)
 
 ### 🐛 Bug Fixes
