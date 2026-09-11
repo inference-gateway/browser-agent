@@ -520,8 +520,8 @@ spec:
           - github.com/maxbrunsfeld/counterfeiter/v6@v6.12.2
   hooks:
     post:
-      - go get google.golang.org/grpc@v1.83.2
       - go mod tidy
+      - go get google.golang.org/grpc@v1.83.2
       - go fmt ./...
   acronyms:
     - CDP
