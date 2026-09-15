@@ -3,7 +3,7 @@ module github.com/inference-gateway/browser-agent
 go 1.26.7
 
 require (
-	github.com/inference-gateway/adk v0.26.5
+	github.com/inference-gateway/adk v0.26.6
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.12.2 // indirect
 	github.com/mxschmitt/playwright-go v0.6201.1
