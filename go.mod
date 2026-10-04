@@ -1,25 +1,21 @@
 module github.com/inference-gateway/browser-agent
 
-go 1.26.7
+go 1.26.8
 
 require (
-	github.com/inference-gateway/adk v0.29.0
+	github.com/inference-gateway/adk v0.32.2
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
-	github.com/maxbrunsfeld/counterfeiter/v6 v6.12.2 // indirect
 	github.com/mxschmitt/playwright-go v0.6201.1
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
+	go.opentelemetry.io/otel v1.46.0
+	go.opentelemetry.io/otel/trace v1.46.0
 	go.uber.org/zap v1.28.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 tool github.com/maxbrunsfeld/counterfeiter/v6
-
-require (
-	go.opentelemetry.io/otel v1.46.0
-	go.opentelemetry.io/otel/trace v1.46.0
-)
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
@@ -52,7 +48,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/inference-gateway/sdk v1.37.2 // indirect
+	github.com/inference-gateway/sdk v1.41.0 // indirect
 	github.com/invopop/jsonschema v0.14.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.20.0 // indirect
@@ -60,6 +56,7 @@ require (
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/leodido/go-urn v1.5.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.12.2 // indirect
 	github.com/metoro-io/mcp-golang v0.16.1 // indirect
 	github.com/minio/crc64nvme v1.1.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect

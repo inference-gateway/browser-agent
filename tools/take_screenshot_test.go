@@ -11,6 +11,10 @@ import (
 
 	zap "go.uber.org/zap"
 
+	server "github.com/inference-gateway/adk/server"
+	adkmocks "github.com/inference-gateway/adk/server/mocks"
+	types "github.com/inference-gateway/adk/types"
+
 	mocks "github.com/inference-gateway/browser-agent/internal/playwright/mocks"
 
 	config "github.com/inference-gateway/browser-agent/config"
@@ -275,5 +279,32 @@ func TestGetCurrentTimestamp(t *testing.T) {
 	timestamp := tool.getCurrentTimestamp()
 	if _, err := time.Parse(time.RFC3339, timestamp); err != nil {
 		t.Errorf("Expected valid RFC3339 timestamp, got: %s (error: %v)", timestamp, err)
+	}
+}
+
+func TestCreateArtifactFromScreenshot_ReturnsArtifactURL(t *testing.T) {
+	tool := newTestTool(t)
+	screenshot := filepath.Join(t.TempDir(), "shot.png")
+	if err := os.WriteFile(screenshot, []byte("png"), 0o600); err != nil {
+		t.Fatalf("Failed to write screenshot: %v", err)
+	}
+
+	contextID := "ctx-1"
+	artifactURL := "http://localhost:8081/artifacts/a-1/shot.png"
+	artifacts := &adkmocks.FakeArtifactService{}
+	artifacts.CreateFileArtifactReturns(types.Artifact{ArtifactID: "a-1", Parts: []types.Part{{URL: &artifactURL}}}, nil)
+
+	ctx := context.WithValue(context.Background(), server.TaskContextKey, &types.Task{ContextID: &contextID})
+	ctx = context.WithValue(ctx, server.ArtifactServiceContextKey, server.ArtifactService(artifacts))
+
+	url, artifactID, err := tool.createArtifactFromScreenshot(ctx, screenshot, "png")
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if url != artifactURL || artifactID != "a-1" {
+		t.Errorf("Expected %s and a-1, got: %s and %s", artifactURL, url, artifactID)
+	}
+	if gotContextID, _, _, _, _, _ := artifacts.CreateFileArtifactArgsForCall(0); gotContextID != contextID {
+		t.Errorf("Expected context id %s, got: %s", contextID, gotContextID)
 	}
 }
