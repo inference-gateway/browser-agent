@@ -219,7 +219,7 @@ func (s *TakeScreenshotTool) createArtifactFromScreenshot(ctx context.Context, f
 
 	filename := filepath.Base(filePath)
 	artifact, err := artifactService.CreateFileArtifact(
-		task.ContextID,
+		task.GetContextID(),
 		fmt.Sprintf("Screenshot - %s", filename),
 		fmt.Sprintf("Screenshot captured at %s", s.getCurrentTimestamp()),
 		filename,
@@ -232,10 +232,8 @@ func (s *TakeScreenshotTool) createArtifactFromScreenshot(ctx context.Context, f
 
 	artifactService.AddArtifactToTask(task, artifact)
 
-	if len(artifact.Parts) > 0 {
-		if artifact.Parts[0].File != nil && artifact.Parts[0].File.FileWithURI != nil {
-			return *artifact.Parts[0].File.FileWithURI, artifact.ArtifactID, nil
-		}
+	if len(artifact.Parts) > 0 && artifact.Parts[0].URL != nil {
+		return *artifact.Parts[0].URL, artifact.ArtifactID, nil
 	}
 
 	return "", artifact.ArtifactID, nil
