@@ -8,7 +8,6 @@ spec:
   capabilities:
     streaming: true
     pushNotifications: false
-    stateTransitionHistory: false
   config:
     tools:
       read:
