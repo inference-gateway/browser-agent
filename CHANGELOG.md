@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.16](https://github.com/inference-gateway/browser-agent/compare/v0.8.15...v0.8.16) (2026-10-05)
+
+### 🔧 Miscellaneous
+
+* **deps:** bump ADL CLI to v0.67.1 ([#214](https://github.com/inference-gateway/browser-agent/issues/214)) ([cc45a7e](https://github.com/inference-gateway/browser-agent/commit/cc45a7ef208eadc04c9e04d01c47dd6c9f262cf2))
+
+### 🔨 Miscellaneous
+
+* **deps:** bump the gomod group across 1 directory with 2 updates ([#213](https://github.com/inference-gateway/browser-agent/issues/213)) ([a6304c8](https://github.com/inference-gateway/browser-agent/commit/a6304c825b472f0b5a6dea1d3ad5ce8842728f73))
+
 ## [0.8.15](https://github.com/inference-gateway/browser-agent/compare/v0.8.14...v0.8.15) (2026-10-05)
 
 ### 🔧 Miscellaneous
