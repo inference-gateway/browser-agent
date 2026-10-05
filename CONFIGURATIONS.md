@@ -85,6 +85,7 @@ derived from `agent.yaml`; the env vars below override them at runtime.
 | **Artifacts** | `A2A_ARTIFACTS_RETENTION_MAX_AGE` | Max artifact age (0 = no age limit) | `168h` |
 | **Artifacts** | `A2A_ARTIFACTS_RETENTION_CLEANUP_INTERVAL` | Cleanup frequency (0 = manual only) | `24h` |
 | **Authentication** | `A2A_AUTH_ENABLED` | Enable OIDC authentication | `false` |
+| **Authentication** | `A2A_AUTH_TOKEN` | Static bearer token that protects `/a2a`, mutually exclusive with `A2A_AUTH_ENABLED` | - |
 | **Telemetry** | `A2A_TELEMETRY_ENABLED` | Enable OpenTelemetry instrumentation | `true` |
 | **Telemetry** | `A2A_OTEL_TRACES_EXPORTER` | Trace exporter (`otlp` or `none`) | `none` |
 | **Telemetry** | `A2A_OTEL_METRICS_EXPORTER` | Metrics exporter (`otlp`, `prometheus`, or `none`) | `prometheus` |
