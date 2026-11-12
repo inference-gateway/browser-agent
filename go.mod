@@ -5,7 +5,7 @@ go 1.26.8
 require (
 	github.com/inference-gateway/adk v0.34.0
 	github.com/jonfriesen/playwright-go-stealth v0.0.3
-	github.com/mxschmitt/playwright-go v0.6201.1
+	github.com/mxschmitt/playwright-go v0.6401.0
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
