@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.20](https://github.com/inference-gateway/browser-agent/compare/v0.8.19...v0.8.20) (2026-11-15)
+
+### 🔧 Miscellaneous
+
+* **deps:** bump ADL CLI to v0.68.1 ([#221](https://github.com/inference-gateway/browser-agent/issues/221)) ([63949c6](https://github.com/inference-gateway/browser-agent/commit/63949c69019b2f4499621a402c276ef56145699b))
+* **deps:** bump ADL CLI to v0.68.2 ([#224](https://github.com/inference-gateway/browser-agent/issues/224)) ([f36ef4f](https://github.com/inference-gateway/browser-agent/commit/f36ef4feb4ed799218634a710536f1a6e63db63b))
+* **deps:** bump ADL CLI to v0.68.3 ([#227](https://github.com/inference-gateway/browser-agent/issues/227)) ([5b4db5b](https://github.com/inference-gateway/browser-agent/commit/5b4db5b48338d78a2523691bf5f2efd0f19505e1))
+* **deps:** bump ADL CLI to v0.68.4 ([#231](https://github.com/inference-gateway/browser-agent/issues/231)) ([4babf58](https://github.com/inference-gateway/browser-agent/commit/4babf58abad5ebfc8dafd250845fec1f9f6cfa84))
+* **deps:** bump ADL CLI to v0.68.5 ([#233](https://github.com/inference-gateway/browser-agent/issues/233)) ([0dd336c](https://github.com/inference-gateway/browser-agent/commit/0dd336c32dde895a4d611e071c6dc2a3af4acff7))
+* **deps:** bump ADL CLI to v0.68.7 ([#236](https://github.com/inference-gateway/browser-agent/issues/236)) ([f3c36d2](https://github.com/inference-gateway/browser-agent/commit/f3c36d2ddd7ba98db897fed0436d99deda1f4ef5))
+* **deps:** bump ADL CLI to v0.68.8 ([#239](https://github.com/inference-gateway/browser-agent/issues/239)) ([7759785](https://github.com/inference-gateway/browser-agent/commit/7759785bfa234d70acf055b0c689afcda3469761))
+* **deps:** bump flox dependencies to latest ([#238](https://github.com/inference-gateway/browser-agent/issues/238)) ([9c6227e](https://github.com/inference-gateway/browser-agent/commit/9c6227ed23f036886a1aab2c5024207133cf9cd5))
+* remove CLAUDE.md file ([#222](https://github.com/inference-gateway/browser-agent/issues/222)) ([79a60cf](https://github.com/inference-gateway/browser-agent/commit/79a60cf26f302f27232b8ee283bbb4ec9efdd90e))
+
+### 🔨 Miscellaneous
+
+* **deps:** bump docker/login-action from 4.6.0 to 4.7.0 in the github-actions group across 1 directory ([#229](https://github.com/inference-gateway/browser-agent/issues/229)) ([eb8fb36](https://github.com/inference-gateway/browser-agent/commit/eb8fb362bdddce216afc08badb594b1b196f1076))
+* **deps:** bump docker/login-action from 4.7.0 to 4.8.0 in the github-actions group across 1 directory ([#237](https://github.com/inference-gateway/browser-agent/issues/237)) ([6d4bf76](https://github.com/inference-gateway/browser-agent/commit/6d4bf76bd80d9fd9e4d863b29fd0c3df32d8fa05))
+* **deps:** bump github.com/go-jose/go-jose/v4 from 4.1.5 to 4.1.6 ([#228](https://github.com/inference-gateway/browser-agent/issues/228)) ([d7117c1](https://github.com/inference-gateway/browser-agent/commit/d7117c14bda165ce96e4470505e6ca7bd2ff04fe))
+* **deps:** bump github.com/mxschmitt/playwright-go from 0.6201.1 to 0.6401.0 in the gomod group ([#234](https://github.com/inference-gateway/browser-agent/issues/234)) ([0cd31e7](https://github.com/inference-gateway/browser-agent/commit/0cd31e767a696ddec44fbd13a534aedc2a03f2e1))
+
 ## [0.8.19](https://github.com/inference-gateway/browser-agent/compare/v0.8.18...v0.8.19) (2026-10-15)
 
 ### 🔧 Miscellaneous
