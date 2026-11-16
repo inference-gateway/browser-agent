@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	stealth "github.com/jonfriesen/playwright-go-stealth"
 	playwright "github.com/mxschmitt/playwright-go"
 	zap "go.uber.org/zap"
 
@@ -18,6 +17,7 @@ import (
 	types "github.com/inference-gateway/adk/types"
 
 	config "github.com/inference-gateway/browser-agent/config"
+	stealth "github.com/inference-gateway/browser-agent/internal/playwright/stealth"
 )
 
 // BrowserEngine represents the browser type
